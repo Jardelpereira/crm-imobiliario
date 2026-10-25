@@ -69,7 +69,14 @@
   .kpis div{border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
   .kpis b{display:block;font-size:20px}
   .kpis span{font-size:12px;color:var(--mut)}
+  .cab{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;margin-bottom:12px}
+  .cab.hide{display:none}
+  .cab .nome{flex:1;min-width:160px}.cab h2{margin:0;font-size:20px}
+  .cab .av{width:56px;height:56px;border-radius:50%;background:var(--bd);color:var(--mut);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;overflow:hidden;flex:none}
+  .cab .av img{width:100%;height:100%;object-fit:cover}
+  body.detalhe #barra,body.detalhe #lista,body.detalhe #funil,body.detalhe #fichas,body.detalhe #leitor{display:none!important}
   @media print{
+    .cab{display:none!important}
     :root{--bg:#fff;--card:#fff;--tx:#000;--mut:#555;--bd:#ccc}
     body{background:#fff}
     body *{visibility:hidden}
@@ -95,7 +102,12 @@
   </section>
 
   <section id="app" class="hide">
-    <div class="bar">
+    <div id="cabecalho" class="cab hide">
+      <div class="bar" style="margin:0"><button type="button" id="voltar">← Voltar à lista</button><button type="button" id="principal">🏠 Página principal</button></div>
+      <div id="cavatar" class="av"></div>
+      <div class="nome"><h2 id="cnome"></h2><div id="cetapa" class="mut"></div></div>
+    </div>
+    <div class="bar" id="barra">
       <input id="busca" placeholder="Buscar por nome, telefone ou interesse">
       <select id="fstatus"><option value="">Todas as etapas</option></select>
       <select id="ordem"><option value="">Mais recentes</option><option value="contato">Sem contato há mais tempo</option></select>
@@ -509,7 +521,7 @@ async function relatorio(c) {
     <div class="bar noprint" style="justify-content:flex-end">
       <button type="button" onclick="print()">🖨️ Imprimir / salvar PDF</button>
       <button type="button" data-abrir="${c.id}">Abrir cliente</button>
-      <button type="button" onclick="this.closest('section').classList.add('hide')">Fechar</button>
+      <button type="button" data-fechar>Fechar</button>
     </div>
     <h2 style="margin:0">${esc(c.nome)}</h2>
     <div class="mut">Relatório gerado em ${dataBR(new Date(), true)} · Etapa atual: <strong>${STATUS[c.status]}</strong></div>
@@ -541,9 +553,10 @@ async function relatorio(c) {
       ${h.length ? [...h].reverse().map(x => `<tr><td>${dataBR(x.criado_em, true)}</td><td>${esc(x.tipo)}</td><td>${esc(x.texto)}</td></tr>`).join("") : '<tr><td colspan="3" class="mut">Nenhum registro.</td></tr>'}
     </table>`;
   $("form").classList.add("hide"); $("relatorio").classList.remove("hide");
-  $("relatorio").scrollIntoView({ behavior: "smooth" });
+  window.scrollTo(0, 0);
 }
 $("relatorio").onclick = e => { const b = e.target.closest("[data-abrir]"); if (b) { $("relatorio").classList.add("hide"); abrir(clientes.find(c => c.id === b.dataset.abrir)); } };
+$("relatorio").addEventListener("click", e => { if (e.target.closest("[data-fechar]")) fecharDetalhe(); });
 $("brel").onclick = () => relatorio(clientes.find(c => c.id === editId));
 $("ordem").onchange = desenhar;
 
@@ -556,10 +569,33 @@ function abrir(c) {
   for (const id of ["hist", "docs", "brel"]) $(id).classList.toggle("hide", !c);
   $("esteira").classList.add("hide"); $("resumo").textContent = "";
   if (c) { historico(); documentos(); }
-  f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
+  f.classList.remove("hide"); $("relatorio").classList.add("hide");
+  cabecalho(c);
+  if (!document.body.classList.contains("detalhe")) { document.body.classList.add("detalhe"); history.pushState({ d: 1 }, ""); }
+  window.scrollTo(0, 0); f.nome.focus({ preventScroll: true });
 }
+// Visão do cliente: só os dados dele, com nome e foto no topo. Voltar/Página principal fecham a visão.
+async function cabecalho(c) {
+  $("cabecalho").classList.remove("hide");
+  $("cnome").textContent = c ? c.nome : "Novo cliente";
+  $("cetapa").textContent = c ? STATUS[c.status] || "" : "Preencha os dados e salve";
+  const av = $("cavatar"); av.textContent = c ? (c.nome || "?").trim().split(/\s+/).slice(0, 2).map(x => x[0]).join("").toUpperCase() : "+";
+  if (!c?.ficha_url) return;
+  const { data } = await sb.storage.from("fichas").createSignedUrl(c.ficha_url, 3600);
+  if (data?.signedUrl && editId === c.id) { const i = new Image(); i.alt = ""; i.src = data.signedUrl; i.onload = () => av.replaceChildren(i); }
+}
+function fecharDetalhe(doPop) {
+  if (!document.body.classList.contains("detalhe")) return;
+  document.body.classList.remove("detalhe");
+  for (const id of ["form", "relatorio", "cabecalho"]) $(id).classList.add("hide");
+  editId = null; window.scrollTo(0, 0);
+  if (!doPop && history.state?.d) history.back();
+}
+window.addEventListener("popstate", () => fecharDetalhe(true));
+$("voltar").onclick = () => fecharDetalhe();
+$("principal").onclick = () => { fecharDetalhe(); $("busca").value = ""; $("fstatus").value = ""; $("ordem").value = ""; $("vlista").click(); };
 $("novo").onclick = () => abrir(null);
-$("cancelar").onclick = () => $("form").classList.add("hide");
+$("cancelar").onclick = () => fecharDetalhe();
 
 $("form").onsubmit = async e => {
   e.preventDefault();
@@ -580,7 +616,7 @@ $("form").onsubmit = async e => {
     : await sb.from("clientes").insert(d);
   if (error) return msg("Erro ao salvar: " + erroEtapa(error.message), true);
   if (editId && clientes.find(c => c.id === editId)?.status !== d.status) await registrar(editId, "Etapa", STATUS[d.status]);
-  msg("Salvo."); e.target.classList.add("hide"); carregar();
+  msg("Salvo."); fecharDetalhe(); carregar();
 };
 
 $("busca").oninput = $("fstatus").onchange = desenhar;
