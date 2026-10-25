@@ -55,6 +55,13 @@
   .etapa{border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:8px;padding:10px 12px;margin-bottom:12px}
   .etapa.perdido{border-left-color:var(--bad)}.etapa.fechado{border-left-color:var(--ok)}
   .etapa p{margin:4px 0 8px}
+  .btn{display:inline-block;font:inherit;border:1px solid var(--bd);border-radius:8px;padding:9px 10px;background:var(--card);color:var(--tx);text-decoration:none;cursor:pointer}
+  .warn{color:#b26a00}@media (prefers-color-scheme:dark){.warn{color:#e0a64a}}
+  .doc{border-top:1px solid var(--bd);padding:8px 0}.doc:first-child{border-top:0}
+  .chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--tx);margin:0}.chk input{width:auto}
+  .arq{display:inline-flex;gap:4px;align-items:center;border:1px solid var(--bd);border-radius:99px;padding:2px 4px 2px 10px;margin:4px 6px 0 0;font-size:13px}
+  .arq button{padding:0 7px;border-radius:99px}
+  .anexar{display:inline-block;font-size:13px;color:var(--pri);cursor:pointer;margin:4px 0 0}
 </style>
 </head>
 <body>
@@ -112,13 +119,23 @@
       <label style="margin-top:10px">Foto da ficha deste cliente <span id="ftemfoto"></span></label><input id="ffoto" type="file" accept="image/*">
       <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button></div>
       <div class="hist hide" id="hist">
-        <strong>Histórico de contatos</strong>
+        <div class="bar" style="justify-content:space-between;align-items:center;margin-bottom:4px">
+          <strong>Contatos com o cliente</strong>
+          <a id="brel" class="btn" target="_blank" href="#">📄 Relatório do cliente</a>
+        </div>
+        <div id="metricas" class="mut" style="margin-bottom:8px"></div>
         <div class="bar" style="margin:8px 0">
-          <select id="htipo" style="width:auto"><option>Anotação</option><option>WhatsApp</option><option>Ligação</option><option>Visita</option></select>
+          <select id="htipo" style="width:auto"><option>Ligação atendida</option><option>Ligação sem resposta</option><option>WhatsApp enviado</option><option>WhatsApp respondido</option><option>Visita</option><option>E-mail</option><option>Anotação</option></select>
+          <input id="hquando" type="datetime-local" style="width:auto" title="Quando foi o contato">
           <input id="htexto" placeholder="O que aconteceu? (ex.: não atendeu, retornar sábado)">
-          <button type="button" id="hadd">Adicionar</button>
+          <button type="button" id="hadd">Registrar contato</button>
         </div>
         <ul id="hlista" style="padding-left:18px;margin:0"></ul>
+      </div>
+      <div class="hist hide" id="docsbox">
+        <strong>Documentos do cliente</strong> <span id="docsresumo" class="mut"></span>
+        <p class="mut" style="margin:4px 0 6px">Marque como entregue e, se quiser, anexe a foto ou o PDF do documento (fica guardado só na sua conta).</p>
+        <div id="docs"></div>
       </div>
     </form>
 
@@ -133,7 +150,8 @@
 const STATUS = {
   lead: "Primeiro contato", visita: "Visita agendada", visita_feita: "Visita realizada",
   proposta: "Simulação / proposta", documentacao: "Documentação", negociacao: "Em financiamento",
-  aprovado: "Crédito aprovado", contrato: "Contrato assinado", fechado: "Chaves entregues", perdido: "Perdido"
+  aprovado: "Crédito aprovado", subsidio: "Aguardando subsídio", vistoria: "Vistoria do imóvel",
+  contrato: "Contrato assinado", fechado: "Chaves entregues", perdido: "Perdido"
 };
 const FLUXO = Object.keys(STATUS).filter(k => k !== "perdido");
 const DICAS = {
@@ -142,8 +160,10 @@ const DICAS = {
   visita_feita: "Pergunte o que achou do imóvel e se quer seguir para a simulação.",
   proposta: "Faça a simulação (renda, FGTS, subsídio do Minha Casa Minha Vida) e apresente a proposta.",
   documentacao: "Peça: RG e CPF, comprovante de renda, comprovante de residência, certidão de estado civil, extrato do FGTS e declaração de IR (se tiver).",
-  negociacao: "Processo no banco: análise de crédito e avaliação do imóvel. Acompanhe e mantenha o cliente informado.",
+  negociacao: "Processo no banco: análise de crédito. Acompanhe e mantenha o cliente informado.",
   aprovado: "Crédito aprovado! Agende a assinatura e confira os valores de entrada, ITBI e cartório.",
+  subsidio: "Confirme se o cliente tem direito a subsídio do programa e acompanhe a liberação do valor junto ao banco.",
+  vistoria: "Agende a vistoria (avaliação) do imóvel pelo banco e confirme que a documentação do imóvel está regular.",
   contrato: "Contrato assinado. Acompanhe o registro em cartório e a liberação do imóvel.",
   fechado: "Venda concluída. Entregue as chaves e peça indicações de amigos e familiares.",
   perdido: "Cliente marcado como perdido. Registre o motivo no histórico; dá para reativar quando quiser."
@@ -169,6 +189,14 @@ if (cfg.SUPABASE_URL.startsWith("COLE")) {
 }
 const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
+const DOCS = [["rg_cpf", "RG / CNH e CPF"], ["renda", "Comprovante de renda"], ["residencia", "Comprovante de residência"], ["estado_civil", "Certidão de estado civil"], ["fgts", "Extrato do FGTS"], ["ir", "Declaração de Imposto de Renda"], ["ctps", "Carteira de trabalho"], ["outros", "Outros documentos"]];
+const docsOk = c => DOCS.filter(([k]) => k !== "outros" && c.docs?.[k]).length;
+const ehContato = t => !["Etapa", "Anotação", "Documento"].includes(t);
+const diasDesde = d => Math.floor((Date.now() - new Date(d)) / 864e5);
+const haDias = d => { const n = diasDesde(d); return n <= 0 ? "hoje" : n === 1 ? "ontem" : `há ${n} dias`; };
+const hojeISO = () => new Date().toLocaleDateString("sv-SE");
+const agoraLocal = () => new Date(Date.now() - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 16);
+let contatos = {}; // cliente_id -> { n, ultimo }
 let clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
 const MODELOS = {
   lead: n => `Olá ${n}, tudo bem? Sou corretor de imóveis e vi que você tem interesse em adquirir um imóvel. Posso te ajudar com a simulação?`,
@@ -178,6 +206,8 @@ const MODELOS = {
   documentacao: n => `Olá ${n}! Para darmos entrada no financiamento, preciso de: RG e CPF, comprovante de renda, comprovante de residência, certidão de estado civil e extrato do FGTS. Pode me enviar por aqui?`,
   negociacao: n => `Olá ${n}! Seu processo de financiamento está em análise no banco. Assim que tiver retorno, te aviso.`,
   aprovado: n => `Olá ${n}, ótima notícia: seu crédito foi aprovado! Vamos agendar a assinatura do contrato?`,
+  subsidio: n => `Olá ${n}! Estamos aguardando a liberação do subsídio. Assim que sair, te aviso.`,
+  vistoria: n => `Olá ${n}! A vistoria do imóvel está sendo agendada. Posso confirmar o melhor dia para você?`,
   contrato: n => `Olá ${n}! Contrato assinado. Agora acompanho o registro em cartório e te aviso de cada passo.`,
   fechado: n => `Olá ${n}! Parabéns pela conquista! Qualquer dúvida na documentação, estou à disposição.`,
   perdido: n => `Olá ${n}, tudo bem? Se mudar de ideia sobre o imóvel, é só me chamar.`
@@ -199,8 +229,13 @@ async function sessao() {
 }
 
 async function carregar() {
-  const { data, error } = await sb.from("clientes").select("*").order("atualizado_em", { ascending: false });
+  const [{ data, error }, { data: ints }] = await Promise.all([
+    sb.from("clientes").select("*").order("atualizado_em", { ascending: false }),
+    sb.from("interacoes").select("cliente_id,tipo,criado_em").order("criado_em", { ascending: false }).limit(5000)
+  ]);
   if (error) return msg("Erro ao carregar: " + error.message, true);
+  contatos = {};
+  for (const h of ints || []) if (ehContato(h.tipo)) { const o = contatos[h.cliente_id] ||= { n: 0, ultimo: h.criado_em }; o.n++; }
   clientes = data; desenhar();
 }
 
@@ -239,6 +274,7 @@ function desenhar() {
       <div>
         <strong>${esc(c.nome)}</strong> <span class="tag ${c.status}">${c.status === "perdido" ? "Perdido" : `${FLUXO.indexOf(c.status) + 1}/${FLUXO.length} · ${STATUS[c.status]}`}</span>
         <div class="mini ${c.status}" data-e="${c.id}" title="Abrir esteira">${barra(c.status)}</div>
+        <span class="${contatos[c.id] && diasDesde(contatos[c.id].ultimo) <= 7 || ["fechado", "perdido"].includes(c.status) ? "mut" : "warn"}">${contatos[c.id] ? `Último contato ${haDias(contatos[c.id].ultimo)} · ${contatos[c.id].n} ${contatos[c.id].n > 1 ? "contatos" : "contato"}` : "Sem contato registrado"} · Documentos ${docsOk(c)}/${DOCS.length - 1}</span><br>
         <span class="mut">${esc(c.telefone)} ${c.interesse ? "· " + esc(c.interesse) : ""}
         ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
         ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span>
@@ -246,6 +282,7 @@ function desenhar() {
       <div class="bar" style="margin:0">
         ${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}
         ${c.ficha_url ? `<button data-f="${c.id}">Ficha</button>` : ""}
+        <a class="btn" target="_blank" href="relatorio.html?id=${c.id}">Relatório</a>
         <button class="pri" data-e="${c.id}">Abrir</button>
         <button class="bad" data-d="${c.id}">Excluir</button>
       </div>
@@ -341,12 +378,83 @@ async function historico() {
     (data.length ? data.map(h => `<li><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
   const c = clientes.find(x => x.id === editId);
   if (c) esteira(c, data || []);
+  if (c && !error) {
+    const cont = data.filter(h => ehContato(h.tipo));
+    const media = cont.length > 1 ? ((new Date(cont[0].criado_em) - new Date(cont[cont.length - 1].criado_em)) / 864e5 / (cont.length - 1)).toFixed(1).replace(".", ",") + " dias" : "-";
+    $("metricas").textContent = `Na base há ${diasDesde(c.criado_em)} dias · ${cont.length} ${cont.length === 1 ? "contato" : "contatos"} · último contato ${cont.length ? haDias(cont[0].criado_em) : "nenhum"} · intervalo médio entre contatos ${media}`;
+  }
 }
 $("hadd").onclick = async () => {
   const t = $("htexto").value.trim(); if (!t || !editId) return;
-  const { error } = await sb.from("interacoes").insert({ cliente_id: editId, tipo: $("htipo").value, texto: t });
+  const reg = { cliente_id: editId, tipo: $("htipo").value, texto: t };
+  if ($("hquando").value) reg.criado_em = new Date($("hquando").value).toISOString();
+  const { error } = await sb.from("interacoes").insert(reg);
   if (error) return msg("Erro ao registrar: " + error.message, true);
-  $("htexto").value = ""; historico();
+  $("htexto").value = ""; $("hquando").value = agoraLocal(); historico(); carregar();
+};
+
+// Documentos do cliente: marcação de entregue (clientes.docs) e arquivos no bucket privado "documentos".
+let arquivos = [];
+async function carregarDocs() {
+  const { data, error } = await sb.from("arquivos").select("*").eq("cliente_id", editId).order("criado_em");
+  if (error) { arquivos = []; $("docs").innerHTML = '<p class="mut">Documentos indisponíveis (rode o schema_v5.sql no Supabase).</p>'; $("docsresumo").textContent = ""; return; }
+  arquivos = data; desenharDocs();
+}
+function desenharDocs() {
+  const c = clientes.find(x => x.id === editId); if (!c) return;
+  $("docsresumo").textContent = `· ${docsOk(c)} de ${DOCS.length - 1} entregues`;
+  $("docs").innerHTML = DOCS.map(([k, t]) => {
+    const d = c.docs?.[k];
+    return `<div class="doc">
+      <label class="chk"><input type="checkbox" data-doc="${k}" ${d ? "checked" : ""}> <strong>${t}</strong>
+        <span class="mut">${d ? "entregue em " + new Date(d + "T12:00").toLocaleDateString("pt-BR") : "pendente"}</span></label>
+      <div>${arquivos.filter(a => a.tipo === k).map(a => `<span class="arq"><a href="#" data-ver="${a.id}">${esc(a.nome)}</a><button type="button" class="bad" data-delarq="${a.id}" title="Excluir arquivo">×</button></span>`).join("")}
+        <label class="anexar">+ Anexar arquivo<input type="file" data-up="${k}" accept="image/*,application/pdf" multiple hidden></label></div>
+    </div>`;
+  }).join("");
+}
+async function marcarDoc(k, entregue) {
+  const c = clientes.find(x => x.id === editId), docs = { ...(c.docs || {}) };
+  entregue ? docs[k] = docs[k] || hojeISO() : delete docs[k];
+  const { error } = await sb.from("clientes").update({ docs, atualizado_em: new Date().toISOString() }).eq("id", c.id);
+  if (error) return msg("Erro ao marcar documento: " + error.message.replace(/docs/, "docs (rode o schema_v5.sql)"), true);
+  await registrar(c.id, "Documento", DOCS.find(d => d[0] === k)[1] + ": " + (entregue ? "entregue" : "marcado como pendente"));
+  await carregar(); desenharDocs(); historico();
+}
+$("docs").onchange = async e => {
+  if (e.target.dataset.doc) return marcarDoc(e.target.dataset.doc, e.target.checked);
+  const k = e.target.dataset.up; if (!k) return;
+  const { data: { user } } = await sb.auth.getUser(), nomeDoc = DOCS.find(d => d[0] === k)[1];
+  for (const f of e.target.files) {
+    if (f.size > 15e6) { msg(`${f.name} passa de 15 MB.`, true); continue; }
+    msg("Enviando " + f.name + "...");
+    const img = f.type.startsWith("image/");
+    const blob = img ? await reduzir(f, 2000) : f, nome = img ? f.name.replace(/\.\w+$/, "") + ".jpg" : f.name;
+    const path = `${user.id}/${editId}/${k}-${Date.now()}-${nome.replace(/[^\w.\-]+/g, "_")}`;
+    const up = await sb.storage.from("documentos").upload(path, blob, { contentType: img ? "image/jpeg" : f.type || "application/octet-stream" });
+    if (up.error) return msg("Erro ao enviar: " + up.error.message, true);
+    const { error } = await sb.from("arquivos").insert({ cliente_id: editId, tipo: k, nome, path, tamanho: blob.size });
+    if (error) return msg("Erro ao registrar o arquivo: " + error.message, true);
+    await registrar(editId, "Documento", `${nomeDoc}: arquivo anexado (${nome})`);
+  }
+  msg("Arquivo(s) enviado(s).");
+  const c = clientes.find(x => x.id === editId);
+  if (!c.docs?.[k]) await marcarDoc(k, true); else { await carregarDocs(); historico(); }
+};
+$("docs").onclick = async e => {
+  const ver = e.target.closest("[data-ver]"), del = e.target.closest("[data-delarq]");
+  if (ver) {
+    e.preventDefault();
+    const w = window.open("", "_blank");
+    const { data, error } = await sb.storage.from("documentos").createSignedUrl(arquivos.find(a => a.id === ver.dataset.ver).path, 3600);
+    error ? (w.close(), msg("Erro ao abrir: " + error.message, true)) : (w.location = data.signedUrl);
+  }
+  if (del && confirm("Excluir este arquivo?")) {
+    const a = arquivos.find(x => x.id === del.dataset.delarq);
+    await sb.storage.from("documentos").remove([a.path]);
+    const { error } = await sb.from("arquivos").delete().eq("id", a.id);
+    error ? msg(error.message, true) : carregarDocs();
+  }
 };
 
 function abrir(c) {
@@ -356,8 +464,9 @@ function abrir(c) {
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
   $("hist").classList.toggle("hide", !c);
+  $("docsbox").classList.toggle("hide", !c);
   $("esteira").classList.add("hide");
-  if (c) historico();
+  if (c) { $("hquando").value = agoraLocal(); $("brel").href = "relatorio.html?id=" + c.id; historico(); carregarDocs(); }
   f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
 }
 $("novo").onclick = () => abrir(null);

@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Relatório do cliente</title>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#1f5eff;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828}
+  @media (prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2029;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140}}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.45 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+  main{max-width:900px;margin:0 auto;padding:16px}
+  section{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+  h1{margin:0 0 2px;font-size:22px}h2{margin:0 0 8px;font-size:15px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+  .mut{color:var(--mut)}.ok{color:var(--ok)}.bad{color:var(--bad)}
+  dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 16px;margin:0}
+  dt{font-size:12px;color:var(--mut)}dd{margin:0}
+  table{border-collapse:collapse;width:100%;font-size:14px}
+  th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
+  th{font-size:12px;color:var(--mut);font-weight:600}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+  .kpi{border:1px solid var(--bd);border-radius:8px;padding:8px 10px}.kpi b{display:block;font-size:20px}.kpi span{font-size:12px;color:var(--mut)}
+  button,a.b{font:inherit;color:inherit;border:1px solid var(--bd);border-radius:8px;padding:8px 12px;background:var(--card);cursor:pointer;text-decoration:none}
+  .tools{display:flex;gap:8px;justify-content:space-between;margin-bottom:12px}
+  a{color:var(--pri)}
+  @media print{
+    body{background:#fff;color:#000}.tools{display:none}
+    section{break-inside:avoid;border-color:#bbb}main{padding:0}
+    :root{--mut:#444;--bd:#ccc}
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="tools"><a class="b" href="index.html">← Voltar ao CRM</a><button onclick="window.print()">Imprimir / salvar em PDF</button></div>
+  <p id="estado" class="mut">Carregando...</p>
+  <div id="rel"></div>
+</main>
+<script src="config.js"></script>
+<script id="main" type="text/plain">
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const STATUS = {
+  lead: "Primeiro contato", visita: "Visita agendada", visita_feita: "Visita realizada",
+  proposta: "Simulação / proposta", documentacao: "Documentação", negociacao: "Em financiamento",
+  aprovado: "Crédito aprovado", subsidio: "Aguardando subsídio", vistoria: "Vistoria do imóvel",
+  contrato: "Contrato assinado", fechado: "Chaves entregues", perdido: "Perdido"
+};
+const FLUXO = Object.keys(STATUS).filter(k => k !== "perdido");
+const DOCS = [["rg_cpf", "RG / CNH e CPF"], ["renda", "Comprovante de renda"], ["residencia", "Comprovante de residência"], ["estado_civil", "Certidão de estado civil"], ["fgts", "Extrato do FGTS"], ["ir", "Declaração de Imposto de Renda"], ["ctps", "Carteira de trabalho"], ["outros", "Outros documentos"]];
+const ehContato = t => !["Etapa", "Anotação", "Documento"].includes(t);
+const dt = d => d ? new Date(d).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" }) : "-";
+const dia = d => d ? new Date(d).toLocaleDateString("pt-BR") : "-";
+const dinheiro = v => v == null || v === "" ? "-" : "R$ " + Number(v).toLocaleString("pt-BR");
+const dias = ms => { const d = ms / 864e5; return d < 1 ? "menos de 1 dia" : Math.floor(d) + (Math.floor(d) === 1 ? " dia" : " dias"); };
+
+const sb = supabase.createClient(window.CRM_CONFIG.SUPABASE_URL, window.CRM_CONFIG.SUPABASE_ANON_KEY);
+
+(async () => {
+  const id = new URLSearchParams(location.search).get("id");
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return $("estado").innerHTML = 'Você não está logado. <a href="index.html">Entre no CRM</a> e abra o relatório de novo.';
+  if (!id) return $("estado").textContent = "Cliente não informado.";
+  const [rc, ri, ra] = await Promise.all([
+    sb.from("clientes").select("*").eq("id", id).single(),
+    sb.from("interacoes").select("*").eq("cliente_id", id).order("criado_em", { ascending: true }),
+    sb.from("arquivos").select("*").eq("cliente_id", id).order("criado_em", { ascending: true })
+  ]);
+  if (rc.error) return $("estado").textContent = "Não encontrei este cliente: " + rc.error.message;
+  const c = rc.data, ints = ri.data || [], arqs = ra.data || [];
+  $("estado").remove();
+  document.title = "Relatório - " + c.nome;
+
+  // Tempo em cada etapa, a partir do registro de mudanças de etapa.
+  const mud = ints.filter(h => h.tipo === "Etapa").map(h => ({ k: Object.keys(STATUS).find(k => STATUS[k] === h.texto), t: h.criado_em })).filter(x => x.k);
+  const linha = [{ k: "lead", t: c.criado_em }, ...mud.filter(x => !(x.k === "lead" && x.t === c.criado_em))];
+  const agora = Date.now();
+  const trechos = linha.map((x, i) => ({ k: x.k, ini: x.t, ms: (linha[i + 1] ? new Date(linha[i + 1].t) : agora) - new Date(x.t), atual: i === linha.length - 1 }));
+  const chegada = {};
+  for (const x of linha) chegada[x.k] = x.t; // a última chegada de cada etapa
+
+  const cont = ints.filter(h => ehContato(h.tipo));
+  const ultimo = cont.length ? cont[cont.length - 1].criado_em : null;
+  const media = cont.length > 1 ? (new Date(ultimo) - new Date(cont[0].criado_em)) / (cont.length - 1) : null;
+  const naBase = agora - new Date(c.criado_em);
+  const entregues = DOCS.filter(([k]) => k !== "outros" && c.docs?.[k]).length;
+
+  const urls = {};
+  if (arqs.length) {
+    const r = await sb.storage.from("documentos").createSignedUrls(arqs.map(a => a.path), 3600);
+    (r.data || []).forEach(u => urls[u.path] = u.signedUrl);
+  }
+  let fichaUrl = null;
+  if (c.ficha_url) fichaUrl = (await sb.storage.from("fichas").createSignedUrl(c.ficha_url, 3600)).data?.signedUrl;
+
+  const campos = [
+    ["Telefone", c.telefone], ["E-mail", c.email], ["CPF", c.cpf], ["Data de nascimento", c.data_nascimento ? dia(c.data_nascimento + "T12:00") : "-"],
+    ["Tipo de renda", c.tipo_renda], ["Renda mensal", dinheiro(c.renda)], ["Possui filhos", c.tem_filhos == null ? "-" : c.tem_filhos ? "Sim" : "Não"],
+    ["Orçamento", dinheiro(c.orcamento)], ["Interesse", c.interesse], ["Origem", c.origem]
+  ];
+  $("rel").innerHTML = `
+    <section>
+      <h1>${esc(c.nome)}</h1>
+      <div class="${c.status === "perdido" ? "bad" : c.status === "fechado" ? "ok" : "mut"}">${esc(STATUS[c.status] || c.status)}${c.status !== "perdido" ? ` · etapa ${FLUXO.indexOf(c.status) + 1} de ${FLUXO.length}` : ""} · relatório de ${new Date().toLocaleDateString("pt-BR")}</div>
+    </section>
+    <section><h2>Resumo de tempo</h2>
+      <div class="kpis">
+        <div class="kpi"><b>${dias(naBase)}</b><span>na base (desde ${dia(c.criado_em)})</span></div>
+        <div class="kpi"><b>${cont.length}</b><span>contatos registrados</span></div>
+        <div class="kpi"><b>${ultimo ? dias(agora - new Date(ultimo)) : "-"}</b><span>desde o último contato${ultimo ? " (" + dia(ultimo) + ")" : ""}</span></div>
+        <div class="kpi"><b>${media ? dias(media) : "-"}</b><span>intervalo médio entre contatos</span></div>
+        <div class="kpi"><b>${entregues}/${DOCS.length - 1}</b><span>documentos entregues</span></div>
+      </div>
+    </section>
+    <section><h2>Dados do cliente</h2>
+      <dl>${campos.map(([t, v]) => `<div><dt>${t}</dt><dd>${esc(v || "-")}</dd></div>`).join("")}</dl>
+      ${c.observacoes ? `<p style="margin-bottom:0"><span class="mut">Observações:</span> ${esc(c.observacoes)}</p>` : ""}
+      ${fichaUrl ? `<p style="margin-bottom:0"><a href="${esc(fichaUrl)}" target="_blank">Ver foto da ficha de papel</a></p>` : ""}
+    </section>
+    <section><h2>Esteira e tempo em cada etapa</h2>
+      <table><tr><th>Etapa</th><th>Quando chegou</th><th>Tempo nela</th></tr>
+      ${trechos.map(t => `<tr><td>${esc(STATUS[t.k])}${t.atual ? ' <span class="mut">(atual)</span>' : ""}</td><td>${dt(t.ini)}</td><td>${dias(t.ms)}</td></tr>`).join("")}</table>
+      <p class="mut" style="margin:8px 0 0">Etapas que ainda faltam: ${FLUXO.filter(k => !chegada[k]).map(k => STATUS[k]).join(", ") || "nenhuma"}.</p>
+    </section>
+    <section><h2>Documentos</h2>
+      <table><tr><th>Documento</th><th>Situação</th><th>Arquivos</th></tr>
+      ${DOCS.map(([k, t]) => `<tr><td>${t}</td><td class="${c.docs?.[k] ? "ok" : "mut"}">${c.docs?.[k] ? "Entregue em " + dia(c.docs[k] + "T12:00") : "Pendente"}</td>
+        <td>${arqs.filter(a => a.tipo === k).map(a => urls[a.path] ? `<a href="${esc(urls[a.path])}" target="_blank">${esc(a.nome)}</a>` : esc(a.nome)).join("<br>") || '<span class="mut">-</span>'}</td></tr>`).join("")}</table>
+    </section>
+    <section><h2>Contatos e histórico (${ints.length} registros)</h2>
+      ${ints.length ? `<table><tr><th>Data e hora</th><th>Tipo</th><th>Registro</th></tr>
+      ${[...ints].reverse().map(h => `<tr><td>${dt(h.criado_em)}</td><td>${esc(h.tipo)}</td><td>${esc(h.texto)}</td></tr>`).join("")}</table>` : '<p class="mut">Nenhum registro ainda.</p>'}
+    </section>`;
+})().catch(e => { $("estado").textContent = "Erro: " + e.message; });
+</script>
+<script>
+(function () {
+  const fontes = [
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/umd/supabase.min.js",
+    "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"
+  ];
+  function iniciar() { const el = document.createElement("script"); el.textContent = document.getElementById("main").textContent; document.body.appendChild(el); }
+  function tentar(i) {
+    if (i >= fontes.length) { document.getElementById("estado").textContent = "Não consegui carregar a biblioteca do Supabase. Desative o bloqueador de anúncios e recarregue."; return; }
+    const s = document.createElement("script"); s.src = fontes[i]; s.onload = iniciar; s.onerror = () => tentar(i + 1); document.head.appendChild(s);
+  }
+  tentar(0);
+})();
+</script>
+</body>
+</html>
