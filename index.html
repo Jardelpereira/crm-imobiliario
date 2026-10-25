@@ -25,6 +25,11 @@
   .tag.fechado{color:var(--ok);border-color:var(--ok)}.tag.perdido{color:var(--bad);border-color:var(--bad)}
   .mut{color:var(--mut)}.hide{display:none}
   #msg{min-height:20px;margin:8px 0}
+  a{color:var(--pri)}@media (prefers-color-scheme:dark){a{color:#8fb0ff}}
+  .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
+  .gal p{grid-column:1/-1;margin:0}.gal figure{margin:0}.gal img{width:100%;height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
+  .gal figcaption{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);margin-top:4px}
+  .gal figcaption button{padding:2px 8px;font-size:12px}
   .kanban{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
   .col{flex:0 0 230px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;min-height:120px}
   .col.over{outline:2px dashed var(--pri)}
@@ -56,9 +61,21 @@
     <div class="bar">
       <input id="busca" placeholder="Buscar por nome, telefone ou interesse">
       <select id="fstatus"><option value="">Todos os status</option></select>
-      <button id="bfichas">📷 Importar fichas</button><button id="vlista">Lista</button><button id="vfunil">Funil</button>
+      <button id="vlista">Lista</button><button id="vfunil">Funil</button>
+      <button id="bfotos">📷 Fotos das fichas</button>
+      <button id="bleitor">🤖 Ler fichas com IA</button>
       <button class="pri" id="novo">+ Novo cliente</button>
     </div>
+
+    <section id="fichas" class="card hide">
+      <h3 style="margin-top:0">Fotos das fichas de papel</h3>
+      <p class="mut" style="margin-top:0">Tire ou escolha fotos das folhas de cadastro. Elas ficam guardadas na sua conta (só você vê).
+        Para virar clientes, mande as fotos ao Claude, que gera a planilha para a página <a href="importar.html">Importar planilha</a>.</p>
+      <label class="pri" style="display:inline-block;cursor:pointer;background:var(--pri);color:#fff;padding:9px 14px;border-radius:8px;font-size:15px;margin:0">
+        Enviar fotos<input id="ffotos" type="file" accept="image/*" multiple hidden>
+      </label>
+      <div id="galeria" class="gal"></div>
+    </section>
 
     <form id="form" class="card hide">
       <h3 id="ftitulo" style="margin-top:0">Novo cliente</h3>
@@ -77,6 +94,7 @@
         <div><label>Origem</label><input name="origem" placeholder="indicação, Instagram, placa..."></div>
       </div>
       <label style="margin-top:10px">Observações</label><textarea name="observacoes" rows="3"></textarea>
+      <label style="margin-top:10px">Foto da ficha deste cliente <span id="ftemfoto"></span></label><input id="ffoto" type="file" accept="image/*">
       <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button></div>
       <div class="hist hide" id="hist">
         <strong>Histórico de contatos</strong>
@@ -89,13 +107,13 @@
       </div>
     </form>
 
-    <section id="fichas" class="card hide">
+    <section id="leitor" class="card hide">
       <h3 style="margin-top:0">Importar fichas por foto</h3>
       <p class="mut">Tire ou escolha fotos das fichas manuscritas. O CRM lê a letra e mostra os dados para você conferir e corrigir antes de salvar. Nada é gravado até você clicar em "Salvar clientes".</p>
-      <input type="file" id="ffotos" accept="image/*" multiple>
-      <p id="fstatus2" class="mut"></p>
-      <div style="overflow-x:auto"><table id="ftab" style="border-collapse:collapse;width:100%;font-size:13px"></table></div>
-      <div class="bar" style="margin-top:10px"><button class="pri hide" id="fsalvar">Salvar clientes</button><button id="ffechar">Fechar</button></div>
+      <input type="file" id="lfotos" accept="image/*" multiple>
+      <p id="lstatus" class="mut"></p>
+      <div style="overflow-x:auto"><table id="ltab" style="border-collapse:collapse;width:100%;font-size:13px"></table></div>
+      <div class="bar" style="margin-top:10px"><button class="pri hide" id="lsalvar">Salvar clientes</button><button id="lfechar">Fechar</button></div>
     </section>
     <div id="lista"></div>
     <div id="funil" class="kanban hide"></div>
@@ -196,6 +214,7 @@ function desenhar() {
       </div>
       <div class="bar" style="margin:0">
         ${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}
+        ${c.ficha_url ? `<button data-f="${c.id}">Ficha</button>` : ""}
         <button data-e="${c.id}">Editar</button>
         <button class="bad" data-d="${c.id}">Excluir</button>
       </div>
@@ -205,6 +224,11 @@ function desenhar() {
 $("lista").onclick = $("funil").onclick = async e => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.dataset.e) abrir(clientes.find(c => c.id === b.dataset.e));
+  if (b.dataset.f) {
+    const w = window.open("", "_blank"); // abre já, para o navegador não bloquear o pop-up
+    const { data, error } = await sb.storage.from("fichas").createSignedUrl(clientes.find(c => c.id === b.dataset.f).ficha_url, 3600);
+    error ? (w.close(), msg("Erro ao abrir a ficha: " + error.message, true)) : (w.location = data.signedUrl);
+  }
   if (b.dataset.w) {
     const c = clientes.find(c => c.id === b.dataset.w);
     let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
@@ -256,6 +280,7 @@ function abrir(c) {
   editId = c?.id ?? null;
   $("ftitulo").textContent = c ? "Editar cliente" : "Novo cliente";
   const f = $("form"); f.reset();
+  $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
   $("hist").classList.toggle("hide", !c);
   if (c) historico();
@@ -272,6 +297,12 @@ $("form").onsubmit = async e => {
   d.tem_filhos = d.tem_filhos === "" ? null : d.tem_filhos === "sim";
   for (const k of ["data_nascimento", "tipo_renda"]) if (d[k] === "") d[k] = null;
   d.atualizado_em = new Date().toISOString();
+  const foto = $("ffoto").files[0];
+  if (foto) {
+    msg("Enviando foto...");
+    try { d.ficha_url = await enviarFoto(foto, "clientes"); }
+    catch (err) { return msg("Erro ao enviar a foto: " + err.message, true); }
+  }
   const { error } = editId
     ? await sb.from("clientes").update(d).eq("id", editId)
     : await sb.from("clientes").insert(d);
@@ -283,19 +314,6 @@ $("form").onsubmit = async e => {
 let achados = [];
 const CAMPOS = [["nome","Nome"],["telefone","Telefone"],["cpf","CPF"],["data_nascimento","Nascimento (AAAA-MM-DD)"],["tipo_renda","Renda (formal/informal)"],["renda","Renda R$"],["tem_filhos","Filhos (sim/nao)"],["status","Status"],["observacoes","Observações"],["conferir","Conferir"]];
 
-function reduzir(file) {
-  return new Promise((ok, err) => {
-    const img = new Image();
-    img.onload = () => {
-      const k = Math.min(1, 1800 / Math.max(img.width, img.height));
-      const c = document.createElement("canvas"); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
-      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-      c.toBlob(b => b ? ok(b) : err(new Error("imagem inválida")), "image/jpeg", 0.85);
-    };
-    img.onerror = () => err(new Error("Não consegui abrir " + file.name));
-    img.src = URL.createObjectURL(file);
-  });
-}
 const base64 = blob => new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result.split(",")[1]); r.readAsDataURL(blob); });
 
 async function lerFoto(file, n) {
@@ -312,25 +330,25 @@ async function lerFoto(file, n) {
 }
 
 function desenharAchados() {
-  $("ftab").innerHTML = "<tr>" + CAMPOS.map(([, t]) => `<th style="text-align:left;padding:4px">${t}</th>`).join("") + "<th></th></tr>" +
+  $("ltab").innerHTML = "<tr>" + CAMPOS.map(([, t]) => `<th style="text-align:left;padding:4px">${t}</th>`).join("") + "<th></th></tr>" +
     achados.map((p, i) => "<tr>" + CAMPOS.map(([k]) => `<td style="padding:2px"><input data-i="${i}" data-k="${k}" value="${esc(p[k] ?? "")}" style="min-width:${k === "nome" || k === "observacoes" || k === "conferir" ? 160 : 100}px"></td>`).join("") +
       `<td><button data-x="${i}" class="bad">Remover</button></td></tr>`).join("");
-  $("fsalvar").classList.toggle("hide", !achados.length);
+  $("lsalvar").classList.toggle("hide", !achados.length);
 }
-$("ftab").oninput = e => { const i = e.target.dataset.i; if (i != null) achados[i][e.target.dataset.k] = e.target.value; };
-$("ftab").onclick = e => { if (e.target.dataset.x != null) { achados.splice(e.target.dataset.x, 1); desenharAchados(); } };
-$("bfichas").onclick = () => $("fichas").classList.remove("hide");
-$("ffechar").onclick = () => { $("fichas").classList.add("hide"); achados = []; desenharAchados(); $("fstatus2").textContent = ""; $("ffotos").value = ""; };
-$("ffotos").onchange = async e => {
+$("ltab").oninput = e => { const i = e.target.dataset.i; if (i != null) achados[i][e.target.dataset.k] = e.target.value; };
+$("ltab").onclick = e => { if (e.target.dataset.x != null) { achados.splice(e.target.dataset.x, 1); desenharAchados(); } };
+$("bleitor").onclick = () => $("leitor").classList.remove("hide");
+$("lfechar").onclick = () => { $("leitor").classList.add("hide"); achados = []; desenharAchados(); $("lstatus").textContent = ""; $("lfotos").value = ""; };
+$("lfotos").onchange = async e => {
   const arquivos = [...e.target.files]; let n = 0;
   for (const f of arquivos) {
-    $("fstatus2").textContent = `Lendo foto ${++n} de ${arquivos.length}...`;
+    $("lstatus").textContent = `Lendo foto ${++n} de ${arquivos.length}...`;
     try { achados.push(...await lerFoto(f, n)); desenharAchados(); }
-    catch (err) { $("fstatus2").innerHTML = `<span style="color:var(--bad)">${esc(err.message)}</span>`; return; }
+    catch (err) { $("lstatus").innerHTML = `<span style="color:var(--bad)">${esc(err.message)}</span>`; return; }
   }
-  $("fstatus2").textContent = `${achados.length} pessoas encontradas. Confira cada linha com a ficha de papel antes de salvar.`;
+  $("lstatus").textContent = `${achados.length} pessoas encontradas. Confira cada linha com a ficha de papel antes de salvar.`;
 };
-$("fsalvar").onclick = async () => {
+$("lsalvar").onclick = async () => {
   const ja = new Set(clientes.map(c => c.telefone).filter(Boolean));
   const num = v => v === "" || v == null ? null : Number(String(v).replace(",", "."));
   const novos = achados.filter(p => p.nome && !(p.telefone && ja.has(p.telefone))).map(p => {
@@ -352,10 +370,59 @@ $("fsalvar").onclick = async () => {
   const { error } = await sb.from("clientes").insert(novos);
   if (error) return msg("Erro ao salvar: " + error.message, true);
   msg(`${novos.length} clientes salvos.` + (pulados ? ` ${pulados} pulados (sem nome ou telefone já cadastrado).` : ""));
-  $("ffechar").click(); carregar();
+  $("lfechar").click(); carregar();
 };
 
 $("busca").oninput = $("fstatus").onchange = desenhar;
+
+// Fotos das fichas: reduz no aparelho (economiza espaço no Supabase) e guarda no bucket privado "fichas".
+async function reduzir(file, max = 1600) {
+  const img = await createImageBitmap(file);
+  const k = Math.min(1, max / Math.max(img.width, img.height));
+  const cv = document.createElement("canvas");
+  cv.width = Math.round(img.width * k); cv.height = Math.round(img.height * k);
+  cv.getContext("2d").drawImage(img, 0, 0, cv.width, cv.height);
+  return new Promise(r => cv.toBlob(r, "image/jpeg", 0.85));
+}
+async function enviarFoto(file, pasta) {
+  const { data: { user } } = await sb.auth.getUser();
+  const path = `${user.id}/${pasta}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+  const { error } = await sb.storage.from("fichas").upload(path, await reduzir(file), { contentType: "image/jpeg" });
+  if (error) throw error;
+  return path;
+}
+async function galeria() {
+  const { data: { user } } = await sb.auth.getUser();
+  const pasta = `${user.id}/lotes`;
+  const { data, error } = await sb.storage.from("fichas").list(pasta, { sortBy: { column: "created_at", order: "desc" } });
+  if (error) return msg("Erro ao listar as fotos: " + error.message, true);
+  const fotos = data.filter(f => f.id);
+  if (!fotos.length) return $("galeria").innerHTML = '<p class="mut">Nenhuma foto enviada ainda.</p>';
+  const { data: urls, error: e2 } = await sb.storage.from("fichas").createSignedUrls(fotos.map(f => `${pasta}/${f.name}`), 3600);
+  if (e2) return msg("Erro ao abrir as fotos: " + e2.message, true);
+  $("galeria").innerHTML = urls.map((u, i) => `
+    <figure>
+      <a href="${esc(u.signedUrl)}" target="_blank"><img src="${esc(u.signedUrl)}" alt="Ficha"></a>
+      <figcaption>${new Date(fotos[i].created_at).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
+        <button class="bad" data-x="${esc(u.path)}">Excluir</button></figcaption>
+    </figure>`).join("");
+}
+$("bfotos").onclick = () => { $("fichas").classList.toggle("hide") || galeria(); };
+$("ffotos").onchange = async e => {
+  const arq = [...e.target.files]; e.target.value = "";
+  for (const [i, f] of arq.entries()) {
+    msg(`Enviando foto ${i + 1} de ${arq.length}...`);
+    try { await enviarFoto(f, "lotes"); }
+    catch (err) { return msg("Erro ao enviar a foto: " + err.message, true); }
+  }
+  msg(arq.length + (arq.length > 1 ? " fotos enviadas." : " foto enviada.")); galeria();
+};
+$("galeria").onclick = async e => {
+  const b = e.target.closest("button[data-x]");
+  if (!b || !confirm("Excluir esta foto?")) return;
+  const { error } = await sb.storage.from("fichas").remove([b.dataset.x]);
+  error ? msg(error.message, true) : galeria();
+};
 
 const cred = () => ({ email: $("lemail").value.trim(), password: $("lsenha").value });
 const traduz = m =>
