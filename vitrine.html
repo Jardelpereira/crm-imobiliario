@@ -44,6 +44,14 @@
   .preco{position:absolute;left:12px;bottom:12px;background:rgba(11,37,69,.92);color:#fff;font-weight:700;font-size:17px;padding:5px 12px;border-radius:8px}
   .selo{position:absolute;left:12px;top:12px;background:var(--acc);color:#1b1300;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px}
   .selo.vendido{background:var(--bad);color:#fff}.selo.reservado{background:#7c3aed;color:#fff}
+  .ilustra{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:6px}
+  .gal .ilustra{right:auto;left:12px;bottom:12px;top:auto}
+  .em-breve .capa::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(11,37,69,.55),transparent 60%)}
+  .passos{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .passo{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+  .passo .img{aspect-ratio:16/9;background:#dbe4f0 center/cover}
+  .passo div{padding:14px 16px}.passo h3{margin:0 0 4px;font-size:18px}.passo p{margin:0;color:var(--mut);font-size:15px}
+  .passo .n{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#1b1300;font-weight:800;align-items:center;justify-content:center;margin-right:6px;font-size:14px}
   .mcmv{position:absolute;right:12px;top:12px;background:#fff;color:var(--navy);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
   .corpo{padding:14px;display:flex;flex-direction:column;gap:6px}
   .corpo h3{margin:0;font-size:17px}
@@ -121,6 +129,20 @@
 
   <section style="padding-top:0">
     <div class="wrap">
+      <div class="tit"><h2>Do sonho à chave na mão</h2><span>Cuido de cada etapa com você</span></div>
+      <div class="passos">
+        <div class="passo"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1554995207-c18c203602cb?w=900&q=70&auto=format&fit=crop')"></div>
+          <div><h3><span class="n">1</span>Escolha e visita</h3><p>Encontramos juntos o imóvel que cabe no seu bolso e agendamos a visita.</p></div></div>
+        <div class="passo"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1556911220-bff31c812dba?w=900&q=70&auto=format&fit=crop')"></div>
+          <div><h3><span class="n">2</span>Simulação e documentos</h3><p>Simulação com FGTS e subsídio do Minha Casa Minha Vida. Eu organizo toda a papelada.</p></div></div>
+        <div class="passo"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=900&q=70&auto=format&fit=crop')"></div>
+          <div><h3><span class="n">3</span>Chaves na mão</h3><p>Acompanho a análise do banco, a assinatura do contrato e a entrega das chaves.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
       <div class="banner">
         <div><h3>Quer saber quanto você consegue financiar?</h3>
           <p>Faça uma simulação gratuita com seu FGTS e o subsídio do Minha Casa Minha Vida. Sem compromisso.</p></div>
@@ -149,6 +171,7 @@
     <button class="prox" id="gprox" aria-label="Próxima foto">›</button>
     <button class="fechar" id="gfechar" aria-label="Fechar">✕</button>
     <span class="cont" id="gcont"></span>
+    <span class="ilustra hide" id="gilustra">Imagem ilustrativa · fotos do imóvel em breve</span>
   </div>
   <div class="thumbs" id="gthumbs"></div>
   <div class="det">
@@ -172,8 +195,12 @@
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const dinheiro = v => "R$ " + Number(v).toLocaleString("pt-BR");
-const CASA = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#dbe4f0"/><path d="M125 165 200 104l75 61v75H125z" fill="#c3d1e4"/><path d="M105 168 200 88l95 80" fill="none" stroke="#8aa1c1" stroke-width="10" stroke-linejoin="round"/><rect x="184" y="192" width="32" height="48" fill="#8aa1c1"/></svg>`).replace(/'/g, "%27");
 const SITUACAO = { reservado: "Reservado", vendido: "Vendido" };
+// Fotos ilustrativas (Unsplash) para imóveis que ainda não têm fotos próprias. Sempre marcadas como "Imagem ilustrativa".
+const ILUSTRA = ["photo-1570129477492-45c003edd2be", "photo-1576941089067-2de3c901e126", "photo-1523217582562-09d0def993a6",
+  "photo-1600047509807-ba8f99d2cdde", "photo-1605276374104-dee2a0ed3cd6", "photo-1512917774080-9991f1c4c750"]
+  .map(id => `https://images.unsplash.com/${id}?w=1200&q=70&auto=format&fit=crop`);
+const ilustra = id => ILUSTRA[[...String(id)].reduce((h, c) => h + c.charCodeAt(0), 0) % ILUSTRA.length];
 const params = new URLSearchParams(location.search), corretor = params.get("c");
 const falha = t => { $("msg").textContent = t; $("msg").classList.remove("hide"); $("site").classList.add("hide"); };
 
@@ -238,7 +265,8 @@ function desenhar() {
   $("qtd").textContent = `${disp} disponíve${disp === 1 ? "l" : "is"}`;
   $("grid").innerHTML = itens.length ? itens.map(i => `
     <article class="im" data-id="${i.id}">
-      <div class="capa" style="background-image:url('${i.fotos?.[0] ? foto(i.fotos[0]) : CASA}')">
+      <div class="capa" style="background-image:url('${i.fotos?.[0] ? foto(i.fotos[0]) : ilustra(i.id)}')">
+        ${i.fotos?.length ? "" : '<span class="ilustra">Imagem ilustrativa</span>'}
         <span class="preco">${precoTxt(i)}</span>
         ${SITUACAO[i.status] ? `<span class="selo ${i.status}">${SITUACAO[i.status]}</span>` : i.destaque ? '<span class="selo">Destaque</span>' : ""}
         ${i.mcmv ? '<span class="mcmv">Minha Casa Minha Vida</span>' : ""}
@@ -249,17 +277,29 @@ function desenhar() {
         <div class="specs">${specs(i) || "<span>Veja os detalhes</span>"}</div>
       </div>
     </article>`).join("")
-    : `<div class="vazio" style="grid-column:1/-1">${imoveis.length ? "Nenhum imóvel com esses filtros. Tente ampliar a busca." : "Novos imóveis em breve. Fale comigo pelo WhatsApp!"}</div>`;
+    : imoveis.length ? '<div class="vazio" style="grid-column:1/-1">Nenhum imóvel com esses filtros. Tente ampliar a busca.</div>'
+    : ["Casas com quintal", "Apartamentos", "Minha Casa Minha Vida"].map((t, k) => `
+      <article class="im em-breve" data-breve="${esc(t)}">
+        <div class="capa" style="background-image:url('${ILUSTRA[k]}')"><span class="selo">Em breve</span><span class="ilustra">Imagem ilustrativa</span></div>
+        <div class="corpo"><h3>${t}</h3><div class="local">Novas opções chegando. Quer ser avisado primeiro?</div>
+          <div class="specs"><span>💬 Toque para falar comigo</span></div></div>
+      </article>`).join("");
 }
 for (const id of ["fq", "ftipo", "fpreco", "fquartos", "fmcmv"]) $(id).addEventListener("input", desenhar);
-$("grid").onclick = e => { const a = e.target.closest("[data-id]"); if (a) abrir(imoveis.find(i => i.id === a.dataset.id)); };
+$("grid").onclick = e => {
+  const a = e.target.closest("[data-id]"), b = e.target.closest("[data-breve]");
+  if (a) abrir(imoveis.find(i => i.id === a.dataset.id));
+  const z = b && zapLink(`Olá! Vi seu site e quero ser avisado quando chegarem opções de: ${b.dataset.breve}.`);
+  if (z) open(z, "_blank");
+};
 $("topo").onclick = e => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); };
 
 // Detalhe do imóvel com galeria de fotos.
 let atual = null, n = 0;
 function abrir(i) {
   atual = i; n = 0;
-  const fotos = i.fotos?.length ? i.fotos.map(foto) : [CASA];
+  const fotos = i.fotos?.length ? i.fotos.map(foto) : [ilustra(i.id)];
+  $("gilustra").classList.toggle("hide", !!i.fotos?.length);
   $("gthumbs").innerHTML = fotos.length > 1 ? fotos.map((f, k) => `<img src="${f}" data-k="${k}" alt="">`).join("") : "";
   $("gthumbs").classList.toggle("hide", fotos.length < 2);
   for (const id of ["gant", "gprox", "gcont"]) $(id).classList.toggle("hide", fotos.length < 2);
