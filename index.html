@@ -25,6 +25,16 @@
   .tag.fechado{color:var(--ok);border-color:var(--ok)}.tag.perdido{color:var(--bad);border-color:var(--bad)}
   .mut{color:var(--mut)}.hide{display:none}
   #msg{min-height:20px;margin:8px 0}
+  .kanban{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
+  .col{flex:0 0 230px;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:10px;min-height:120px}
+  .col.over{outline:2px dashed var(--pri)}
+  .col h4{margin:0 0 8px;font-size:13px;display:flex;justify-content:space-between}
+  .kc{border:1px solid var(--bd);border-radius:8px;padding:8px;margin-bottom:8px;background:var(--bg);cursor:grab}
+  .kc select{margin-top:6px;padding:5px 6px;font-size:12px}
+  .kc small{display:block;color:var(--mut)}
+  .hist{border-top:1px solid var(--bd);margin-top:12px;padding-top:10px}
+  .hist li{margin-bottom:6px;font-size:13px}
+  main{max-width:1100px}
 </style>
 </head>
 <body>
@@ -46,6 +56,7 @@
     <div class="bar">
       <input id="busca" placeholder="Buscar por nome, telefone ou interesse">
       <select id="fstatus"><option value="">Todos os status</option></select>
+      <button id="vlista">Lista</button><button id="vfunil">Funil</button>
       <button class="pri" id="novo">+ Novo cliente</button>
     </div>
 
@@ -56,6 +67,10 @@
         <div><label>Telefone / WhatsApp</label><input name="telefone" inputmode="tel"></div>
         <div><label>E-mail</label><input name="email" type="email"></div>
         <div><label>CPF</label><input name="cpf"></div>
+        <div><label>Data de nascimento</label><input name="data_nascimento" type="date"></div>
+        <div><label>Tipo de renda</label><select name="tipo_renda"><option value="">-</option><option value="formal">Formal</option><option value="informal">Informal</option></select></div>
+        <div><label>Renda mensal (R$)</label><input name="renda" type="number" step="50" min="0"></div>
+        <div><label>Possui filhos?</label><select name="tem_filhos"><option value="">-</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
         <div><label>Status</label><select name="status"></select></div>
         <div><label>Orçamento (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
         <div><label>Interesse (tipo, bairro...)</label><input name="interesse"></div>
@@ -63,9 +78,19 @@
       </div>
       <label style="margin-top:10px">Observações</label><textarea name="observacoes" rows="3"></textarea>
       <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button></div>
+      <div class="hist hide" id="hist">
+        <strong>Histórico de contatos</strong>
+        <div class="bar" style="margin:8px 0">
+          <select id="htipo" style="width:auto"><option>Anotação</option><option>WhatsApp</option><option>Ligação</option><option>Visita</option></select>
+          <input id="htexto" placeholder="O que aconteceu? (ex.: não atendeu, retornar sábado)">
+          <button type="button" id="hadd">Adicionar</button>
+        </div>
+        <ul id="hlista" style="padding-left:18px;margin:0"></ul>
+      </div>
     </form>
 
     <div id="lista"></div>
+    <div id="funil" class="kanban hide"></div>
   </section>
 </main>
 
@@ -93,7 +118,15 @@ if (cfg.SUPABASE_URL.startsWith("COLE")) {
 }
 const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
-let clientes = [], editId = null;
+let clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
+const MODELOS = {
+  lead: n => `Olá ${n}, tudo bem? Sou corretor de imóveis e vi que você tem interesse em adquirir um imóvel. Posso te ajudar com a simulação?`,
+  visita: n => `Olá ${n}! Passando para confirmar nossa visita. Posso te passar o endereço e o horário?`,
+  proposta: n => `Olá ${n}, tudo bem? Estou preparando sua proposta. Pode me enviar os documentos que combinamos?`,
+  negociacao: n => `Olá ${n}! Temos novidades sobre a negociação. Podemos conversar hoje?`,
+  fechado: n => `Olá ${n}! Parabéns pela conquista! Qualquer dúvida na documentação, estou à disposição.`,
+  perdido: n => `Olá ${n}, tudo bem? Se mudar de ideia sobre o imóvel, é só me chamar.`
+};
 
 for (const [k, v] of Object.entries(STATUS)) {
   $("fstatus").add(new Option(v, k));
@@ -116,17 +149,41 @@ async function carregar() {
   clientes = data; desenhar();
 }
 
-function desenhar() {
+function filtrados() {
   const q = $("busca").value.toLowerCase(), st = $("fstatus").value;
-  const itens = clientes.filter(c =>
+  return clientes.filter(c =>
     (!st || c.status === st) &&
-    [c.nome, c.telefone, c.interesse, c.email].join(" ").toLowerCase().includes(q));
+    [c.nome, c.telefone, c.interesse, c.email, c.cpf].join(" ").toLowerCase().includes(q));
+}
+const dinheiro = v => "R$ " + Number(v).toLocaleString("pt-BR");
+const opcoes = atual => Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === atual ? "selected" : ""}>${v}</option>`).join("");
+
+function desenhar() {
+  $("lista").classList.toggle("hide", visao !== "lista");
+  $("funil").classList.toggle("hide", visao !== "funil");
+  $("fstatus").classList.toggle("hide", visao === "funil");
+  const itens = filtrados();
+  if (visao === "funil") {
+    $("funil").innerHTML = Object.entries(STATUS).map(([k, v]) => {
+      const col = itens.filter(c => c.status === k);
+      return `<div class="col" data-col="${k}"><h4>${v} <span class="mut">${col.length}</span></h4>` + col.map(c => `
+        <div class="kc" draggable="true" data-id="${c.id}">
+          <strong>${esc(c.nome)}</strong>
+          <small>${esc(c.telefone)}</small>
+          ${c.renda ? `<small>Renda ${dinheiro(c.renda)}</small>` : ""}
+          <select data-mv="${c.id}">${opcoes(c.status)}</select>
+          <div class="bar" style="margin:6px 0 0">${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}<button data-e="${c.id}">Abrir</button></div>
+        </div>`).join("") + "</div>";
+    }).join("");
+    return;
+  }
   $("lista").innerHTML = itens.length ? itens.map(c => `
     <div class="card cli">
       <div>
         <strong>${esc(c.nome)}</strong> <span class="tag ${c.status}">${STATUS[c.status]}</span><br>
         <span class="mut">${esc(c.telefone)} ${c.interesse ? "· " + esc(c.interesse) : ""}
-        ${c.orcamento ? "· R$ " + Number(c.orcamento).toLocaleString("pt-BR") : ""}</span>
+        ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
+        ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span>
       </div>
       <div class="bar" style="margin:0">
         ${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}
@@ -136,13 +193,14 @@ function desenhar() {
     </div>`).join("") : '<p class="mut">Nenhum cliente encontrado.</p>';
 }
 
-$("lista").onclick = async e => {
+$("lista").onclick = $("funil").onclick = async e => {
   const b = e.target.closest("button"); if (!b) return;
   if (b.dataset.e) abrir(clientes.find(c => c.id === b.dataset.e));
   if (b.dataset.w) {
     const c = clientes.find(c => c.id === b.dataset.w);
     let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
-    window.open(`https://wa.me/${n}?text=${encodeURIComponent("Olá " + c.nome.split(" ")[0] + ", tudo bem?")}`, "_blank");
+    window.open(`https://wa.me/${n}?text=${encodeURIComponent(MODELOS[c.status](c.nome.split(" ")[0]))}`, "_blank");
+    registrar(c.id, "WhatsApp", "Abriu conversa (modelo da etapa " + STATUS[c.status] + ")");
   }
   if (b.dataset.d && confirm("Excluir este cliente?")) {
     const { error } = await sb.from("clientes").delete().eq("id", b.dataset.d);
@@ -150,12 +208,49 @@ $("lista").onclick = async e => {
   }
 };
 
+async function mover(id, status) {
+  const { error } = await sb.from("clientes").update({ status, atualizado_em: new Date().toISOString() }).eq("id", id);
+  if (error) return msg("Erro ao mover: " + error.message, true);
+  registrar(id, "Anotação", "Status alterado para " + STATUS[status]);
+  carregar();
+}
+$("funil").onchange = e => { if (e.target.dataset.mv) mover(e.target.dataset.mv, e.target.value); };
+$("funil").ondragstart = e => { const k = e.target.closest(".kc"); if (k) e.dataTransfer.setData("text/plain", k.dataset.id); };
+$("funil").ondragover = e => { const c = e.target.closest(".col"); if (c) { e.preventDefault(); c.classList.add("over"); } };
+$("funil").ondragleave = e => e.target.closest(".col")?.classList.remove("over");
+$("funil").ondrop = e => {
+  const c = e.target.closest(".col"); if (!c) return;
+  e.preventDefault(); c.classList.remove("over");
+  const id = e.dataTransfer.getData("text/plain");
+  if (id && clientes.find(x => x.id === id)?.status !== c.dataset.col) mover(id, c.dataset.col);
+};
+$("vlista").onclick = () => { visao = "lista"; localStorage.setItem("visao", visao); desenhar(); };
+$("vfunil").onclick = () => { visao = "funil"; localStorage.setItem("visao", visao); desenhar(); };
+
+async function registrar(clienteId, tipo, texto) {
+  const { error } = await sb.from("interacoes").insert({ cliente_id: clienteId, tipo, texto });
+  if (error && !/interacoes/.test(error.message)) msg("Erro ao registrar: " + error.message, true);
+}
+async function historico() {
+  const { data, error } = await sb.from("interacoes").select("*").eq("cliente_id", editId).order("criado_em", { ascending: false });
+  $("hlista").innerHTML = error ? `<li class="mut">Histórico indisponível (rode o schema_v3.sql no Supabase).</li>` :
+    (data.length ? data.map(h => `<li><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
+}
+$("hadd").onclick = async () => {
+  const t = $("htexto").value.trim(); if (!t || !editId) return;
+  const { error } = await sb.from("interacoes").insert({ cliente_id: editId, tipo: $("htipo").value, texto: t });
+  if (error) return msg("Erro ao registrar: " + error.message, true);
+  $("htexto").value = ""; historico();
+};
+
 function abrir(c) {
   editId = c?.id ?? null;
   $("ftitulo").textContent = c ? "Editar cliente" : "Novo cliente";
   const f = $("form"); f.reset();
-  if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = c[el.name];
-  f.classList.remove("hide"); f.nome.focus();
+  if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
+  $("hist").classList.toggle("hide", !c);
+  if (c) historico();
+  f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
 }
 $("novo").onclick = () => abrir(null);
 $("cancelar").onclick = () => $("form").classList.add("hide");
@@ -164,6 +259,9 @@ $("form").onsubmit = async e => {
   e.preventDefault();
   const d = Object.fromEntries(new FormData(e.target));
   d.orcamento = d.orcamento === "" ? null : Number(d.orcamento);
+  d.renda = d.renda === "" ? null : Number(d.renda);
+  d.tem_filhos = d.tem_filhos === "" ? null : d.tem_filhos === "sim";
+  for (const k of ["data_nascimento", "tipo_renda"]) if (d[k] === "") d[k] = null;
   d.atualizado_em = new Date().toISOString();
   const { error } = editId
     ? await sb.from("clientes").update(d).eq("id", editId)
