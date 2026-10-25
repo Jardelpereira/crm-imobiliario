@@ -101,6 +101,8 @@
   .slot b{font-size:38px;line-height:1;color:var(--pri);font-weight:400}.slot:hover{border-color:var(--pri);color:var(--tx)}
   .zona{border:2px dashed var(--bd);border-radius:12px;padding:12px;margin:6px 0 4px}
   .zona.over{border-color:var(--pri);background:rgba(20,83,154,.07)}
+  .hitem{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .hitem button{padding:1px 7px;font-size:12px;flex:none;opacity:.55}.hitem:hover button{opacity:1}
   .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;margin-left:4px;text-align:center}
   .ag{display:grid;grid-template-columns:76px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:10px;background:var(--card);margin-bottom:8px}
   .ag.atras{border-left-color:var(--bad)}.ag.feito{opacity:.65;border-left-color:var(--ok)}
@@ -240,6 +242,7 @@
           <button type="button" class="pri" id="hadd">Registrar</button>
         </div>
         <ul id="hlista" style="padding-left:18px;margin:0"></ul>
+        <div class="bar" style="margin:10px 0 0"><button type="button" class="bad" id="hlimpaetapas">Apagar registros de mudança de etapa</button></div>
       </div>
       <div class="hist hide" id="docs">
         <strong>Documentos</strong> <span id="docresumo" class="mut"></span>
@@ -646,7 +649,9 @@ async function registrar(clienteId, tipo, texto) {
 async function historico() {
   const { data, error } = await sb.from("interacoes").select("*").eq("cliente_id", editId).order("criado_em", { ascending: false });
   $("hlista").innerHTML = error ? `<li class="mut">Histórico indisponível (rode o schema_v3.sql no Supabase).</li>` :
-    (data.length ? data.map(h => `<li><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
+    (data.length ? data.map(h => `<li class="hitem"><span><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</span>
+      <button type="button" class="bad" data-hdel="${h.id}" title="Excluir este registro">✕</button></li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
+  $("hlimpaetapas").classList.toggle("hide", !(data || []).some(h => h.tipo === "Etapa"));
   const c = clientes.find(x => x.id === editId);
   if (!c) return;
   esteira(c, data || []);
@@ -654,6 +659,20 @@ async function historico() {
   $("resumo").textContent = `· na base há ${diasDesde(c.criado_em)} dias · ` +
     (r ? `${r.n} contato${r.n > 1 ? "s" : ""}, último ${haDias(diasDesde(r.ultimo))}` : "nenhum contato ainda");
 }
+// Excluir registros do histórico (um por um, ou todos os de mudança de etapa).
+$("hlista").onclick = async e => {
+  const b = e.target.closest("[data-hdel]");
+  if (!b || !confirm("Excluir este registro do histórico?")) return;
+  const { error } = await sb.from("interacoes").delete().eq("id", b.dataset.hdel);
+  if (error) return msg("Erro ao excluir: " + error.message, true);
+  msg("Registro excluído."); await carregar(); historico();
+};
+$("hlimpaetapas").onclick = async () => {
+  if (!editId || !confirm("Apagar todos os registros de mudança de etapa deste cliente? Os contatos e anotações continuam. As datas da esteira deixam de aparecer.")) return;
+  const { error } = await sb.from("interacoes").delete().eq("cliente_id", editId).eq("tipo", "Etapa");
+  if (error) return msg("Erro ao apagar: " + error.message, true);
+  msg("Registros de etapa apagados."); await carregar(); historico();
+};
 $("hadd").onclick = async () => {
   const tipo = $("htipo").value, t = $("htexto").value.trim() || (tipo === "Anotação" ? "" : tipo);
   if (!t || !editId) return;
