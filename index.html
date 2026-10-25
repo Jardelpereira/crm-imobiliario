@@ -55,6 +55,28 @@
   .etapa{border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:8px;padding:10px 12px;margin-bottom:12px}
   .etapa.perdido{border-left-color:var(--bad)}.etapa.fechado{border-left-color:var(--ok)}
   .etapa p{margin:4px 0 8px}
+  .alerta{color:var(--bad)}
+  .doc{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}
+  .doc .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx);margin:0;cursor:pointer}
+  .doc .chk input{width:18px;height:18px}
+  .doc .up{display:inline-block;margin:0;font-size:12px;color:var(--pri);cursor:pointer;border:1px solid var(--bd);border-radius:6px;padding:3px 8px}
+  .doc button{padding:1px 7px;font-size:12px}
+  .rel table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:14px}
+  .rel th,.rel td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--bd);vertical-align:top}
+  .rel th{color:var(--mut);font-weight:500;width:34%}
+  .rel h4{margin:16px 0 6px}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0 4px}
+  .kpis div{border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
+  .kpis b{display:block;font-size:20px}
+  .kpis span{font-size:12px;color:var(--mut)}
+  @media print{
+    :root{--bg:#fff;--card:#fff;--tx:#000;--mut:#555;--bd:#ccc}
+    body{background:#fff}
+    body *{visibility:hidden}
+    #relatorio,#relatorio *{visibility:visible}
+    #relatorio{position:absolute;left:0;top:0;width:100%;border:none}
+    .noprint{display:none!important}
+  }
 </style>
 </head>
 <body>
@@ -76,6 +98,7 @@
     <div class="bar">
       <input id="busca" placeholder="Buscar por nome, telefone ou interesse">
       <select id="fstatus"><option value="">Todas as etapas</option></select>
+      <select id="ordem"><option value="">Mais recentes</option><option value="contato">Sem contato há mais tempo</option></select>
       <button id="vlista">Lista</button><button id="vfunil">Funil</button>
       <button id="bfotos">📷 Fotos das fichas</button>
       <button id="bleitor">🤖 Ler fichas com IA</button>
@@ -111,15 +134,23 @@
       </div>
       <label style="margin-top:10px">Observações</label><textarea name="observacoes" rows="3"></textarea>
       <label style="margin-top:10px">Foto da ficha deste cliente <span id="ftemfoto"></span></label><input id="ffoto" type="file" accept="image/*">
-      <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button></div>
+      <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button><button type="button" id="brel" class="hide">📄 Relatório</button></div>
       <div class="hist hide" id="hist">
-        <strong>Histórico de contatos</strong>
+        <strong>Registrar contato</strong> <span id="resumo" class="mut"></span>
         <div class="bar" style="margin:8px 0">
-          <select id="htipo" style="width:auto"><option>Anotação</option><option>WhatsApp</option><option>Ligação</option><option>Visita</option></select>
+          <select id="htipo" style="width:auto"><option>WhatsApp</option><option>Ligação</option><option>Visita</option><option>E-mail</option><option>Presencial</option><option>Anotação</option></select>
           <input id="htexto" placeholder="O que aconteceu? (ex.: não atendeu, retornar sábado)">
-          <button type="button" id="hadd">Adicionar</button>
+          <button type="button" class="pri" id="hadd">Registrar</button>
         </div>
         <ul id="hlista" style="padding-left:18px;margin:0"></ul>
+      </div>
+      <div class="hist hide" id="docs">
+        <strong>Documentos</strong> <span id="docresumo" class="mut"></span>
+        <div id="doclista" style="margin-top:6px"></div>
+        <div class="bar" style="margin:8px 0 0">
+          <input id="docnovo" placeholder="Outro documento (ex.: certidão de dependente)">
+          <button type="button" id="docadd">Adicionar</button>
+        </div>
       </div>
     </form>
 
@@ -131,6 +162,8 @@
       <div style="overflow-x:auto"><table id="ltab" style="border-collapse:collapse;width:100%;font-size:13px"></table></div>
       <div class="bar" style="margin-top:10px"><button class="pri hide" id="lsalvar">Salvar clientes</button><button id="lfechar">Fechar</button></div>
     </section>
+    <section id="relatorio" class="card rel hide"></section>
+
     <div id="lista"></div>
     <div id="funil" class="kanban hide"></div>
   </section>
@@ -142,8 +175,13 @@
 const STATUS = {
   lead: "Primeiro contato", visita: "Visita agendada", visita_feita: "Visita realizada",
   proposta: "Simulação / proposta", documentacao: "Documentação", negociacao: "Em financiamento",
-  aprovado: "Crédito aprovado", contrato: "Contrato assinado", fechado: "Chaves entregues", perdido: "Perdido"
+  vistoria: "Vistoria do imóvel", aprovado: "Crédito aprovado", subsidio: "Aguardando subsídio / FGTS",
+  contrato: "Contrato assinado", fechado: "Chaves entregues", perdido: "Perdido"
 };
+// Tipos que contam como contato com o cliente ("Anotação", "Etapa" e "Documento" não contam).
+const CONTATOS = ["WhatsApp", "Ligação", "Visita", "E-mail", "Presencial"];
+const DOCS = ["RG ou CNH", "CPF", "Comprovante de renda", "Comprovante de residência", "Certidão de nascimento ou casamento",
+  "Carteira de trabalho", "Extrato do FGTS", "Declaração de IR"];
 const FLUXO = Object.keys(STATUS).filter(k => k !== "perdido");
 const DICAS = {
   lead: "Faça o primeiro contato: entenda renda, se tem filhos, FGTS e a região que procura. Ofereça uma visita.",
@@ -151,8 +189,10 @@ const DICAS = {
   visita_feita: "Pergunte o que achou do imóvel e se quer seguir para a simulação.",
   proposta: "Faça a simulação (renda, FGTS, subsídio do Minha Casa Minha Vida) e apresente a proposta.",
   documentacao: "Peça: RG e CPF, comprovante de renda, comprovante de residência, certidão de estado civil, extrato do FGTS e declaração de IR (se tiver).",
-  negociacao: "Processo no banco: análise de crédito e avaliação do imóvel. Acompanhe e mantenha o cliente informado.",
-  aprovado: "Crédito aprovado! Agende a assinatura e confira os valores de entrada, ITBI e cartório.",
+  negociacao: "Processo no banco: análise de crédito. Acompanhe e mantenha o cliente informado.",
+  vistoria: "O engenheiro do banco vai avaliar o imóvel. Combine o acesso e confira se a documentação do imóvel está em dia.",
+  aprovado: "Crédito aprovado! Confira os valores de entrada, ITBI e cartório com o cliente.",
+  subsidio: "Aguardando liberação do subsídio do Minha Casa Minha Vida e/ou do FGTS. Acompanhe e agende a assinatura.",
   contrato: "Contrato assinado. Acompanhe o registro em cartório e a liberação do imóvel.",
   fechado: "Venda concluída. Entregue as chaves e peça indicações de amigos e familiares.",
   perdido: "Cliente marcado como perdido. Registre o motivo no histórico; dá para reativar quando quiser."
@@ -179,6 +219,16 @@ if (cfg.SUPABASE_URL.startsWith("COLE")) {
 const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
 let usuario = null, clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
+let resumo = {}; // por cliente: { n: nº de contatos, ultimo: data, tipo: tipo do último }
+const diasDesde = d => Math.floor((Date.now() - new Date(d)) / 864e5);
+const haDias = n => n === 0 ? "hoje" : n === 1 ? "ontem" : `há ${n} dias`;
+const dataBR = (d, hora) => d ? new Date(d).toLocaleString("pt-BR", hora ? { dateStyle: "short", timeStyle: "short" } : { dateStyle: "short" }) : "";
+function ultimoContato(c) {
+  const r = resumo[c.id];
+  if (!r) return `<span class="${["fechado", "perdido"].includes(c.status) ? "mut" : "alerta"}">Nunca contatado</span>`;
+  const n = diasDesde(r.ultimo);
+  return `<span class="${n > 7 && !["fechado", "perdido"].includes(c.status) ? "alerta" : "mut"}">Último contato ${haDias(n)} (${esc(r.tipo)}) · ${r.n} contato${r.n > 1 ? "s" : ""}</span>`;
+}
 const MODELOS = {
   lead: n => `Olá ${n}, tudo bem? Sou corretor de imóveis e vi que você tem interesse em adquirir um imóvel. Posso te ajudar com a simulação?`,
   visita: n => `Olá ${n}! Passando para confirmar nossa visita. Posso te passar o endereço e o horário?`,
@@ -186,7 +236,9 @@ const MODELOS = {
   proposta: n => `Olá ${n}, tudo bem? Sua simulação está pronta. Posso te explicar os valores?`,
   documentacao: n => `Olá ${n}! Para darmos entrada no financiamento, preciso de: RG e CPF, comprovante de renda, comprovante de residência, certidão de estado civil e extrato do FGTS. Pode me enviar por aqui?`,
   negociacao: n => `Olá ${n}! Seu processo de financiamento está em análise no banco. Assim que tiver retorno, te aviso.`,
-  aprovado: n => `Olá ${n}, ótima notícia: seu crédito foi aprovado! Vamos agendar a assinatura do contrato?`,
+  vistoria: n => `Olá ${n}! O banco vai fazer a vistoria do imóvel. Assim que tiver a data, te aviso.`,
+  aprovado: n => `Olá ${n}, ótima notícia: seu crédito foi aprovado! Vamos conversar sobre os próximos passos?`,
+  subsidio: n => `Olá ${n}! Estamos aguardando a liberação do subsídio/FGTS. Assim que sair, agendamos a assinatura.`,
   contrato: n => `Olá ${n}! Contrato assinado. Agora acompanho o registro em cartório e te aviso de cada passo.`,
   fechado: n => `Olá ${n}! Parabéns pela conquista! Qualquer dúvida na documentação, estou à disposição.`,
   perdido: n => `Olá ${n}, tudo bem? Se mudar de ideia sobre o imóvel, é só me chamar.`
@@ -211,14 +263,26 @@ async function sessao() {
 async function carregar() {
   const { data, error } = await sb.from("clientes").select("*").order("atualizado_em", { ascending: false });
   if (error) return msg("Erro ao carregar: " + error.message, true);
-  clientes = data; desenhar();
+  clientes = data;
+  const { data: ints } = await sb.from("interacoes").select("cliente_id,tipo,criado_em").in("tipo", CONTATOS).order("criado_em", { ascending: false });
+  resumo = {};
+  for (const h of ints || []) {
+    const r = resumo[h.cliente_id] ||= { n: 0, ultimo: h.criado_em, tipo: h.tipo };
+    r.n++;
+  }
+  desenhar();
 }
 
 function filtrados() {
   const q = $("busca").value.toLowerCase(), st = $("fstatus").value;
-  return clientes.filter(c =>
+  const itens = clientes.filter(c =>
     (!st || c.status === st) &&
     [c.nome, c.telefone, c.interesse, c.email, c.cpf].join(" ").toLowerCase().includes(q));
+  if ($("ordem").value === "contato") {
+    const t = c => resumo[c.id] ? new Date(resumo[c.id].ultimo).getTime() : 0; // nunca contatado vem primeiro
+    itens.sort((a, b) => t(a) - t(b));
+  }
+  return itens;
 }
 const barra = st => FLUXO.map((k, n) => `<i class="${st !== "perdido" && n < FLUXO.indexOf(st) ? "ok" : k === st ? "at" : ""}"></i>`).join("");
 const dinheiro = v => "R$ " + Number(v).toLocaleString("pt-BR");
@@ -238,6 +302,7 @@ function desenhar() {
           <div class="mini ${c.status}">${barra(c.status)}</div>
           <small>${esc(c.telefone)}</small>
           ${c.renda ? `<small>Renda ${dinheiro(c.renda)}</small>` : ""}
+          <small>${ultimoContato(c)}</small>
           <select data-mv="${c.id}">${opcoes(c.status)}</select>
           <div class="bar" style="margin:6px 0 0">${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}<button data-e="${c.id}">Abrir</button></div>
         </div>`).join("") + "</div>";
@@ -251,11 +316,13 @@ function desenhar() {
         <div class="mini ${c.status}" data-e="${c.id}" title="Abrir esteira">${barra(c.status)}</div>
         <span class="mut">${esc(c.telefone)} ${c.interesse ? "· " + esc(c.interesse) : ""}
         ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
-        ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span>
+        ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span><br>
+        <small>${ultimoContato(c)}</small>
       </div>
       <div class="bar" style="margin:0">
         ${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}
         ${c.ficha_url ? `<button data-f="${c.id}">Ficha</button>` : ""}
+        <button data-r="${c.id}">Relatório</button>
         <button class="pri" data-e="${c.id}">Abrir</button>
         <button class="bad" data-d="${c.id}">Excluir</button>
       </div>
@@ -265,6 +332,7 @@ function desenhar() {
 $("lista").onclick = $("funil").onclick = async e => {
   const b = e.target.closest("button, .mini[data-e]"); if (!b) return;
   if (b.dataset.e) abrir(clientes.find(c => c.id === b.dataset.e));
+  if (b.dataset.r) relatorio(clientes.find(c => c.id === b.dataset.r));
   if (b.dataset.f) {
     const w = window.open("", "_blank"); // abre já, para o navegador não bloquear o pop-up
     const { data, error } = await sb.storage.from("fichas").createSignedUrl(clientes.find(c => c.id === b.dataset.f).ficha_url, 3600);
@@ -274,7 +342,8 @@ $("lista").onclick = $("funil").onclick = async e => {
     const c = clientes.find(c => c.id === b.dataset.w);
     let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
     window.open(`https://wa.me/${n}?text=${encodeURIComponent(MODELOS[c.status](c.nome.split(" ")[0]))}`, "_blank");
-    registrar(c.id, "WhatsApp", "Abriu conversa (modelo da etapa " + STATUS[c.status] + ")");
+    await registrar(c.id, "WhatsApp", "Abriu conversa (modelo da etapa " + STATUS[c.status] + ")");
+    carregar();
   }
   if (b.dataset.d && confirm("Excluir este cliente?")) {
     const { error } = await sb.from("clientes").delete().eq("id", b.dataset.d);
@@ -282,7 +351,7 @@ $("lista").onclick = $("funil").onclick = async e => {
   }
 };
 
-const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v4.sql no SQL Editor do Supabase." : m;
+const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v5.sql no SQL Editor do Supabase." : m;
 async function mover(id, status) {
   const { error } = await sb.from("clientes").update({ status, atualizado_em: new Date().toISOString() }).eq("id", id);
   if (error) return msg("Erro ao mover: " + erroEtapa(error.message), true);
@@ -350,14 +419,143 @@ async function historico() {
   $("hlista").innerHTML = error ? `<li class="mut">Histórico indisponível (rode o schema_v3.sql no Supabase).</li>` :
     (data.length ? data.map(h => `<li><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
   const c = clientes.find(x => x.id === editId);
-  if (c) esteira(c, data || []);
+  if (!c) return;
+  esteira(c, data || []);
+  const r = resumo[c.id];
+  $("resumo").textContent = `· na base há ${diasDesde(c.criado_em)} dias · ` +
+    (r ? `${r.n} contato${r.n > 1 ? "s" : ""}, último ${haDias(diasDesde(r.ultimo))}` : "nenhum contato ainda");
 }
 $("hadd").onclick = async () => {
-  const t = $("htexto").value.trim(); if (!t || !editId) return;
-  const { error } = await sb.from("interacoes").insert({ cliente_id: editId, tipo: $("htipo").value, texto: t });
+  const tipo = $("htipo").value, t = $("htexto").value.trim() || (tipo === "Anotação" ? "" : tipo);
+  if (!t || !editId) return;
+  const { error } = await sb.from("interacoes").insert({ cliente_id: editId, tipo, texto: t });
   if (error) return msg("Erro ao registrar: " + error.message, true);
-  $("htexto").value = ""; historico();
+  $("htexto").value = ""; msg("Contato registrado.");
+  await carregar(); historico();
 };
+
+// Documentos do cliente: checklist "entregue" + arquivo (PDF ou foto) no bucket privado "fichas".
+async function enviarArquivo(file, path) {
+  const imagem = file.type.startsWith("image/");
+  const { error } = await sb.storage.from("fichas").upload(path, imagem ? await reduzir(file, 2000) : file,
+    { contentType: imagem ? "image/jpeg" : file.type || "application/octet-stream" });
+  if (error) throw error;
+}
+async function abrirArquivo(path) {
+  const w = window.open("", "_blank");
+  const { data, error } = await sb.storage.from("fichas").createSignedUrl(path, 3600);
+  error ? (w.close(), msg("Erro ao abrir o arquivo: " + error.message, true)) : (w.location = data.signedUrl);
+}
+let docs = [];
+async function documentos() {
+  const { data, error } = await sb.from("documentos").select("*").eq("cliente_id", editId);
+  if (error) { $("docresumo").textContent = ""; return $("doclista").innerHTML = '<p class="mut">Documentos indisponíveis: rode o schema_v5.sql no SQL Editor do Supabase.</p>'; }
+  docs = data;
+  const tipos = [...DOCS, ...data.map(d => d.tipo).filter(t => !DOCS.includes(t))];
+  $("docresumo").textContent = `· ${data.filter(d => d.entregue).length} de ${tipos.length} entregues`;
+  $("doclista").innerHTML = tipos.map(t => { const d = data.find(x => x.tipo === t) || {}; return `
+    <div class="doc">
+      <label class="chk"><input type="checkbox" data-ok="${esc(t)}" ${d.entregue ? "checked" : ""}> ${esc(t)}</label>
+      <span>
+        ${d.arquivo ? `<a href="#" data-ver="${esc(d.arquivo)}">${esc(d.nome_arquivo || "arquivo")}</a> <button type="button" class="bad" data-rm="${esc(t)}" title="Remover arquivo">×</button>` : ""}
+        <label class="up">${d.arquivo ? "Trocar" : "Enviar arquivo"}<input type="file" accept="image/*,application/pdf" data-up="${esc(t)}" hidden></label>
+      </span>
+    </div>`; }).join("");
+}
+async function salvarDoc(tipo, campos) {
+  const { error } = await sb.from("documentos").upsert({ cliente_id: editId, tipo, ...campos, atualizado_em: new Date().toISOString() }, { onConflict: "cliente_id,tipo" });
+  if (error) msg("Erro no documento: " + error.message, true);
+  await documentos();
+}
+$("doclista").onchange = async e => {
+  const el = e.target;
+  if (el.dataset.ok != null) {
+    await salvarDoc(el.dataset.ok, { entregue: el.checked });
+    registrar(editId, "Documento", `${el.dataset.ok}: ${el.checked ? "entregue" : "pendente"}`);
+  }
+  if (el.dataset.up != null && el.files[0]) {
+    const f = el.files[0], tipo = el.dataset.up, antigo = docs.find(d => d.tipo === tipo)?.arquivo;
+    const { data: { user } } = await sb.auth.getUser();
+    const ext = f.type.startsWith("image/") ? "jpg" : (f.name.split(".").pop() || "pdf").toLowerCase();
+    const path = `${user.id}/docs/${editId}/${Date.now()}.${ext}`;
+    msg("Enviando " + tipo + "...");
+    try { await enviarArquivo(f, path); } catch (err) { return msg("Erro ao enviar o arquivo: " + err.message, true); }
+    if (antigo) await sb.storage.from("fichas").remove([antigo]);
+    await salvarDoc(tipo, { arquivo: path, nome_arquivo: f.name, entregue: true });
+    registrar(editId, "Documento", `${tipo}: arquivo enviado`);
+    msg(tipo + " enviado.");
+  }
+};
+$("doclista").onclick = async e => {
+  const ver = e.target.closest("[data-ver]"), rm = e.target.closest("[data-rm]");
+  if (ver) { e.preventDefault(); abrirArquivo(ver.dataset.ver); }
+  if (rm && confirm("Remover o arquivo deste documento?")) {
+    const d = docs.find(x => x.tipo === rm.dataset.rm);
+    await sb.storage.from("fichas").remove([d.arquivo]);
+    await salvarDoc(d.tipo, { arquivo: null, nome_arquivo: null });
+  }
+};
+$("docadd").onclick = async () => {
+  const t = $("docnovo").value.trim(); if (!t || !editId) return;
+  $("docnovo").value = ""; await salvarDoc(t, { entregue: false });
+};
+
+// Relatório do cliente: todos os dados, tempo em cada etapa, documentos e contatos. Pode imprimir/salvar em PDF.
+async function relatorio(c) {
+  const [{ data: hist }, { data: dcs }] = await Promise.all([
+    sb.from("interacoes").select("*").eq("cliente_id", c.id).order("criado_em", { ascending: true }),
+    sb.from("documentos").select("*").eq("cliente_id", c.id)
+  ]);
+  const h = hist || [], contatos = h.filter(x => CONTATOS.includes(x.tipo));
+  // Linha do tempo das etapas: entrada em cada uma e quanto tempo ficou.
+  const etapas = h.filter(x => x.tipo === "Etapa").map(x => ({ k: Object.keys(STATUS).find(k => STATUS[k] === x.texto), t: x.criado_em })).filter(x => x.k);
+  if (!etapas.length || etapas[0].k !== "lead") etapas.unshift({ k: "lead", t: c.criado_em });
+  const dur = (a, b) => { const n = Math.floor((new Date(b) - new Date(a)) / 864e5); return n === 0 ? "menos de 1 dia" : n + (n > 1 ? " dias" : " dia"); };
+  const idade = c.data_nascimento ? Math.floor((Date.now() - new Date(c.data_nascimento + "T12:00")) / 31557600000) : null;
+  const tipos = [...DOCS, ...(dcs || []).map(d => d.tipo).filter(t => !DOCS.includes(t))];
+  const linha = (rot, val) => val != null && val !== "" ? `<tr><th>${rot}</th><td>${val}</td></tr>` : "";
+  const ult = contatos.at(-1);
+  $("relatorio").innerHTML = `
+    <div class="bar noprint" style="justify-content:flex-end">
+      <button type="button" onclick="print()">🖨️ Imprimir / salvar PDF</button>
+      <button type="button" data-abrir="${c.id}">Abrir cliente</button>
+      <button type="button" onclick="this.closest('section').classList.add('hide')">Fechar</button>
+    </div>
+    <h2 style="margin:0">${esc(c.nome)}</h2>
+    <div class="mut">Relatório gerado em ${dataBR(new Date(), true)} · Etapa atual: <strong>${STATUS[c.status]}</strong></div>
+    <div class="kpis">
+      <div><b>${diasDesde(c.criado_em)}</b><span>dias na base</span></div>
+      <div><b>${diasDesde(etapas.at(-1).t)}</b><span>dias na etapa atual</span></div>
+      <div><b>${contatos.length}</b><span>contatos feitos</span></div>
+      <div><b>${ult ? haDias(diasDesde(ult.criado_em)) : "—"}</b><span>último contato</span></div>
+      <div><b>${(dcs || []).filter(d => d.entregue).length}/${tipos.length}</b><span>documentos entregues</span></div>
+    </div>
+    <h4>Dados do cliente</h4>
+    <table>
+      ${linha("Telefone / WhatsApp", esc(c.telefone))}${linha("E-mail", esc(c.email))}${linha("CPF", esc(c.cpf))}
+      ${linha("Data de nascimento", c.data_nascimento ? dataBR(c.data_nascimento + "T12:00") + ` (${idade} anos)` : "")}
+      ${linha("Tipo de renda", esc(c.tipo_renda))}${linha("Renda mensal", c.renda ? dinheiro(c.renda) : "")}
+      ${linha("Possui filhos", c.tem_filhos == null ? "" : c.tem_filhos ? "Sim" : "Não")}
+      ${linha("Orçamento", c.orcamento ? dinheiro(c.orcamento) : "")}${linha("Interesse", esc(c.interesse))}
+      ${linha("Origem", esc(c.origem))}${linha("Observações", esc(c.observacoes).replace(/\n/g, "<br>"))}
+      ${linha("Cadastrado em", dataBR(c.criado_em, true))}
+    </table>
+    <h4>Esteira (tempo em cada etapa)</h4>
+    <table><tr><th>Etapa</th><th>Entrou em</th><th>Tempo</th></tr>
+      ${etapas.map((e, i) => `<tr><td>${STATUS[e.k]}</td><td>${dataBR(e.t, true)}</td><td>${dur(e.t, etapas[i + 1]?.t || new Date())}${i === etapas.length - 1 ? " (atual)" : ""}</td></tr>`).join("")}
+    </table>
+    <h4>Documentos</h4>
+    <table>${tipos.map(t => { const d = (dcs || []).find(x => x.tipo === t); return `<tr><td>${d?.entregue ? "✅" : "⬜"} ${esc(t)}</td><td>${d?.entregue ? "Entregue" : "Pendente"}${d?.arquivo ? " · arquivo anexado" : ""}</td></tr>`; }).join("")}</table>
+    <h4>Histórico completo (${h.length} registros)</h4>
+    <table><tr><th>Data</th><th>Tipo</th><th>O que aconteceu</th></tr>
+      ${h.length ? [...h].reverse().map(x => `<tr><td>${dataBR(x.criado_em, true)}</td><td>${esc(x.tipo)}</td><td>${esc(x.texto)}</td></tr>`).join("") : '<tr><td colspan="3" class="mut">Nenhum registro.</td></tr>'}
+    </table>`;
+  $("form").classList.add("hide"); $("relatorio").classList.remove("hide");
+  $("relatorio").scrollIntoView({ behavior: "smooth" });
+}
+$("relatorio").onclick = e => { const b = e.target.closest("[data-abrir]"); if (b) { $("relatorio").classList.add("hide"); abrir(clientes.find(c => c.id === b.dataset.abrir)); } };
+$("brel").onclick = () => relatorio(clientes.find(c => c.id === editId));
+$("ordem").onchange = desenhar;
 
 function abrir(c) {
   editId = c?.id ?? null;
@@ -365,9 +563,9 @@ function abrir(c) {
   const f = $("form"); f.reset();
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
-  $("hist").classList.toggle("hide", !c);
-  $("esteira").classList.add("hide");
-  if (c) historico();
+  for (const id of ["hist", "docs", "brel"]) $(id).classList.toggle("hide", !c);
+  $("esteira").classList.add("hide"); $("resumo").textContent = "";
+  if (c) { historico(); documentos(); }
   f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
 }
 $("novo").onclick = () => abrir(null);
