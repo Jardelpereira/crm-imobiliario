@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRM Imobiliário</title>
 <style>
-  :root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#1f5eff;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828}
-  @media (prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2029;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140}}
+  :root{--bg:#f4f6f9;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#14539a;--acc:#f2a516;--navy:#0b2545;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828}
+  @media (prefers-color-scheme:dark){:root{--bg:#10141b;--card:#1a1f28;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140;--pri:#3d7fd6}}
   *{box-sizing:border-box}
   body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
   header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--bd)}
@@ -25,7 +25,7 @@
   .mini{display:flex;gap:3px;margin:6px 0 4px;max-width:320px;cursor:pointer}.mini i{flex:1;height:6px;border-radius:3px;background:var(--bd)}
   .mini i.ok{background:var(--ok)}.mini i.at{background:var(--pri)}.mini.perdido i{background:var(--bad);opacity:.35}
   .tag.fechado{color:var(--ok);border-color:var(--ok)}.tag.perdido{color:var(--bad);border-color:var(--bad)}
-  .mut{color:var(--mut)}.hide{display:none}
+  .mut{color:var(--mut)}.hide{display:none!important}
   #msg{min-height:20px;margin:8px 0}
   a{color:var(--pri)}@media (prefers-color-scheme:dark){a{color:#8fb0ff}}
   .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
@@ -56,6 +56,54 @@
   .etapa.perdido{border-left-color:var(--bad)}.etapa.fechado{border-left-color:var(--ok)}
   .etapa p{margin:4px 0 8px}
   .alerta{color:var(--bad)}
+  header.topbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--navy);color:#fff;border:none}
+  .marca{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+  .marca svg{color:var(--acc);flex:none}.marca b{display:block;font-size:16px;line-height:1.2}.marca small{display:block;font-size:11px;opacity:.7}
+  #menu{display:flex;gap:2px;flex-wrap:wrap;order:3;width:100%}
+  @media (min-width:900px){#menu{order:0;width:auto}}
+  #menu button,#menu a{background:transparent;border:none;color:#cfd8e6;padding:7px 12px;border-radius:8px;font-size:14px;text-decoration:none}
+  #menu button.on{background:rgba(255,255,255,.14);color:#fff}
+  #menu a{color:var(--acc)}
+  .conta{display:flex;align-items:center;gap:8px;font-size:13px}.conta .mut{color:#9fb0c8}
+  .conta button{background:transparent;color:#fff;border-color:rgba(255,255,255,.3);padding:6px 12px}
+  @media (max-width:600px){#quem{display:none}}
+  .hero{border-radius:14px;min-height:250px;padding:28px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:14px;
+    background:linear-gradient(90deg,rgba(11,37,69,.94),rgba(11,37,69,.3)),url("https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .hero h1{margin:0 0 6px;font-size:30px}.hero p{margin:0 0 16px;opacity:.92;max-width:540px}.hero .bar{margin:0}
+  .btn-acc{background:var(--acc);border-color:var(--acc);color:#1b1300;font-weight:600}
+  .btn-ghost{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);color:#fff}
+  .kpis div.click{cursor:pointer;background:var(--card)}.kpis div.click:hover{border-color:var(--pri)}
+  .duas{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:800px){.duas{grid-template-columns:1fr}}
+  .secao-tit{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}.secao-tit h2,.secao-tit h3{margin:0}
+  .lista-mini .item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer}
+  .grid-im{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .grid-im.mini{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .im{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:box-shadow .15s}
+  .im:hover{box-shadow:0 6px 20px rgba(11,37,69,.15)}
+  .im .capa{position:relative;aspect-ratio:4/3;background:#dbe4f0 center/cover}
+  .im .preco{position:absolute;left:10px;bottom:10px;background:rgba(11,37,69,.9);color:#fff;font-weight:700;padding:4px 10px;border-radius:8px}
+  .im .selo{position:absolute;right:10px;top:10px;background:var(--acc);color:#1b1300;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px}
+  .im .selo.vendido{background:var(--bad);color:#fff}.im .selo.reservado{background:#7c3aed;color:#fff}
+  .im .corpo{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .im h4{margin:0;font-size:16px}
+  .specs{display:flex;gap:12px;font-size:13px;color:var(--mut);flex-wrap:wrap}
+  .im .bar{margin:auto 0 0;padding-top:4px}
+  .fotos-ed{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:6px 0 10px}
+  .fotos-ed figure{margin:0}.fotos-ed img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
+  .fotos-ed figcaption{display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:4px;font-size:12px}
+  .fotos-ed button{padding:2px 6px;font-size:12px}
+  .chk2{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx);margin:0;cursor:pointer}.chk2 input{width:18px;height:18px}
+  .btn-up{display:inline-block;margin:0;cursor:pointer;border:1px dashed var(--pri);color:var(--pri);border-radius:8px;padding:9px 14px;font-size:14px}
+  a.btn{display:inline-block;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;text-decoration:none;color:var(--tx)}
+  dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);max-width:480px;width:calc(100% - 32px);padding:18px}
+  dialog::backdrop{background:rgba(0,0,0,.55)}
+  .login{display:grid;grid-template-columns:1.25fr 1fr;min-height:calc(100vh - 120px);border-radius:14px;overflow:hidden;border:1px solid var(--bd);margin-top:8px;background:var(--card)}
+  .login-hero{color:#fff;display:flex;align-items:flex-end;padding:32px;
+    background:linear-gradient(0deg,rgba(11,37,69,.92),rgba(11,37,69,.15)),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .login-hero h1{font-size:30px;margin:0 0 8px;max-width:520px}.login-hero p{margin:0;opacity:.9;max-width:480px}
+  .login-card{display:flex;flex-direction:column;justify-content:center;padding:32px;max-width:420px;width:100%;margin:0 auto}
+  @media (max-width:760px){.login{grid-template-columns:1fr;min-height:0}.login-hero{min-height:230px}}
   .cab{display:flex;align-items:center;gap:14px;margin-bottom:14px}
   .cab h2{margin:0;font-size:22px}
   .avatar{flex:0 0 72px;width:72px;height:72px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;overflow:hidden;cursor:pointer;position:relative;margin:0}
@@ -86,17 +134,33 @@
 </style>
 </head>
 <body>
-<header><strong>CRM Imobiliário</strong><span><span id="quem" class="mut"></span> <button id="sair" class="hide">Sair</button></span></header>
+<header class="topbar">
+  <a class="marca" href="#" id="marca">
+    <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>
+    <span><b id="marcanome">CRM Imobiliário</b><small id="marcasub">Clientes e imóveis</small></span>
+  </a>
+  <nav id="menu" class="hide">
+    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="portfolio">Portfólio</button><button data-nav="perfil">Meu perfil</button>
+    <a id="lvitrine" href="vitrine.html" target="_blank" rel="noopener">Ver meu site ↗</a>
+  </nav>
+  <span class="conta"><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
+</header>
 <main>
   <div id="msg" class="mut"></div>
 
-  <section id="login" class="card" style="max-width:380px;margin:40px auto">
-    <h2 style="margin-top:0">Entrar</h2>
-    <label>E-mail</label><input id="lemail" type="email" autocomplete="username">
-    <label style="margin-top:10px">Senha</label><input id="lsenha" type="password" autocomplete="current-password">
-    <div class="bar" style="margin-top:12px">
-      <button class="pri" id="entrar">Entrar</button>
-      <button id="criar">Criar conta</button>
+  <section id="login" class="login">
+    <div class="login-hero"><div>
+      <h1>Do primeiro contato à entrega das chaves.</h1>
+      <p>Clientes, funil de vendas, documentos e o seu portfólio de imóveis em um só lugar.</p>
+    </div></div>
+    <div class="login-card">
+      <h2 style="margin-top:0">Entrar</h2>
+      <label>E-mail</label><input id="lemail" type="email" autocomplete="username">
+      <label style="margin-top:10px">Senha</label><input id="lsenha" type="password" autocomplete="current-password">
+      <div class="bar" style="margin-top:12px">
+        <button class="pri" id="entrar">Entrar</button>
+        <button id="criar">Criar conta</button>
+      </div>
     </div>
   </section>
 
@@ -168,10 +232,95 @@
 
     <section id="relatorio" class="card rel hide"></section>
 
+    <section id="inicio">
+      <div class="hero">
+        <h1 id="ola">Olá!</h1>
+        <p>Acompanhe seus clientes do primeiro contato à entrega das chaves e divulgue seus imóveis.</p>
+        <div class="bar">
+          <button class="btn-acc" data-acao="novocliente">+ Novo cliente</button>
+          <button class="btn-ghost" data-acao="novoimovel">+ Novo imóvel</button>
+          <button class="btn-ghost" data-acao="share">Compartilhar meu site</button>
+        </div>
+      </div>
+      <div id="avisoperfil"></div>
+      <div class="kpis" id="kpis"></div>
+      <div class="duas">
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Precisam de contato</h3><button data-acao="contato">Ver todos</button></div>
+          <div id="pend" class="lista-mini"></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Imóveis em destaque</h3><button data-acao="portfolio">Ver portfólio</button></div>
+          <div id="idest" class="grid-im mini"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="portfolio" class="hide">
+      <div class="secao-tit"><h2>Portfólio de imóveis</h2>
+        <div class="bar" style="margin:0">
+          <select id="pfiltro"><option value="">Todos</option><option value="disponivel">Disponíveis</option><option value="reservado">Reservados</option><option value="vendido">Vendidos</option></select>
+          <button data-acao="share">Compartilhar portfólio</button>
+          <button class="pri" data-acao="novoimovel">+ Novo imóvel</button>
+        </div>
+      </div>
+      <div id="pgrid" class="grid-im"></div>
+    </section>
+
+    <form id="imovelform" class="card hide">
+      <h2 id="ititulo" style="margin-top:0">Novo imóvel</h2>
+      <div class="row">
+        <div style="grid-column:1/-1"><label>Título do anúncio *</label><input name="titulo" required placeholder="Ex.: Casa 2 quartos com quintal no Riacho Fundo"></div>
+        <div><label>Tipo</label><select name="tipo"><option>Casa</option><option>Apartamento</option><option>Sobrado</option><option>Kitnet / Studio</option><option>Terreno / Lote</option><option>Comercial</option></select></div>
+        <div><label>Finalidade</label><select name="finalidade"><option value="venda">Venda</option><option value="aluguel">Aluguel</option></select></div>
+        <div><label>Preço (R$)</label><input name="preco" type="number" min="0" step="1000"></div>
+        <div><label>Situação</label><select name="status"><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
+        <div><label>Bairro / região</label><input name="bairro"></div>
+        <div><label>Cidade</label><input name="cidade"></div>
+        <div><label>Quartos</label><input name="quartos" type="number" min="0"></div>
+        <div><label>Banheiros</label><input name="banheiros" type="number" min="0"></div>
+        <div><label>Vagas de garagem</label><input name="vagas" type="number" min="0"></div>
+        <div><label>Área (m²)</label><input name="area" type="number" min="0" step="0.5"></div>
+      </div>
+      <label style="margin-top:10px">Descrição</label>
+      <textarea name="descricao" rows="5" placeholder="Diferenciais, condições de pagamento, o que tem perto..."></textarea>
+      <div class="bar" style="margin:12px 0;gap:18px">
+        <label class="chk2"><input type="checkbox" name="mcmv"> Aceita Minha Casa Minha Vida</label>
+        <label class="chk2"><input type="checkbox" name="publicado" checked> Mostrar no site</label>
+        <label class="chk2"><input type="checkbox" name="destaque"> Destaque</label>
+      </div>
+      <label>Fotos (a primeira é a capa)</label>
+      <div id="ifotos" class="fotos-ed"></div>
+      <label class="btn-up">+ Adicionar fotos<input id="ifotosin" type="file" accept="image/*" multiple hidden></label>
+      <div class="bar" style="margin-top:16px">
+        <button class="pri" type="submit">Salvar imóvel</button>
+        <button type="button" id="icancelar">Cancelar</button>
+        <button type="button" id="ishare" class="hide">Compartilhar</button>
+        <button type="button" class="bad hide" id="iexcluir">Excluir imóvel</button>
+      </div>
+    </form>
+
+    <form id="perfilform" class="card hide">
+      <div class="cab">
+        <label class="avatar" id="pavatar" title="Trocar foto"><span id="pini">?</span><small>foto</small><input id="pfoto" type="file" accept="image/*" hidden></label>
+        <div><h2>Meu perfil de corretor</h2><div class="mut">Esses dados aparecem no seu site de imóveis.</div></div>
+      </div>
+      <div class="row">
+        <div><label>Nome *</label><input name="nome" required></div>
+        <div><label>CRECI</label><input name="creci"></div>
+        <div><label>WhatsApp (com DDD)</label><input name="whatsapp" inputmode="tel" placeholder="61999999999"></div>
+        <div><label>Cidade / região de atuação</label><input name="cidade"></div>
+      </div>
+      <label style="margin-top:10px">Sobre você</label>
+      <textarea name="bio" rows="4" placeholder="Ex.: Especialista em Minha Casa Minha Vida no DF. Cuido de tudo, da simulação à entrega das chaves."></textarea>
+      <div class="bar" style="margin-top:12px"><button class="pri" type="submit">Salvar perfil</button><button type="button" id="pver">Ver meu site ↗</button></div>
+    </form>
+
     <div id="lista"></div>
     <div id="funil" class="kanban hide"></div>
   </section>
 </main>
+<dialog id="share"><div id="sharebox"></div></dialog>
 
 <script src="config.js"></script>
 <script id="main" type="text/plain">
@@ -261,8 +410,9 @@ async function sessao() {
   $("login").classList.toggle("hide", logado);
   $("app").classList.toggle("hide", !logado);
   $("sair").classList.toggle("hide", !logado);
+  $("menu").classList.toggle("hide", !logado);
   $("quem").textContent = logado ? session.user.email : "";
-  if (logado) carregar();
+  if (logado) { tela(base); carregar(); }
 }
 
 async function carregar() {
@@ -275,6 +425,14 @@ async function carregar() {
     const r = resumo[h.cliente_id] ||= { n: 0, ultimo: h.criado_em, tipo: h.tipo };
     r.n++;
   }
+  const u = await uid();
+  const [im, pf] = await Promise.all([
+    sb.from("imoveis").select("*").eq("user_id", u).order("destaque", { ascending: false }).order("criado_em", { ascending: false }),
+    sb.from("perfil").select("*").eq("user_id", u).maybeSingle()
+  ]);
+  faltaV6 = !!(im.error || pf.error);
+  imoveis = im.data || []; perfil = pf.data || null;
+  marca();
   desenhar();
 }
 
@@ -294,9 +452,11 @@ const dinheiro = v => "R$ " + Number(v).toLocaleString("pt-BR");
 const opcoes = atual => Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === atual ? "selected" : ""}>${v}</option>`).join("");
 
 function desenhar() {
-  $("lista").classList.toggle("hide", telaAtual !== "home" || visao !== "lista");
-  $("funil").classList.toggle("hide", telaAtual !== "home" || visao !== "funil");
+  $("lista").classList.toggle("hide", telaAtual !== "clientes" || visao !== "lista");
+  $("funil").classList.toggle("hide", telaAtual !== "clientes" || visao !== "funil");
   $("fstatus").classList.toggle("hide", visao === "funil");
+  if (telaAtual === "inicio") return desenharInicio();
+  if (telaAtual === "portfolio") return desenharPortfolio();
   const itens = filtrados();
   if (visao === "funil") {
     $("funil").innerHTML = Object.entries(STATUS).map(([k, v]) => {
@@ -561,31 +721,38 @@ $("relatorio").onclick = e => { const b = e.target.closest("[data-abrir]"); if (
 $("brel").onclick = () => relatorio(clientes.find(c => c.id === editId));
 $("ordem").onchange = desenhar;
 
-// Telas: "home" (lista/funil), "cliente" (só o cliente aberto) e "relatorio".
-// Cada tela entra no histórico do navegador, então o botão voltar do celular também funciona.
-let telaAtual = "home", nivel = 0;
+// Telas do menu (início, clientes, portfólio, perfil) e telas internas (cliente, relatório, imóvel).
+// As internas entram no histórico do navegador, então o botão voltar do celular também funciona.
+let telaAtual = "inicio", nivel = 0, base = "inicio";
+const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", portfolio: "portfolio", imovel: "imovelform", perfil: "perfilform" };
+const RAIZ = ["inicio", "clientes", "portfolio", "perfil"];
 function tela(t) {
   telaAtual = t;
-  const home = t === "home";
-  for (const id of ["topo"]) $(id).classList.toggle("hide", !home);
-  $("nav").classList.toggle("hide", home);
-  $("form").classList.toggle("hide", t !== "cliente");
-  $("relatorio").classList.toggle("hide", t !== "relatorio");
-  if (!home) $("fichas").classList.add("hide");
+  $("topo").classList.toggle("hide", t !== "clientes");
+  $("nav").classList.toggle("hide", RAIZ.includes(t));
+  for (const [k, id] of Object.entries(SECOES)) $(id).classList.toggle("hide", k !== t);
+  if (t !== "clientes") $("fichas").classList.add("hide");
+  const item = { cliente: "clientes", relatorio: "clientes", imovel: "portfolio" }[t] || t;
+  for (const b of document.querySelectorAll("#menu [data-nav]")) b.classList.toggle("on", b.dataset.nav === item);
+  if (t === "perfil") preencherPerfil();
   desenhar();
   scrollTo(0, 0);
 }
 function ir(estado) { nivel++; history.pushState({ ...estado, nivel }, ""); tela(estado.t); }
-const voltar = () => nivel > 0 ? history.back() : tela("home");
+function irRaiz(t) { base = t; nivel > 0 ? history.go(-nivel) : tela(t); }
+const voltar = () => nivel > 0 ? history.back() : tela(base);
 addEventListener("popstate", e => {
   const s = e.state; nivel = s?.nivel || 0;
   const c = s && clientes.find(x => x.id === s.id);
   if (s?.t === "cliente") abrir(c || null, false);
   else if (s?.t === "relatorio" && c) relatorio(c, false);
-  else tela("home");
+  else if (s?.t === "imovel") abrirImovel(imoveis.find(x => x.id === s.id) || null, false);
+  else tela(base);
 });
 $("nvoltar").onclick = voltar;
-$("nhome").onclick = () => nivel > 0 ? history.go(-nivel) : tela("home");
+$("nhome").onclick = () => irRaiz("inicio");
+for (const b of document.querySelectorAll("#menu [data-nav]")) b.onclick = () => irRaiz(b.dataset.nav);
+$("marca").onclick = e => { e.preventDefault(); if ($("menu").classList.contains("hide")) return; irRaiz("inicio"); };
 history.replaceState(null, "");
 
 // Foto do cliente: fica em <usuário>/perfil/<cliente>.jpg no bucket privado "fichas".
@@ -702,6 +869,232 @@ $("galeria").onclick = async e => {
   const { error } = await sb.storage.from("fichas").remove([b.dataset.x]);
   error ? msg(error.message, true) : galeria();
 };
+
+// ---------- Início, portfólio de imóveis, perfil do corretor e compartilhamento ----------
+let imoveis = [], perfil = null, faltaV6 = false, imovelId = null, fotosEdit = [], fotosRemover = [];
+const urlFoto = p => sb.storage.from("imoveis").getPublicUrl(p).data.publicUrl;
+const CASA = "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300"><rect width="400" height="300" fill="#dbe4f0"/><path d="M125 165 200 104l75 61v75H125z" fill="#c3d1e4"/><path d="M105 168 200 88l95 80" fill="none" stroke="#8aa1c1" stroke-width="10" stroke-linejoin="round"/><rect x="184" y="192" width="32" height="48" fill="#8aa1c1"/></svg>`).replace(/'/g, "%27");
+const SITUACAO = { disponivel: "Disponível", reservado: "Reservado", vendido: "Vendido" };
+const precoTxt = i => i.preco ? dinheiro(i.preco) + (i.finalidade === "aluguel" ? "/mês" : "") : "Consulte";
+const specs = i => [
+  i.quartos != null && `🛏 ${i.quartos} quarto${i.quartos == 1 ? "" : "s"}`, i.banheiros != null && `🚿 ${i.banheiros} banh.`,
+  i.vagas != null && `🚗 ${i.vagas} vaga${i.vagas == 1 ? "" : "s"}`, i.area && `📐 ${i.area} m²`
+].filter(Boolean).map(s => `<span>${s}</span>`).join("");
+function cartao(i, acoes = true) {
+  return `<div class="im" data-im="${i.id}">
+    <div class="capa" style="background-image:url('${i.fotos?.[0] ? urlFoto(i.fotos[0]) : CASA}')">
+      <span class="preco">${precoTxt(i)}</span>
+      ${i.status !== "disponivel" ? `<span class="selo ${i.status}">${SITUACAO[i.status]}</span>` : i.destaque ? '<span class="selo">Destaque</span>' : ""}
+    </div>
+    <div class="corpo">
+      <h4>${esc(i.titulo)}</h4>
+      <div class="mut" style="font-size:13px">${esc([i.bairro, i.cidade].filter(Boolean).join(", "))}${i.mcmv ? " · Aceita MCMV" : ""}${i.publicado ? "" : " · <b>oculto no site</b>"}</div>
+      <div class="specs">${specs(i)}</div>
+      ${acoes ? `<div class="bar"><button data-ie="${i.id}">Editar</button><button data-is="${i.id}">Compartilhar</button></div>` : ""}
+    </div>
+  </div>`;
+}
+async function linkSite(imovel) {
+  const u = new URL("vitrine.html", location.href); u.search = ""; u.hash = "";
+  u.searchParams.set("c", await uid());
+  if (imovel) u.searchParams.set("i", imovel);
+  return u.href;
+}
+async function marca() {
+  $("marcanome").textContent = perfil?.nome || "CRM Imobiliário";
+  $("marcasub").textContent = perfil?.nome ? "Corretor de imóveis" + (perfil.creci ? " · CRECI " + perfil.creci : "") : "Clientes e imóveis";
+  $("lvitrine").href = await linkSite();
+}
+
+function desenharInicio() {
+  const ativos = clientes.filter(c => !["fechado", "perdido"].includes(c.status));
+  const t = c => resumo[c.id] ? new Date(resumo[c.id].ultimo).getTime() : 0;
+  const pend = ativos.filter(c => !resumo[c.id] || diasDesde(resumo[c.id].ultimo) > 7).sort((a, b) => t(a) - t(b));
+  const fin = clientes.filter(c => ["documentacao", "negociacao", "vistoria", "aprovado", "subsidio", "contrato"].includes(c.status)).length;
+  $("ola").textContent = `Olá${perfil?.nome ? ", " + perfil.nome.split(" ")[0] : ""}!`;
+  $("kpis").innerHTML = [
+    [ativos.length, "clientes ativos", "clientes"],
+    [pend.length, "sem contato há 7+ dias", "contato"],
+    [fin, "em documentação / financiamento", "clientes"],
+    [clientes.filter(c => c.status === "fechado").length, "vendas concluídas", "clientes"],
+    [imoveis.filter(i => i.status === "disponivel").length, "imóveis disponíveis", "portfolio"]
+  ].map(([n, txt, a]) => `<div class="click" data-acao="${a}"><b>${n}</b><span>${txt}</span></div>`).join("");
+  $("pend").innerHTML = pend.length ? pend.slice(0, 6).map(c => `
+    <div class="item" data-e="${c.id}"><span><strong>${esc(c.nome)}</strong><br><small>${ultimoContato(c)}</small></span><span class="tag">${STATUS[c.status]}</span></div>`).join("")
+    : '<p class="mut">Todos os clientes estão em dia. 👏</p>';
+  const dest = imoveis.filter(i => i.publicado && i.status !== "vendido").slice(0, 2);
+  $("idest").innerHTML = faltaV6 ? '<p class="mut">Rode o schema_v6.sql no Supabase para ativar o portfólio.</p>'
+    : dest.length ? dest.map(i => cartao(i, false)).join("") : '<p class="mut">Nenhum imóvel ainda. Cadastre o primeiro!</p>';
+  $("avisoperfil").innerHTML = !faltaV6 && !perfil?.nome ? `<div class="etapa"><strong>Complete seu perfil de corretor</strong>
+    <p>Seu nome, CRECI e WhatsApp aparecem no site de imóveis para os clientes falarem com você.</p>
+    <button class="pri" data-acao="perfil">Completar perfil</button></div>` : "";
+}
+$("inicio").addEventListener("click", e => {
+  const c = e.target.closest("[data-e]"), i = e.target.closest("[data-im]");
+  if (c) abrir(clientes.find(x => x.id === c.dataset.e));
+  if (i) abrirImovel(imoveis.find(x => x.id === i.dataset.im));
+});
+
+function desenharPortfolio() {
+  if (faltaV6) return $("pgrid").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v6.sql</b> no SQL Editor do Supabase para ativar o portfólio e o site.</div>';
+  const f = $("pfiltro").value, itens = imoveis.filter(i => !f || i.status === f);
+  $("pgrid").innerHTML = itens.length ? itens.map(i => cartao(i)).join("") : '<p class="mut">Nenhum imóvel aqui. Clique em "+ Novo imóvel".</p>';
+}
+$("pfiltro").onchange = desenhar;
+$("pgrid").onclick = e => {
+  const b = e.target.closest("button"), card = e.target.closest("[data-im]"); if (!card) return;
+  const i = imoveis.find(x => x.id === card.dataset.im);
+  b?.dataset.is ? compartilharImovel(i) : abrirImovel(i);
+};
+
+// Atalhos (botões com data-acao) usados no início e no portfólio.
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-acao]")?.dataset.acao; if (!a) return;
+  if (a === "novocliente") abrir(null);
+  if (a === "novoimovel") abrirImovel(null);
+  if (a === "share") compartilharSite();
+  if (a === "contato") { $("ordem").value = "contato"; irRaiz("clientes"); }
+  if (["clientes", "portfolio", "perfil"].includes(a)) irRaiz(a);
+});
+
+function abrirImovel(i, empilhar = true) {
+  if (faltaV6) return msg("Rode o schema_v6.sql no SQL Editor do Supabase para ativar o portfólio.", true);
+  imovelId = i?.id ?? null;
+  const f = $("imovelform"); f.reset();
+  $("ititulo").textContent = i ? i.titulo : "Novo imóvel";
+  if (i) for (const el of f.elements) if (el.name && i[el.name] != null) el.type === "checkbox" ? (el.checked = !!i[el.name]) : (el.value = i[el.name]);
+  fotosEdit = (i?.fotos || []).map(path => ({ path })); fotosRemover = [];
+  desenharFotos();
+  for (const id of ["ishare", "iexcluir"]) $(id).classList.toggle("hide", !i);
+  if (empilhar) ir({ t: "imovel", id: imovelId }); else tela("imovel");
+}
+function desenharFotos() {
+  $("ifotos").innerHTML = fotosEdit.map((f, n) => `<figure><img src="${f.path ? urlFoto(f.path) : f.url}" alt="">
+    <figcaption>${n === 0 ? "<b>Capa</b>" : `<button type="button" data-capa="${n}">Tornar capa</button>`}<button type="button" class="bad" data-tira="${n}">Remover</button></figcaption></figure>`).join("")
+    || '<p class="mut" style="grid-column:1/-1;margin:0">Nenhuma foto ainda.</p>';
+}
+$("ifotosin").onchange = e => { for (const file of e.target.files) fotosEdit.push({ file, url: URL.createObjectURL(file) }); e.target.value = ""; desenharFotos(); };
+$("ifotos").onclick = e => {
+  const { capa, tira } = e.target.dataset;
+  if (capa != null) fotosEdit.unshift(...fotosEdit.splice(+capa, 1));
+  if (tira != null) { const [f] = fotosEdit.splice(+tira, 1); if (f.path) fotosRemover.push(f.path); }
+  desenharFotos();
+};
+$("imovelform").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, d = Object.fromEntries(new FormData(f)), novo = !imovelId;
+  for (const k of ["preco", "quartos", "banheiros", "vagas", "area"]) d[k] = d[k] === "" ? null : Number(d[k]);
+  for (const k of ["mcmv", "publicado", "destaque"]) d[k] = f[k].checked;
+  d.atualizado_em = new Date().toISOString();
+  msg("Salvando imóvel...");
+  if (novo) {
+    const { data, error } = await sb.from("imoveis").insert(d).select("id").single();
+    if (error) return msg("Erro ao salvar: " + error.message, true);
+    imovelId = data.id; // se uma foto falhar, salvar de novo não duplica o imóvel
+  } else {
+    const { error } = await sb.from("imoveis").update(d).eq("id", imovelId);
+    if (error) return msg("Erro ao salvar: " + error.message, true);
+  }
+  const u = await uid(), fotos = [];
+  for (const [n, fo] of fotosEdit.entries()) {
+    if (!fo.path) {
+      msg(`Enviando foto ${n + 1} de ${fotosEdit.length}...`);
+      const path = `${u}/${imovelId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+      const { error } = await sb.storage.from("imoveis").upload(path, await reduzir(fo.file, 1600), { contentType: "image/jpeg" });
+      if (error) return msg("Erro ao enviar a foto: " + error.message, true);
+      fo.path = path;
+    }
+    fotos.push(fo.path);
+  }
+  if (fotosRemover.length) await sb.storage.from("imoveis").remove(fotosRemover);
+  await sb.from("imoveis").update({ fotos }).eq("id", imovelId);
+  msg("Imóvel salvo.");
+  await carregar();
+  novo ? voltar() : abrirImovel(imoveis.find(i => i.id === imovelId), false);
+};
+$("icancelar").onclick = voltar;
+$("ishare").onclick = () => compartilharImovel(imoveis.find(x => x.id === imovelId));
+$("iexcluir").onclick = async () => {
+  const i = imoveis.find(x => x.id === imovelId);
+  if (!i || !confirm("Excluir este imóvel e as fotos dele?")) return;
+  if (i.fotos.length) await sb.storage.from("imoveis").remove(i.fotos);
+  const { error } = await sb.from("imoveis").delete().eq("id", i.id);
+  if (error) return msg(error.message, true);
+  msg("Imóvel excluído."); await carregar(); voltar();
+};
+
+function preencherPerfil() {
+  const f = $("perfilform"); f.reset();
+  if (perfil) for (const el of f.elements) if (el.name && perfil[el.name] != null) el.value = perfil[el.name];
+  $("pini").textContent = (perfil?.nome || "?").split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+  $("pavatar").querySelector("img")?.remove();
+  if (perfil?.foto) {
+    const img = new Image(); img.alt = "";
+    img.onload = () => { $("pini").textContent = ""; $("pavatar").prepend(img); };
+    img.src = urlFoto(perfil.foto);
+  }
+}
+$("perfilform").onsubmit = async e => {
+  e.preventDefault();
+  if (faltaV6) return msg("Rode o schema_v6.sql no SQL Editor do Supabase primeiro.", true);
+  const d = Object.fromEntries(new FormData(e.target));
+  const { error } = await sb.from("perfil").upsert({ user_id: await uid(), ...d, atualizado_em: new Date().toISOString() });
+  if (error) return msg("Erro ao salvar o perfil: " + error.message, true);
+  msg("Perfil salvo."); await carregar(); preencherPerfil();
+};
+$("pfoto").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  if (faltaV6) return msg("Rode o schema_v6.sql no SQL Editor do Supabase primeiro.", true);
+  const path = `${await uid()}/perfil-${Date.now()}.jpg`;
+  msg("Enviando foto...");
+  const { error } = await sb.storage.from("imoveis").upload(path, await reduzir(f, 600), { contentType: "image/jpeg" });
+  if (error) return msg("Erro ao enviar a foto: " + error.message, true);
+  if (perfil?.foto) await sb.storage.from("imoveis").remove([perfil.foto]);
+  const { error: e2 } = await sb.from("perfil").upsert({ user_id: await uid(), foto: path, atualizado_em: new Date().toISOString() });
+  if (e2) return msg("Erro ao salvar a foto: " + e2.message, true);
+  msg("Foto atualizada."); await carregar(); preencherPerfil();
+};
+$("pver").onclick = async () => open(await linkSite(), "_blank");
+
+// Compartilhar o site inteiro ou um imóvel: WhatsApp, Facebook, copiar link, menu do celular ou direto para um cliente.
+let compartilhando = null;
+function compartilhar(titulo, texto, url, registro) {
+  compartilhando = { titulo, texto, url, registro };
+  const comTel = clientes.filter(c => c.telefone && c.status !== "perdido");
+  $("sharebox").innerHTML = `
+    <h3 style="margin-top:0">${esc(titulo)}</h3>
+    <label>Link</label><input readonly value="${esc(url)}" onfocus="this.select()">
+    <div class="bar" style="margin-top:10px">
+      ${navigator.share ? '<button type="button" class="pri" data-s="nativo">📤 Compartilhar…</button>' : ""}
+      <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(texto + "\n" + url)}">WhatsApp</a>
+      <a class="btn" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}">Facebook</a>
+      <button type="button" data-s="copiar">Copiar link</button>
+    </div>
+    ${comTel.length ? `<label>Enviar para um cliente pelo WhatsApp</label>
+      <div class="bar"><select id="sharecli" style="flex:1">${comTel.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select><button type="button" data-s="cliente">Enviar</button></div>` : ""}
+    <p class="mut" style="font-size:13px">Instagram: copie o link e coloque na bio ou num story com a figurinha "Link".</p>
+    <div class="bar" style="justify-content:flex-end;margin:0"><button type="button" data-s="fechar">Fechar</button></div>`;
+  $("share").showModal();
+}
+$("sharebox").onclick = async e => {
+  const b = e.target.closest("[data-s]"); if (!b) return;
+  const { titulo, texto, url, registro } = compartilhando;
+  if (b.dataset.s === "fechar") $("share").close();
+  if (b.dataset.s === "nativo") navigator.share({ title: titulo, text: texto, url }).catch(() => {});
+  if (b.dataset.s === "copiar") { await navigator.clipboard.writeText(url).catch(() => {}); b.textContent = "Link copiado ✓"; }
+  if (b.dataset.s === "cliente") {
+    const c = clientes.find(x => x.id === $("sharecli").value); if (!c) return;
+    let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+    open(`https://wa.me/${n}?text=${encodeURIComponent(`Olá ${c.nome.split(" ")[0]}! ${texto}\n${url}`)}`, "_blank");
+    await registrar(c.id, "WhatsApp", "Enviou " + registro); carregar();
+  }
+};
+const compartilharSite = async () => compartilhar("Compartilhar meu site de imóveis",
+  `Confira os imóveis disponíveis${perfil?.nome ? " com " + perfil.nome : ""}:`, await linkSite(), "o link do site de imóveis");
+const compartilharImovel = async i => compartilhar(i.titulo,
+  `🏡 ${i.titulo} – ${precoTxt(i)}${i.bairro || i.cidade ? "\n📍 " + [i.bairro, i.cidade].filter(Boolean).join(", ") : ""}\nVeja fotos e detalhes:`,
+  await linkSite(i.id), "o imóvel: " + i.titulo);
 
 const cred = () => ({ email: $("lemail").value.trim(), password: $("lsenha").value });
 const traduz = m =>
