@@ -40,6 +40,15 @@
   .hist{border-top:1px solid var(--bd);margin-top:12px;padding-top:10px}
   .hist li{margin-bottom:6px;font-size:13px}
   main{max-width:1100px}
+  .esteira{display:flex;gap:0;overflow-x:auto;margin:6px 0 10px;padding-bottom:6px}
+  .et{flex:1 0 118px;position:relative;text-align:center;padding:26px 6px 0;font-size:12px;cursor:pointer;color:var(--mut);background:none;border:0;border-radius:0;width:auto}
+  .et::before{content:"";position:absolute;top:9px;left:0;right:0;height:3px;background:var(--bd)}
+  .et::after{content:"";position:absolute;top:2px;left:50%;margin-left:-8px;width:16px;height:16px;border-radius:50%;background:var(--card);border:2px solid var(--bd);box-sizing:border-box}
+  .et.feito{color:var(--tx)}.et.feito::before,.et.atual::before{background:var(--ok)}
+  .et.feito::after{background:var(--ok);border-color:var(--ok)}
+  .et.atual{color:var(--pri);font-weight:600}.et.atual::after{background:var(--pri);border-color:var(--pri);box-shadow:0 0 0 4px rgba(31,94,255,.2)}
+  .et.atual ~ .et::before{background:var(--bd)}
+  .et small{display:block;color:var(--mut);font-weight:400}
 </style>
 </head>
 <body>
@@ -78,6 +87,14 @@
 
     <form id="form" class="card hide">
       <h3 id="ftitulo" style="margin-top:0">Novo cliente</h3>
+      <div id="esteirabox" class="hide">
+        <strong>Esteira do cliente</strong>
+        <div id="esteira" class="esteira"></div>
+        <div class="bar" style="margin-bottom:12px">
+          <button type="button" class="pri" id="eavancar">Avançar para a próxima etapa</button>
+          <button type="button" class="bad" id="eperdido">Marcar como perdido</button>
+        </div>
+      </div>
       <div class="row">
         <div><label>Nome *</label><input name="nome" required></div>
         <div><label>Telefone / WhatsApp</label><input name="telefone" inputmode="tel"></div>
@@ -135,6 +152,26 @@ if (cfg.SUPABASE_URL.startsWith("COLE")) {
 }
 const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 
+const ETAPAS = [
+  { k: "contato", t: "Contato inicial", s: "lead" },
+  { k: "respondeu", t: "Cliente respondeu", s: "lead" },
+  { k: "visita_agendada", t: "Visita agendada", s: "visita" },
+  { k: "visita_feita", t: "Visita realizada", s: "visita" },
+  { k: "documentos", t: "Documentação", s: "proposta" },
+  { k: "analise", t: "Análise de crédito", s: "proposta" },
+  { k: "aprovado", t: "Crédito aprovado", s: "negociacao" },
+  { k: "financiamento", t: "Em financiamento", s: "negociacao" },
+  { k: "contrato", t: "Contrato assinado", s: "negociacao" },
+  { k: "chaves", t: "Chaves entregues", s: "fechado" }
+];
+const etapaIdx = c => Math.max(0, ETAPAS.findIndex(e => e.k === c.etapa));
+const etapaNome = c => ETAPAS[etapaIdx(c)].t;
+// Monta o que gravar ao colocar o cliente numa etapa: marca as anteriores como feitas e guarda a data de cada uma.
+function patchEtapa(c, k) {
+  const i = ETAPAS.findIndex(e => e.k === k), hoje = new Date().toISOString(), etapas = { ...(c.etapas || {}) };
+  ETAPAS.forEach((e, j) => { if (j <= i) etapas[e.k] = etapas[e.k] || hoje; else delete etapas[e.k]; });
+  return { etapa: k, etapas, status: ETAPAS[i].s, atualizado_em: hoje };
+}
 let clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
 const MODELOS = {
   lead: n => `Olá ${n}, tudo bem? Sou corretor de imóveis e vi que você tem interesse em adquirir um imóvel. Posso te ajudar com a simulação?`,
@@ -187,6 +224,7 @@ function desenhar() {
         <div class="kc" draggable="true" data-id="${c.id}">
           <strong>${esc(c.nome)}</strong>
           <small>${esc(c.telefone)}</small>
+          <small>${etapaNome(c)}</small>
           ${c.renda ? `<small>Renda ${dinheiro(c.renda)}</small>` : ""}
           <select data-mv="${c.id}">${opcoes(c.status)}</select>
           <div class="bar" style="margin:6px 0 0">${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}<button data-e="${c.id}">Abrir</button></div>
@@ -197,7 +235,7 @@ function desenhar() {
   $("lista").innerHTML = itens.length ? itens.map(c => `
     <div class="card cli">
       <div>
-        <strong>${esc(c.nome)}</strong> <span class="tag ${c.status}">${STATUS[c.status]}</span><br>
+        <strong>${esc(c.nome)}</strong> <span class="tag ${c.status}">${STATUS[c.status]}</span> <span class="tag">${etapaNome(c)}</span><br>
         <span class="mut">${esc(c.telefone)} ${c.interesse ? "· " + esc(c.interesse) : ""}
         ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
         ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span>
@@ -232,9 +270,13 @@ $("lista").onclick = $("funil").onclick = async e => {
 };
 
 async function mover(id, status) {
-  const { error } = await sb.from("clientes").update({ status, atualizado_em: new Date().toISOString() }).eq("id", id);
+  const c = clientes.find(x => x.id === id);
+  const grupo = ETAPAS.findIndex(e => e.s === status);
+  const patch = status !== "perdido" && ETAPAS[etapaIdx(c)].s !== status && grupo >= 0
+    ? patchEtapa(c, ETAPAS[grupo].k) : { status, atualizado_em: new Date().toISOString() };
+  const { error } = await sb.from("clientes").update(patch).eq("id", id);
   if (error) return msg("Erro ao mover: " + error.message, true);
-  registrar(id, "Anotação", "Status alterado para " + STATUS[status]);
+  registrar(id, "Anotação", "Status alterado para " + STATUS[status] + (patch.etapa ? " (etapa: " + etapaNome(patch) + ")" : ""));
   carregar();
 }
 $("funil").onchange = e => { if (e.target.dataset.mv) mover(e.target.dataset.mv, e.target.value); };
@@ -266,6 +308,34 @@ $("hadd").onclick = async () => {
   $("htexto").value = ""; historico();
 };
 
+function desenharEsteira(c) {
+  const i = etapaIdx(c), perdido = c.status === "perdido";
+  $("esteira").innerHTML = ETAPAS.map((e, j) => {
+    const d = c.etapas?.[e.k];
+    return `<button type="button" class="et ${j < i || (j === i && perdido) ? "feito" : ""} ${j === i && !perdido ? "atual" : ""}" data-et="${e.k}">${e.t}<small>${d ? new Date(d).toLocaleDateString("pt-BR") : ""}</small></button>`;
+  }).join("");
+  $("eavancar").disabled = !perdido && i === ETAPAS.length - 1;
+  $("eavancar").textContent = perdido ? "Reativar na etapa atual" : "Avançar para a próxima etapa";
+  $("eperdido").classList.toggle("hide", perdido);
+  $("form").status.value = c.status;
+}
+async function irEtapa(k) {
+  const c = clientes.find(x => x.id === editId); if (!c) return;
+  const { error } = await sb.from("clientes").update(patchEtapa(c, k)).eq("id", c.id);
+  if (error) return msg("Erro ao mudar de etapa: " + error.message, true);
+  registrar(c.id, "Anotação", "Etapa: " + ETAPAS.find(e => e.k === k).t);
+  await carregar(); desenharEsteira(clientes.find(x => x.id === editId)); historico();
+}
+$("esteira").onclick = e => { const b = e.target.closest("[data-et]"); if (b) irEtapa(b.dataset.et); };
+$("eavancar").onclick = () => {
+  const c = clientes.find(x => x.id === editId), i = etapaIdx(c);
+  irEtapa(ETAPAS[c.status === "perdido" ? i : Math.min(i + 1, ETAPAS.length - 1)].k);
+};
+$("eperdido").onclick = async () => {
+  if (!confirm("Marcar este cliente como perdido?")) return;
+  await mover(editId, "perdido"); await carregar(); desenharEsteira(clientes.find(x => x.id === editId)); historico();
+};
+
 function abrir(c) {
   editId = c?.id ?? null;
   $("ftitulo").textContent = c ? "Editar cliente" : "Novo cliente";
@@ -273,6 +343,8 @@ function abrir(c) {
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
   $("hist").classList.toggle("hide", !c);
+  $("esteirabox").classList.toggle("hide", !c);
+  if (c) desenharEsteira(c);
   if (c) historico();
   f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
 }
