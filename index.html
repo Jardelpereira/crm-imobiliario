@@ -101,6 +101,15 @@
   .slot b{font-size:38px;line-height:1;color:var(--pri);font-weight:400}.slot:hover{border-color:var(--pri);color:var(--tx)}
   .zona{border:2px dashed var(--bd);border-radius:12px;padding:12px;margin:6px 0 4px}
   .zona.over{border-color:var(--pri);background:rgba(20,83,154,.07)}
+  .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;margin-left:4px;text-align:center}
+  .ag{display:grid;grid-template-columns:76px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:10px;background:var(--card);margin-bottom:8px}
+  .ag.atras{border-left-color:var(--bad)}.ag.feito{opacity:.65;border-left-color:var(--ok)}
+  .ag .hora b{display:block;font-size:18px}.ag .hora small,.ag .info small{display:block;color:var(--mut);font-size:12px}
+  .ag .info a{color:inherit}.ag .bar{margin:0;justify-content:flex-end}
+  .ag .bar button,.ag a.btn{padding:6px 10px;font-size:13px}
+  @media (max-width:760px){.ag{grid-template-columns:62px 1fr}.ag .bar{grid-column:1/-1;justify-content:flex-start}}
+  .grupo{margin:18px 0 8px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+  .grupo.alerta{color:var(--bad)}
   .btn-up{display:inline-block;margin:0;cursor:pointer;border:1px dashed var(--pri);color:var(--pri);border-radius:8px;padding:9px 14px;font-size:14px}
   a.btn{display:inline-block;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;text-decoration:none;color:var(--tx)}
   dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);max-width:480px;width:calc(100% - 32px);padding:18px}
@@ -147,7 +156,7 @@
     <span><b id="marcanome">CRM Imobiliário</b><small id="marcasub">Clientes e imóveis</small></span>
   </a>
   <nav id="menu" class="hide">
-    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="portfolio">Portfólio</button><button data-nav="perfil">Meu perfil</button>
+    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="perfil">Meu perfil</button>
     <a id="lvitrine" href="vitrine.html" target="_blank" rel="noopener">Ver meu site ↗</a>
   </nav>
   <span class="conta"><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
@@ -218,6 +227,11 @@
       <label style="margin-top:10px">Observações</label><textarea name="observacoes" rows="3"></textarea>
       <label style="margin-top:10px">Foto da ficha deste cliente <span id="ftemfoto"></span></label><input id="ffoto" type="file" accept="image/*">
       <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button><button type="button" id="brel" class="hide">📄 Relatório</button></div>
+      <div class="hist hide" id="agcli">
+        <div class="secao-tit" style="margin:0 0 8px"><strong>Agenda deste cliente</strong>
+          <div class="bar" style="margin:0"><button type="button" data-acao="agvisita">📅 Agendar visita</button><button type="button" data-acao="agretorno">📞 Agendar retorno</button></div></div>
+        <div id="agclilista"></div>
+      </div>
       <div class="hist hide" id="hist">
         <strong>Registrar contato</strong> <span id="resumo" class="mut"></span>
         <div class="bar" style="margin:8px 0">
@@ -250,6 +264,10 @@
         </div>
       </div>
       <div id="avisoperfil"></div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="secao-tit"><h3>Agenda de hoje</h3><div class="bar" style="margin:0"><button data-acao="novocomp">+ Agendar</button><button data-acao="agenda">Ver agenda</button></div></div>
+        <div id="aghoje"></div>
+      </div>
       <div class="kpis" id="kpis"></div>
       <div class="duas">
         <div class="card" style="margin:0">
@@ -261,6 +279,14 @@
           <div id="idest" class="grid-im mini"></div>
         </div>
       </div>
+    </section>
+
+    <section id="agenda" class="hide">
+      <div class="secao-tit"><h2>Agenda</h2>
+        <div class="bar" style="margin:0"><label class="chk2"><input type="checkbox" id="agfeitos"> Mostrar concluídos</label>
+          <button class="pri" data-acao="novocomp">+ Novo compromisso</button></div>
+      </div>
+      <div id="aglista"></div>
     </section>
 
     <section id="portfolio" class="hide">
@@ -331,6 +357,29 @@
   </section>
 </main>
 <dialog id="share"><div id="sharebox"></div></dialog>
+<dialog id="agdlg">
+  <form id="agform">
+    <h3 id="agtit" style="margin-top:0">Novo compromisso</h3>
+    <div class="row">
+      <div><label>Tipo</label><select name="tipo"></select></div>
+      <div><label>Cliente</label><select name="cliente_id"></select></div>
+      <div><label>Data</label><input name="data" type="date" required></div>
+      <div><label>Hora</label><input name="hora" type="time" required></div>
+      <div><label>Duração</label><select name="duracao"><option value="30">30 min</option><option value="60" selected>1 hora</option><option value="90">1h30</option><option value="120">2 horas</option></select></div>
+      <div><label>Imóvel (opcional)</label><select name="imovel_id"></select></div>
+    </div>
+    <label style="margin-top:10px">Local</label><input name="local" placeholder="Endereço ou ponto de encontro">
+    <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2"></textarea>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar</button><button type="button" id="agcancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="okdlg">
+  <form id="okform">
+    <h3 style="margin-top:0">Como foi?</h3>
+    <textarea name="resultado" rows="3" placeholder="Ex.: gostou do imóvel, vai juntar os documentos"></textarea>
+    <div class="bar" style="margin:12px 0 0"><button class="pri" type="submit">✓ Concluir</button><button type="button" id="okcancel">Cancelar</button></div>
+  </form>
+</dialog>
 
 <script src="config.js"></script>
 <script id="main" type="text/plain">
@@ -442,7 +491,9 @@ async function carregar() {
   ]);
   faltaV6 = !!(im.error || pf.error);
   imoveis = im.data || []; perfil = pf.data || null;
-  marca();
+  const ag = await sb.from("compromissos").select("*").order("quando");
+  faltaV7 = !!ag.error; agenda = ag.data || [];
+  marca(); badgeAgenda();
   desenhar();
 }
 
@@ -467,6 +518,8 @@ function desenhar() {
   $("fstatus").classList.toggle("hide", visao === "funil");
   if (telaAtual === "inicio") return desenharInicio();
   if (telaAtual === "portfolio") return desenharPortfolio();
+  if (telaAtual === "agenda") return desenharAgenda();
+  if (telaAtual === "cliente") return agendaCliente();
   const itens = filtrados();
   if (visao === "funil") {
     $("funil").innerHTML = Object.entries(STATUS).map(([k, v]) => {
@@ -734,8 +787,8 @@ $("ordem").onchange = desenhar;
 // Telas do menu (início, clientes, portfólio, perfil) e telas internas (cliente, relatório, imóvel).
 // As internas entram no histórico do navegador, então o botão voltar do celular também funciona.
 let telaAtual = "inicio", nivel = 0, base = "inicio";
-const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", portfolio: "portfolio", imovel: "imovelform", perfil: "perfilform" };
-const RAIZ = ["inicio", "clientes", "portfolio", "perfil"];
+const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", portfolio: "portfolio", imovel: "imovelform", perfil: "perfilform" };
+const RAIZ = ["inicio", "clientes", "agenda", "portfolio", "perfil"];
 function tela(t) {
   telaAtual = t;
   $("topo").classList.toggle("hide", t !== "clientes");
@@ -798,7 +851,7 @@ function abrir(c, empilhar = true) {
   const f = $("form"); f.reset();
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
-  for (const id of ["hist", "docs", "brel"]) $(id).classList.toggle("hide", !c);
+  for (const id of ["hist", "docs", "brel", "agcli"]) $(id).classList.toggle("hide", !c);
   $("esteira").classList.add("hide"); $("resumo").textContent = "";
   if (c) { historico(); documentos(); }
   if (empilhar) ir({ t: "cliente", id: editId }); else tela("cliente");
@@ -928,6 +981,7 @@ function desenharInicio() {
   const fin = clientes.filter(c => ["documentacao", "negociacao", "vistoria", "aprovado", "subsidio", "contrato"].includes(c.status)).length;
   $("ola").textContent = `Olá${perfil?.nome ? ", " + perfil.nome.split(" ")[0] : ""}!`;
   $("kpis").innerHTML = [
+    [agenda.filter(a => !a.feito && new Date(a.quando) < diaSeguinte(0)).length, "compromissos hoje / atrasados", "agenda"],
     [ativos.length, "clientes ativos", "clientes"],
     [pend.length, "sem contato há 7+ dias", "contato"],
     [fin, "em documentação / financiamento", "clientes"],
@@ -937,6 +991,9 @@ function desenharInicio() {
   $("pend").innerHTML = pend.length ? pend.slice(0, 6).map(c => `
     <div class="item" data-e="${c.id}"><span><strong>${esc(c.nome)}</strong><br><small>${ultimoContato(c)}</small></span><span class="tag">${STATUS[c.status]}</span></div>`).join("")
     : '<p class="mut">Todos os clientes estão em dia. 👏</p>';
+  const hoje = agenda.filter(a => !a.feito && new Date(a.quando) < diaSeguinte(0));
+  $("aghoje").innerHTML = faltaV7 ? '<p class="mut">Rode o schema_v7.sql no Supabase para ativar a agenda.</p>'
+    : hoje.length ? hoje.map(a => itemAgenda(a)).join("") : '<p class="mut">Nada agendado para hoje.</p>';
   const dest = imoveis.filter(i => i.publicado && i.status !== "vendido").slice(0, 2);
   $("idest").innerHTML = faltaV6 ? '<p class="mut">Rode o schema_v6.sql no Supabase para ativar o portfólio.</p>'
     : dest.length ? dest.map(i => cartao(i, false)).join("") : '<p class="mut">Nenhum imóvel ainda. Cadastre o primeiro!</p>';
@@ -973,8 +1030,156 @@ document.addEventListener("click", e => {
   if (a === "novoimovel") abrirImovel(null);
   if (a === "share") compartilharSite();
   if (a === "contato") { $("ordem").value = "contato"; irRaiz("clientes"); }
-  if (["clientes", "portfolio", "perfil"].includes(a)) irRaiz(a);
+  if (["clientes", "agenda", "portfolio", "perfil"].includes(a)) irRaiz(a);
+  if (a === "novocomp") abrirComp({});
+  if (a === "agvisita") abrirComp({ tipo: "visita", cliente_id: editId });
+  if (a === "agretorno") abrirComp({ tipo: "retorno", cliente_id: editId });
 });
+
+// ---------- Agenda: visitas, retornos e outros compromissos ----------
+let agenda = [], faltaV7 = false, compId = null, concluindo = null;
+const TIPOS_AG = { visita: "🏠 Visita", retorno: "📞 Retorno", assinatura: "✍️ Assinatura", reuniao: "🤝 Reunião", outro: "📌 Compromisso" };
+const NOME_AG = { visita: "Visita", retorno: "Retorno", assinatura: "Assinatura", reuniao: "Reunião", outro: "Compromisso" };
+const CONTATO_AG = { visita: "Visita", retorno: "Ligação", assinatura: "Presencial", reuniao: "Presencial", outro: "Anotação" };
+for (const [k, v] of Object.entries(TIPOS_AG)) $("agform").tipo.add(new Option(v, k));
+const diaSeguinte = n => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n + 1); return d; }; // início do dia (hoje + n + 1)
+const hora = d => new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const diaTxt = d => {
+  const x = new Date(d);
+  if (x >= diaSeguinte(-1) && x < diaSeguinte(0)) return "hoje";
+  if (x >= diaSeguinte(0) && x < diaSeguinte(1)) return "amanhã";
+  return x.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
+};
+function badgeAgenda() {
+  const n = agenda.filter(a => !a.feito && new Date(a.quando) < diaSeguinte(0)).length;
+  $("agbadge").textContent = n; $("agbadge").classList.toggle("hide", !n);
+}
+function linkGoogle(a, c, i) {
+  const f = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const ini = new Date(a.quando), fim = new Date(ini.getTime() + (a.duracao || 60) * 6e4);
+  const u = new URL("https://calendar.google.com/calendar/render");
+  u.searchParams.set("action", "TEMPLATE");
+  u.searchParams.set("text", NOME_AG[a.tipo] + (c ? " – " + c.nome : ""));
+  u.searchParams.set("dates", `${f(ini)}/${f(fim)}`);
+  u.searchParams.set("details", [c?.telefone && "Tel: " + c.telefone, i && "Imóvel: " + i.titulo, a.obs].filter(Boolean).join("\n"));
+  if (a.local) u.searchParams.set("location", a.local);
+  return u.href;
+}
+function itemAgenda(a, comCliente = true) {
+  const c = clientes.find(x => x.id === a.cliente_id), i = imoveis.find(x => x.id === a.imovel_id);
+  const atras = !a.feito && new Date(a.quando) < new Date();
+  return `<div class="ag ${atras ? "atras" : ""} ${a.feito ? "feito" : ""}">
+    <div class="hora"><b>${hora(a.quando)}</b><small>${diaTxt(a.quando)}</small></div>
+    <div class="info"><strong>${TIPOS_AG[a.tipo]}${c && comCliente ? ` · <a href="#" data-e="${c.id}">${esc(c.nome)}</a>` : ""}</strong>
+      ${i ? `<small>🏘 ${esc(i.titulo)}</small>` : ""}${a.local ? `<small>📍 ${esc(a.local)}</small>` : ""}
+      ${a.obs ? `<small>${esc(a.obs)}</small>` : ""}${a.resultado ? `<small>✓ ${esc(a.resultado)}</small>` : ""}
+      ${atras ? '<small class="alerta">Atrasado</small>' : ""}</div>
+    <div class="bar">${a.feito ? '<span class="tag fechado">Concluído</span>' : `
+      <button type="button" class="pri" data-agok="${a.id}">✓ Concluir</button>
+      ${c?.telefone ? `<button type="button" data-aglembra="${a.id}">Lembrar cliente</button>` : ""}
+      <button type="button" data-agedit="${a.id}">Reagendar</button>
+      <a class="btn" target="_blank" rel="noopener" href="${esc(linkGoogle(a, c, i))}" title="Salvar no Google Agenda para receber aviso no celular">Google Agenda</a>`}
+      <button type="button" class="bad" data-agdel="${a.id}" title="Excluir">✕</button></div>
+  </div>`;
+}
+function desenharAgenda() {
+  if (faltaV7) return $("aglista").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v7.sql</b> no SQL Editor do Supabase para ativar a agenda.</div>';
+  const agora = new Date(), feitos = $("agfeitos").checked;
+  const abertos = agenda.filter(a => !a.feito), q = a => new Date(a.quando);
+  const grupos = [
+    ["Atrasados", abertos.filter(a => q(a) < agora), "alerta"],
+    ["Hoje", abertos.filter(a => q(a) >= agora && q(a) < diaSeguinte(0))],
+    ["Amanhã", abertos.filter(a => q(a) >= diaSeguinte(0) && q(a) < diaSeguinte(1))],
+    ["Próximos 7 dias", abertos.filter(a => q(a) >= diaSeguinte(1) && q(a) < diaSeguinte(7))],
+    ["Mais adiante", abertos.filter(a => q(a) >= diaSeguinte(7))],
+    ["Concluídos", feitos ? agenda.filter(a => a.feito).reverse() : []]
+  ].filter(([, itens]) => itens.length);
+  $("aglista").innerHTML = grupos.length ? grupos.map(([t, itens, cls]) => `<div class="grupo ${cls || ""}">${t} (${itens.length})</div>` + itens.map(a => itemAgenda(a)).join("")).join("")
+    : '<div class="card mut">Nenhum compromisso marcado. Use "+ Novo compromisso" ou os botões "Agendar" na página de cada cliente.</div>';
+}
+function agendaCliente() {
+  if (!editId) return;
+  const itens = agenda.filter(a => a.cliente_id === editId && (!a.feito || diasDesde(a.quando) < 30));
+  $("agclilista").innerHTML = faltaV7 ? '<p class="mut">Rode o schema_v7.sql no Supabase para ativar a agenda.</p>'
+    : itens.length ? itens.map(a => itemAgenda(a, false)).join("") : '<p class="mut" style="margin:0">Nada agendado com este cliente.</p>';
+}
+$("agfeitos").onchange = desenhar;
+
+function abrirComp(a) {
+  if (faltaV7) return msg("Rode o schema_v7.sql no SQL Editor do Supabase para ativar a agenda.", true);
+  compId = a.id || null;
+  const f = $("agform"); f.reset();
+  f.cliente_id.innerHTML = '<option value="">— sem cliente —</option>' + clientes.filter(c => c.status !== "perdido" || c.id === a.cliente_id)
+    .map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+  f.imovel_id.innerHTML = '<option value="">—</option>' + imoveis.filter(i => i.status !== "vendido" || i.id === a.imovel_id)
+    .map(i => `<option value="${i.id}">${esc(i.titulo)}</option>`).join("");
+  // Padrão: próxima hora cheia de hoje.
+  const d = a.quando ? new Date(a.quando) : new Date(Date.now() + 36e5);
+  if (!a.quando) d.setMinutes(0, 0, 0);
+  const p = n => String(n).padStart(2, "0");
+  f.data.value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  f.hora.value = `${p(d.getHours())}:${p(d.getMinutes())}`;
+  for (const k of ["tipo", "cliente_id", "imovel_id", "duracao", "local", "obs"]) if (a[k] != null) f[k].value = a[k];
+  $("agtit").textContent = compId ? "Reagendar" : "Novo compromisso";
+  $("agdlg").showModal();
+}
+$("agcancel").onclick = () => $("agdlg").close();
+$("agform").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, d = Object.fromEntries(new FormData(f));
+  const r = {
+    tipo: d.tipo, cliente_id: d.cliente_id || null, imovel_id: d.imovel_id || null, duracao: Number(d.duracao),
+    quando: new Date(`${d.data}T${d.hora}`).toISOString(), local: d.local.trim() || null, obs: d.obs.trim() || null
+  };
+  const { error } = compId ? await sb.from("compromissos").update(r).eq("id", compId) : await sb.from("compromissos").insert(r);
+  if (error) return msg("Erro ao salvar o compromisso: " + error.message, true);
+  $("agdlg").close();
+  const c = clientes.find(x => x.id === r.cliente_id);
+  const quando = `${NOME_AG[r.tipo]} ${diaTxt(r.quando)} às ${hora(r.quando)}`;
+  if (c) await registrar(c.id, "Anotação", (compId ? "Reagendado: " : "Agendado: ") + quando);
+  msg((compId ? "Reagendado: " : "Agendado: ") + quando + ".");
+  // Agendar visita de quem está no primeiro contato já move o cliente na esteira.
+  if (c && r.tipo === "visita" && c.status === "lead") await mover(c.id, "visita");
+  else await carregar();
+};
+
+$("app").addEventListener("click", async e => {
+  const b = e.target.closest("[data-agok],[data-aglembra],[data-agedit],[data-agdel],.ag [data-e]");
+  if (!b) return;
+  e.preventDefault();
+  const id = b.dataset.agok || b.dataset.aglembra || b.dataset.agedit || b.dataset.agdel;
+  const a = agenda.find(x => x.id === id);
+  if (b.dataset.e && !b.closest("#inicio")) return abrir(clientes.find(x => x.id === b.dataset.e));
+  if (b.dataset.agok) { concluindo = a; $("okform").reset(); $("okdlg").showModal(); }
+  if (b.dataset.agedit) abrirComp(a);
+  if (b.dataset.agdel && confirm("Excluir este compromisso?")) {
+    const { error } = await sb.from("compromissos").delete().eq("id", a.id);
+    error ? msg(error.message, true) : carregar();
+  }
+  if (b.dataset.aglembra) {
+    const c = clientes.find(x => x.id === a.cliente_id);
+    let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+    const oque = { visita: "nossa visita", retorno: "nossa conversa", assinatura: "a assinatura", reuniao: "nossa reunião", outro: "nosso compromisso" }[a.tipo];
+    const texto = `Olá ${c.nome.split(" ")[0]}! Passando para confirmar ${oque} ${diaTxt(a.quando)} às ${hora(a.quando)}${a.local ? " em " + a.local : ""}. Posso confirmar?`;
+    open(`https://wa.me/${n}?text=${encodeURIComponent(texto)}`, "_blank");
+    await registrar(c.id, "WhatsApp", `Lembrete: ${NOME_AG[a.tipo].toLowerCase()} ${diaTxt(a.quando)} às ${hora(a.quando)}`);
+    carregar();
+  }
+});
+$("okcancel").onclick = () => $("okdlg").close();
+$("okform").onsubmit = async e => {
+  e.preventDefault();
+  const a = concluindo, resultado = e.target.resultado.value.trim() || null;
+  const { error } = await sb.from("compromissos").update({ feito: true, resultado }).eq("id", a.id);
+  if (error) return msg("Erro ao concluir: " + error.message, true);
+  $("okdlg").close();
+  const c = clientes.find(x => x.id === a.cliente_id);
+  if (c) await registrar(c.id, CONTATO_AG[a.tipo], `${NOME_AG[a.tipo]} concluído${resultado ? ": " + resultado : ""}`);
+  msg("Concluído: " + NOME_AG[a.tipo] + ".");
+  // Visita feita move o cliente para "Visita realizada".
+  if (c && a.tipo === "visita" && ["lead", "visita"].includes(c.status)) await mover(c.id, "visita_feita");
+  else await carregar();
+};
 
 // Envio rápido de fotos direto do cartão do imóvel (sem abrir o cadastro).
 $("pgrid").onchange = async e => {
