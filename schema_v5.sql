@@ -1,5 +1,5 @@
 -- Etapa 5: novas etapas da esteira e documentos dos clientes. Rode uma vez no SQL Editor do Supabase.
--- Pode rodar mesmo que o schema_v4.sql já tenha sido rodado.
+-- Pode rodar mesmo que o schema_v4.sql já tenha sido rodado, e pode rodar de novo sem problema.
 alter table clientes drop constraint if exists clientes_status_check;
 alter table clientes add constraint clientes_status_check check (status in (
   'lead','visita','visita_feita','proposta','documentacao','negociacao','vistoria','aprovado','subsidio','contrato','fechado','perdido'
@@ -19,6 +19,10 @@ create table if not exists documentos (
 );
 
 alter table documentos enable row level security;
+drop policy if exists "documentos_select" on documentos;
+drop policy if exists "documentos_insert" on documentos;
+drop policy if exists "documentos_update" on documentos;
+drop policy if exists "documentos_delete" on documentos;
 create policy "documentos_select" on documentos for select using (auth.uid() = user_id);
 create policy "documentos_insert" on documentos for insert with check (auth.uid() = user_id);
 create policy "documentos_update" on documentos for update using (auth.uid() = user_id);
