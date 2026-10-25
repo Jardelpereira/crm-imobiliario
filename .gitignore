@@ -1,0 +1,4 @@
+# Dados de clientes (CPF, telefone) nunca vão para o Git
+*.csv
+*.xlsx
+fichas/

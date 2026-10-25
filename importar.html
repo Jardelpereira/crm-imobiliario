@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Importar clientes</title>
+<style>
+  :root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#1f5eff;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828;--warn:#b26a00}
+  @media (prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2029;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140}}
+  *{box-sizing:border-box}
+  body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
+  main{max-width:1100px;margin:0 auto;padding:16px}
+  .card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:12px}
+  button,input[type=file]{font:inherit;color:inherit;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;background:var(--card)}
+  button{cursor:pointer}button.pri{background:var(--pri);color:#fff;border-color:var(--pri)}
+  button:disabled{opacity:.5;cursor:default}
+  table{border-collapse:collapse;width:100%;font-size:13px}
+  th,td{border-bottom:1px solid var(--bd);padding:6px 8px;text-align:left;vertical-align:top}
+  .wrap{overflow-x:auto}.mut{color:var(--mut)}.warn{color:var(--warn)}.bad{color:var(--bad)}.ok{color:var(--ok)}
+  a{color:var(--pri)}
+</style>
+</head>
+<body>
+<main>
+  <h2>Importar clientes de uma planilha (CSV)</h2>
+  <div class="card">
+    <p id="estado" class="mut">Verificando login...</p>
+    <input type="file" id="arq" accept=".csv,text/csv" disabled>
+    <p class="mut">Confira a planilha antes de importar. A coluna "conferir" marca o que ficou incerto na leitura da letra e vai junto nas observações.</p>
+  </div>
+  <div class="card hide" id="previa" style="display:none">
+    <div id="resumo"></div>
+    <div class="wrap"><table id="tab"></table></div>
+    <p><button class="pri" id="importar">Importar para o CRM</button></p>
+  </div>
+  <p><a href="index.html">Voltar ao CRM</a></p>
+</main>
+<script src="config.js"></script>
+<script id="main" type="text/plain">
+const $ = id => document.getElementById(id);
+const cfg = window.CRM_CONFIG;
+const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+const STATUS = ["lead","visita","proposta","negociacao","fechado","perdido"];
+let linhas = [];
+
+function parseCSV(t) {
+  t = t.replace(/^﻿/, "");
+  const rows = []; let r = [], c = "", q = false;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (q) { if (ch === '"') { if (t[i+1] === '"') { c += '"'; i++; } else q = false; } else c += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ",") { r.push(c); c = ""; }
+    else if (ch === "\n" || ch === "\r") { if (ch === "\r" && t[i+1] === "\n") i++; r.push(c); c = ""; if (r.some(x => x !== "")) rows.push(r); r = []; }
+    else c += ch;
+  }
+  if (c !== "" || r.length) { r.push(c); if (r.some(x => x !== "")) rows.push(r); }
+  return rows;
+}
+
+function montar(rows) {
+  const h = rows[0].map(x => x.trim().toLowerCase());
+  return rows.slice(1).map(r => {
+    const o = {}; h.forEach((k, i) => o[k] = (r[i] ?? "").trim());
+    const obs = [o.observacoes, o.conferir ? "[Conferir na ficha: " + o.conferir + "]" : ""].filter(Boolean).join(" ");
+    return {
+      nome: o.nome,
+      telefone: o.telefone || null,
+      cpf: o.cpf || null,
+      data_nascimento: o.data_nascimento || null,
+      tipo_renda: ["formal","informal"].includes(o.tipo_renda) ? o.tipo_renda : null,
+      renda: o.renda ? Number(o.renda) : null,
+      tem_filhos: o.tem_filhos === "sim" ? true : o.tem_filhos === "nao" ? false : null,
+      status: STATUS.includes(o.status) ? o.status : "lead",
+      origem: o.origem || null,
+      observacoes: obs || null,
+      _conferir: o.conferir
+    };
+  }).filter(x => x.nome);
+}
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+$("arq").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return;
+  linhas = montar(parseCSV(await f.text()));
+  const { data } = await sb.from("clientes").select("telefone");
+  const ja = new Set((data || []).map(x => x.telefone).filter(Boolean));
+  linhas.forEach(l => l._dup = l.telefone && ja.has(l.telefone));
+  const dups = linhas.filter(l => l._dup).length;
+  $("previa").style.display = "block";
+  $("resumo").innerHTML = `<strong>${linhas.length}</strong> pessoas na planilha` +
+    (dups ? ` · <span class="warn">${dups} já cadastradas (mesmo telefone) serão puladas</span>` : "");
+  $("tab").innerHTML = "<tr><th>Nome</th><th>Telefone</th><th>CPF</th><th>Nasc.</th><th>Renda</th><th>Status</th><th>Conferir</th></tr>" +
+    linhas.map(l => `<tr class="${l._dup ? "mut" : ""}"><td>${esc(l.nome)}</td><td>${esc(l.telefone)}</td><td>${esc(l.cpf)}</td><td>${esc(l.data_nascimento)}</td><td>${esc(l.renda)}</td><td>${esc(l.status)}</td><td class="warn">${esc(l._conferir)}</td></tr>`).join("");
+  $("importar").disabled = linhas.length === dups;
+};
+
+$("importar").onclick = async () => {
+  const novos = linhas.filter(l => !l._dup).map(({ _conferir, _dup, ...x }) => x);
+  $("importar").disabled = true; $("importar").textContent = "Importando...";
+  const { error } = await sb.from("clientes").insert(novos);
+  if (error) {
+    $("resumo").innerHTML = `<span class="bad">Erro: ${esc(error.message)}</span>`;
+    if (/column|schema/i.test(error.message)) $("resumo").innerHTML += `<br>Rode antes o schema_v2.sql no SQL Editor do Supabase.`;
+    $("importar").textContent = "Importar para o CRM"; $("importar").disabled = false;
+    return;
+  }
+  $("resumo").innerHTML = `<span class="ok"><strong>${novos.length} clientes importados.</strong></span> <a href="index.html">Abrir o CRM</a>`;
+  $("importar").style.display = "none";
+};
+
+(async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) { $("estado").innerHTML = `Logado como <strong>${esc(session.user.email)}</strong>. Escolha o arquivo CSV:`; $("arq").disabled = false; }
+  else $("estado").innerHTML = `<span class="bad">Você não está logado.</span> Entre primeiro no <a href="index.html">CRM</a> e volte a esta página.`;
+})();
+</script>
+<script>
+(function () {
+  const fontes = [
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/umd/supabase.min.js",
+    "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"
+  ];
+  function iniciar() { const el = document.createElement("script"); el.textContent = document.getElementById("main").textContent; document.body.appendChild(el); }
+  function tentar(i) {
+    if (i >= fontes.length) { document.getElementById("estado").textContent = "Não consegui carregar a biblioteca do Supabase. Desative o bloqueador de anúncios e recarregue."; return; }
+    const s = document.createElement("script"); s.src = fontes[i]; s.onload = iniciar; s.onerror = () => tentar(i + 1); document.head.appendChild(s);
+  }
+  tentar(0);
+})();
+</script>
+</body>
+</html>
