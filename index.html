@@ -40,6 +40,19 @@
   .hist{border-top:1px solid var(--bd);margin-top:12px;padding-top:10px}
   .hist li{margin-bottom:6px;font-size:13px}
   main{max-width:1100px}
+  .est{list-style:none;display:flex;padding:0 0 4px;margin:0 0 10px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--bd) transparent}
+  .est li{flex:1 0 92px;text-align:center;font-size:12px;color:var(--mut);position:relative;padding-top:30px;cursor:pointer}
+  .est li::before{content:attr(data-n);position:absolute;top:0;left:50%;transform:translateX(-50%);width:24px;height:24px;border-radius:50%;border:2px solid var(--bd);background:var(--card);line-height:20px;font-weight:600;z-index:1}
+  .est li::after{content:"";position:absolute;top:11px;left:-50%;width:100%;height:2px;background:var(--bd)}
+  .est li:first-child::after{display:none}
+  .est li.ok::before{content:"✓";background:var(--ok);border-color:var(--ok);color:#fff}
+  .est li.ok::after,.est li.at::after{background:var(--ok)}
+  .est li.at::before{background:var(--pri);border-color:var(--pri);color:#fff}
+  .est li.at{color:var(--tx);font-weight:600}
+  .est small{display:block;font-weight:400;color:var(--mut)}
+  .etapa{border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:8px;padding:10px 12px;margin-bottom:12px}
+  .etapa.perdido{border-left-color:var(--bad)}.etapa.fechado{border-left-color:var(--ok)}
+  .etapa p{margin:4px 0 8px}
 </style>
 </head>
 <body>
@@ -60,7 +73,7 @@
   <section id="app" class="hide">
     <div class="bar">
       <input id="busca" placeholder="Buscar por nome, telefone ou interesse">
-      <select id="fstatus"><option value="">Todos os status</option></select>
+      <select id="fstatus"><option value="">Todas as etapas</option></select>
       <button id="vlista">Lista</button><button id="vfunil">Funil</button>
       <button id="bfotos">📷 Fotos das fichas</button>
       <button id="bleitor">🤖 Ler fichas com IA</button>
@@ -79,6 +92,7 @@
 
     <form id="form" class="card hide">
       <h3 id="ftitulo" style="margin-top:0">Novo cliente</h3>
+      <div id="esteira" class="hide"></div>
       <div class="row">
         <div><label>Nome *</label><input name="nome" required></div>
         <div><label>Telefone / WhatsApp</label><input name="telefone" inputmode="tel"></div>
@@ -88,7 +102,7 @@
         <div><label>Tipo de renda</label><select name="tipo_renda"><option value="">-</option><option value="formal">Formal</option><option value="informal">Informal</option></select></div>
         <div><label>Renda mensal (R$)</label><input name="renda" type="number" step="50" min="0"></div>
         <div><label>Possui filhos?</label><select name="tem_filhos"><option value="">-</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
-        <div><label>Status</label><select name="status"></select></div>
+        <div><label>Etapa</label><select name="status"></select></div>
         <div><label>Orçamento (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
         <div><label>Interesse (tipo, bairro...)</label><input name="interesse"></div>
         <div><label>Origem</label><input name="origem" placeholder="indicação, Instagram, placa..."></div>
@@ -122,7 +136,25 @@
 
 <script src="config.js"></script>
 <script id="main" type="text/plain">
-const STATUS = {lead:"Lead",visita:"Visita",proposta:"Proposta",negociacao:"Negociação",fechado:"Fechado",perdido:"Perdido"};
+// Esteira de vendas, na ordem. "perdido" fica fora da sequência.
+const STATUS = {
+  lead: "Primeiro contato", visita: "Visita agendada", visita_feita: "Visita realizada",
+  proposta: "Simulação / proposta", documentacao: "Documentação", negociacao: "Em financiamento",
+  aprovado: "Crédito aprovado", contrato: "Contrato assinado", fechado: "Chaves entregues", perdido: "Perdido"
+};
+const FLUXO = Object.keys(STATUS).filter(k => k !== "perdido");
+const DICAS = {
+  lead: "Faça o primeiro contato: entenda renda, se tem filhos, FGTS e a região que procura. Ofereça uma visita.",
+  visita: "Confirme dia, hora e endereço um dia antes da visita.",
+  visita_feita: "Pergunte o que achou do imóvel e se quer seguir para a simulação.",
+  proposta: "Faça a simulação (renda, FGTS, subsídio do Minha Casa Minha Vida) e apresente a proposta.",
+  documentacao: "Peça: RG e CPF, comprovante de renda, comprovante de residência, certidão de estado civil, extrato do FGTS e declaração de IR (se tiver).",
+  negociacao: "Processo no banco: análise de crédito e avaliação do imóvel. Acompanhe e mantenha o cliente informado.",
+  aprovado: "Crédito aprovado! Agende a assinatura e confira os valores de entrada, ITBI e cartório.",
+  contrato: "Contrato assinado. Acompanhe o registro em cartório e a liberação do imóvel.",
+  fechado: "Venda concluída. Entregue as chaves e peça indicações de amigos e familiares.",
+  perdido: "Cliente marcado como perdido. Registre o motivo no histórico; dá para reativar quando quiser."
+};
 const $ = id => document.getElementById(id);
 const msg = (t, bad) => { $("msg").textContent = t || ""; $("msg").style.color = bad ? "var(--bad)" : ""; };
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -148,8 +180,12 @@ let usuario = null, clientes = [], editId = null, visao = localStorage.getItem("
 const MODELOS = {
   lead: n => `Olá ${n}, tudo bem? Sou corretor de imóveis e vi que você tem interesse em adquirir um imóvel. Posso te ajudar com a simulação?`,
   visita: n => `Olá ${n}! Passando para confirmar nossa visita. Posso te passar o endereço e o horário?`,
-  proposta: n => `Olá ${n}, tudo bem? Estou preparando sua proposta. Pode me enviar os documentos que combinamos?`,
-  negociacao: n => `Olá ${n}! Temos novidades sobre a negociação. Podemos conversar hoje?`,
+  visita_feita: n => `Olá ${n}, obrigado pela visita! O que achou do imóvel? Posso fazer a sua simulação de financiamento?`,
+  proposta: n => `Olá ${n}, tudo bem? Sua simulação está pronta. Posso te explicar os valores?`,
+  documentacao: n => `Olá ${n}! Para darmos entrada no financiamento, preciso de: RG e CPF, comprovante de renda, comprovante de residência, certidão de estado civil e extrato do FGTS. Pode me enviar por aqui?`,
+  negociacao: n => `Olá ${n}! Seu processo de financiamento está em análise no banco. Assim que tiver retorno, te aviso.`,
+  aprovado: n => `Olá ${n}, ótima notícia: seu crédito foi aprovado! Vamos agendar a assinatura do contrato?`,
+  contrato: n => `Olá ${n}! Contrato assinado. Agora acompanho o registro em cartório e te aviso de cada passo.`,
   fechado: n => `Olá ${n}! Parabéns pela conquista! Qualquer dúvida na documentação, estou à disposição.`,
   perdido: n => `Olá ${n}, tudo bem? Se mudar de ideia sobre o imóvel, é só me chamar.`
 };
@@ -241,12 +277,52 @@ $("lista").onclick = $("funil").onclick = async e => {
   }
 };
 
+const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v4.sql no SQL Editor do Supabase." : m;
 async function mover(id, status) {
   const { error } = await sb.from("clientes").update({ status, atualizado_em: new Date().toISOString() }).eq("id", id);
-  if (error) return msg("Erro ao mover: " + error.message, true);
-  registrar(id, "Anotação", "Status alterado para " + STATUS[status]);
-  carregar();
+  if (error) return msg("Erro ao mover: " + erroEtapa(error.message), true);
+  msg("Movido para " + STATUS[status] + ".");
+  await registrar(id, "Etapa", STATUS[status]);
+  await carregar();
+  if (editId === id) { $("form").status.value = status; historico(); }
 }
+
+// Esteira do cliente aberto: etapas concluídas, atual (com dica e dias parado) e botões para andar.
+function esteira(c, hist) {
+  const quando = {};
+  for (const h of hist) if (h.tipo === "Etapa") {
+    const k = Object.keys(STATUS).find(k => STATUS[k] === h.texto);
+    if (k && !quando[k]) quando[k] = h.criado_em; // hist vem do mais novo para o mais antigo
+  }
+  const desde = quando[c.status] || (c.status === "lead" ? c.criado_em : null);
+  const dias = desde ? Math.floor((Date.now() - new Date(desde)) / 864e5) : null;
+  const i = FLUXO.indexOf(c.status), prox = FLUXO[i + 1], ant = FLUXO[i - 1];
+  const data = d => d ? new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
+  $("esteira").innerHTML = `
+    <ol class="est">${FLUXO.map((k, n) => `
+      <li data-go="${k}" data-n="${n + 1}" class="${c.status !== "perdido" && n < i ? "ok" : k === c.status ? "at" : ""}" title="Mover para ${STATUS[k]}">
+        ${STATUS[k]}<small>${data(quando[k])}</small></li>`).join("")}
+    </ol>
+    <div class="etapa ${c.status}">
+      <strong>Etapa atual: ${STATUS[c.status]}</strong>
+      ${dias != null ? `<span class="mut"> · desde ${data(desde)} (${dias === 0 ? "hoje" : dias + (dias > 1 ? " dias" : " dia")})</span>` : ""}
+      <p>${DICAS[c.status]}</p>
+      <div class="bar" style="margin:0">
+        ${c.status === "perdido" ? `<button type="button" class="pri" data-go="lead">Reativar cliente</button>` : `
+          ${ant ? `<button type="button" data-go="${ant}">◀ Voltar</button>` : ""}
+          ${prox ? `<button type="button" class="pri" data-go="${prox}">Avançar para: ${STATUS[prox]} ▶</button>` : ""}
+          <button type="button" class="bad" data-go="perdido">Marcar como perdido</button>`}
+      </div>
+    </div>`;
+  $("esteira").classList.remove("hide");
+}
+$("esteira").onclick = e => {
+  const go = e.target.closest("[data-go]")?.dataset.go;
+  const c = clientes.find(x => x.id === editId);
+  if (!go || !c || go === c.status) return;
+  if (go === "perdido" && !confirm("Marcar este cliente como perdido?")) return;
+  mover(editId, go);
+};
 $("funil").onchange = e => { if (e.target.dataset.mv) mover(e.target.dataset.mv, e.target.value); };
 $("funil").ondragstart = e => { const k = e.target.closest(".kc"); if (k) e.dataTransfer.setData("text/plain", k.dataset.id); };
 $("funil").ondragover = e => { const c = e.target.closest(".col"); if (c) { e.preventDefault(); c.classList.add("over"); } };
@@ -268,6 +344,8 @@ async function historico() {
   const { data, error } = await sb.from("interacoes").select("*").eq("cliente_id", editId).order("criado_em", { ascending: false });
   $("hlista").innerHTML = error ? `<li class="mut">Histórico indisponível (rode o schema_v3.sql no Supabase).</li>` :
     (data.length ? data.map(h => `<li><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
+  const c = clientes.find(x => x.id === editId);
+  if (c) esteira(c, data || []);
 }
 $("hadd").onclick = async () => {
   const t = $("htexto").value.trim(); if (!t || !editId) return;
@@ -283,6 +361,7 @@ function abrir(c) {
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
   $("hist").classList.toggle("hide", !c);
+  $("esteira").classList.add("hide");
   if (c) historico();
   f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
 }
@@ -306,7 +385,8 @@ $("form").onsubmit = async e => {
   const { error } = editId
     ? await sb.from("clientes").update(d).eq("id", editId)
     : await sb.from("clientes").insert(d);
-  if (error) return msg("Erro ao salvar: " + error.message, true);
+  if (error) return msg("Erro ao salvar: " + erroEtapa(error.message), true);
+  if (editId && clientes.find(c => c.id === editId)?.status !== d.status) await registrar(editId, "Etapa", STATUS[d.status]);
   msg("Salvo."); e.target.classList.add("hide"); carregar();
 };
 
