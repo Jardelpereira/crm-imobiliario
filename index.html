@@ -56,6 +56,12 @@
   .etapa.perdido{border-left-color:var(--bad)}.etapa.fechado{border-left-color:var(--ok)}
   .etapa p{margin:4px 0 8px}
   .alerta{color:var(--bad)}
+  .cab{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .cab h2{margin:0;font-size:22px}
+  .avatar{flex:0 0 72px;width:72px;height:72px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;overflow:hidden;cursor:pointer;position:relative;margin:0}
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .avatar small{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);font-size:10px;font-weight:400;text-align:center;padding:2px 0}
+  #nav{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;margin-bottom:4px}
   .doc{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}
   .doc .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx);margin:0;cursor:pointer}
   .doc .chk input{width:18px;height:18px}
@@ -95,7 +101,11 @@
   </section>
 
   <section id="app" class="hide">
-    <div class="bar">
+    <div class="bar hide" id="nav">
+      <button type="button" id="nvoltar">◀ Voltar</button>
+      <button type="button" id="nhome">🏠 Página principal</button>
+    </div>
+    <div class="bar" id="topo">
       <input id="busca" placeholder="Buscar por nome, telefone ou interesse">
       <select id="fstatus"><option value="">Todas as etapas</option></select>
       <select id="ordem"><option value="">Mais recentes</option><option value="contato">Sem contato há mais tempo</option></select>
@@ -115,7 +125,10 @@
     </section>
 
     <form id="form" class="card hide">
-      <h3 id="ftitulo" style="margin-top:0">Novo cliente</h3>
+      <div class="cab">
+        <label class="avatar hide" id="avatar" title="Trocar foto do cliente"><span id="avini"></span><small>foto</small><input id="favatar" type="file" accept="image/*" hidden></label>
+        <div><h2 id="ftitulo">Novo cliente</h2><div id="fsub" class="mut"></div></div>
+      </div>
       <div id="esteira" class="hide"></div>
       <div class="row">
         <div><label>Nome *</label><input name="nome" required></div>
@@ -208,6 +221,8 @@ if (cfg.SUPABASE_URL.startsWith("COLE")) {
   throw new Error("config.js não preenchido");
 }
 const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+// Id do usuário logado, lido da sessão guardada no navegador (sem ir ao servidor).
+const uid = async () => (await sb.auth.getSession()).data.session?.user.id;
 
 let clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
 let resumo = {}; // por cliente: { n: nº de contatos, ultimo: data, tipo: tipo do último }
@@ -279,8 +294,8 @@ const dinheiro = v => "R$ " + Number(v).toLocaleString("pt-BR");
 const opcoes = atual => Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === atual ? "selected" : ""}>${v}</option>`).join("");
 
 function desenhar() {
-  $("lista").classList.toggle("hide", visao !== "lista");
-  $("funil").classList.toggle("hide", visao !== "funil");
+  $("lista").classList.toggle("hide", telaAtual !== "home" || visao !== "lista");
+  $("funil").classList.toggle("hide", telaAtual !== "home" || visao !== "funil");
   $("fstatus").classList.toggle("hide", visao === "funil");
   const itens = filtrados();
   if (visao === "funil") {
@@ -348,7 +363,8 @@ async function mover(id, status) {
   msg("Movido para " + STATUS[status] + ".");
   await registrar(id, "Etapa", STATUS[status]);
   await carregar();
-  if (editId === id) { $("form").status.value = status; historico(); }
+  const c = clientes.find(x => x.id === id);
+  if (editId === id && c) { $("form").status.value = status; $("fsub").innerHTML = subtitulo(c); historico(); }
 }
 
 // Esteira do cliente aberto: etapas concluídas, atual (com dica e dias parado) e botões para andar.
@@ -465,9 +481,8 @@ $("doclista").onchange = async e => {
   }
   if (el.dataset.up != null && el.files[0]) {
     const f = el.files[0], tipo = el.dataset.up, antigo = docs.find(d => d.tipo === tipo)?.arquivo;
-    const { data: { user } } = await sb.auth.getUser();
     const ext = f.type.startsWith("image/") ? "jpg" : (f.name.split(".").pop() || "pdf").toLowerCase();
-    const path = `${user.id}/docs/${editId}/${Date.now()}.${ext}`;
+    const path = `${await uid()}/docs/${editId}/${Date.now()}.${ext}`;
     msg("Enviando " + tipo + "...");
     try { await enviarArquivo(f, path); } catch (err) { return msg("Erro ao enviar o arquivo: " + err.message, true); }
     if (antigo) await sb.storage.from("fichas").remove([antigo]);
@@ -491,7 +506,7 @@ $("docadd").onclick = async () => {
 };
 
 // Relatório do cliente: todos os dados, tempo em cada etapa, documentos e contatos. Pode imprimir/salvar em PDF.
-async function relatorio(c) {
+async function relatorio(c, empilhar = true) {
   const [{ data: hist }, { data: dcs }] = await Promise.all([
     sb.from("interacoes").select("*").eq("cliente_id", c.id).order("criado_em", { ascending: true }),
     sb.from("documentos").select("*").eq("cliente_id", c.id)
@@ -509,7 +524,7 @@ async function relatorio(c) {
     <div class="bar noprint" style="justify-content:flex-end">
       <button type="button" onclick="print()">🖨️ Imprimir / salvar PDF</button>
       <button type="button" data-abrir="${c.id}">Abrir cliente</button>
-      <button type="button" onclick="this.closest('section').classList.add('hide')">Fechar</button>
+
     </div>
     <h2 style="margin:0">${esc(c.nome)}</h2>
     <div class="mut">Relatório gerado em ${dataBR(new Date(), true)} · Etapa atual: <strong>${STATUS[c.status]}</strong></div>
@@ -540,26 +555,80 @@ async function relatorio(c) {
     <table><tr><th>Data</th><th>Tipo</th><th>O que aconteceu</th></tr>
       ${h.length ? [...h].reverse().map(x => `<tr><td>${dataBR(x.criado_em, true)}</td><td>${esc(x.tipo)}</td><td>${esc(x.texto)}</td></tr>`).join("") : '<tr><td colspan="3" class="mut">Nenhum registro.</td></tr>'}
     </table>`;
-  $("form").classList.add("hide"); $("relatorio").classList.remove("hide");
-  $("relatorio").scrollIntoView({ behavior: "smooth" });
+  if (empilhar) ir({ t: "relatorio", id: c.id }); else tela("relatorio");
 }
-$("relatorio").onclick = e => { const b = e.target.closest("[data-abrir]"); if (b) { $("relatorio").classList.add("hide"); abrir(clientes.find(c => c.id === b.dataset.abrir)); } };
+$("relatorio").onclick = e => { const b = e.target.closest("[data-abrir]"); if (b) abrir(clientes.find(c => c.id === b.dataset.abrir)); };
 $("brel").onclick = () => relatorio(clientes.find(c => c.id === editId));
 $("ordem").onchange = desenhar;
 
-function abrir(c) {
+// Telas: "home" (lista/funil), "cliente" (só o cliente aberto) e "relatorio".
+// Cada tela entra no histórico do navegador, então o botão voltar do celular também funciona.
+let telaAtual = "home", nivel = 0;
+function tela(t) {
+  telaAtual = t;
+  const home = t === "home";
+  for (const id of ["topo"]) $(id).classList.toggle("hide", !home);
+  $("nav").classList.toggle("hide", home);
+  $("form").classList.toggle("hide", t !== "cliente");
+  $("relatorio").classList.toggle("hide", t !== "relatorio");
+  if (!home) $("fichas").classList.add("hide");
+  desenhar();
+  scrollTo(0, 0);
+}
+function ir(estado) { nivel++; history.pushState({ ...estado, nivel }, ""); tela(estado.t); }
+const voltar = () => nivel > 0 ? history.back() : tela("home");
+addEventListener("popstate", e => {
+  const s = e.state; nivel = s?.nivel || 0;
+  const c = s && clientes.find(x => x.id === s.id);
+  if (s?.t === "cliente") abrir(c || null, false);
+  else if (s?.t === "relatorio" && c) relatorio(c, false);
+  else tela("home");
+});
+$("nvoltar").onclick = voltar;
+$("nhome").onclick = () => nivel > 0 ? history.go(-nivel) : tela("home");
+history.replaceState(null, "");
+
+// Foto do cliente: fica em <usuário>/perfil/<cliente>.jpg no bucket privado "fichas".
+const caminhoAvatar = async id => `${await uid()}/perfil/${id}.jpg`;
+async function avatar(c) {
+  const ini = c.nome.split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+  $("avini").textContent = ini;
+  $("avatar").querySelector("img")?.remove();
+  const { data } = await sb.storage.from("fichas").createSignedUrl(await caminhoAvatar(c.id), 3600);
+  if (data?.signedUrl && editId === c.id) {
+    const img = new Image(); img.alt = c.nome;
+    img.onload = () => { $("avini").textContent = ""; $("avatar").prepend(img); };
+    img.src = data.signedUrl;
+  }
+}
+$("favatar").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f || !editId) return;
+  const path = await caminhoAvatar(editId);
+  msg("Enviando foto...");
+  await sb.storage.from("fichas").remove([path]);
+  const { error } = await sb.storage.from("fichas").upload(path, await reduzir(f, 600), { contentType: "image/jpeg" });
+  if (error) return msg("Erro ao enviar a foto: " + error.message, true);
+  msg("Foto atualizada."); avatar(clientes.find(c => c.id === editId));
+};
+
+const subtitulo = c => `${STATUS[c.status]}${c.telefone ? " · " + esc(c.telefone) : ""}<br>${ultimoContato(c)}`;
+function abrir(c, empilhar = true) {
   editId = c?.id ?? null;
-  $("ftitulo").textContent = c ? "Editar cliente" : "Novo cliente";
+  $("ftitulo").textContent = c ? c.nome : "Novo cliente";
+  $("fsub").innerHTML = c ? subtitulo(c) : "";
+  $("avatar").classList.toggle("hide", !c);
+  if (c) avatar(c);
   const f = $("form"); f.reset();
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
   for (const id of ["hist", "docs", "brel"]) $(id).classList.toggle("hide", !c);
   $("esteira").classList.add("hide"); $("resumo").textContent = "";
   if (c) { historico(); documentos(); }
-  f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
+  if (empilhar) ir({ t: "cliente", id: editId }); else tela("cliente");
+  if (!c) f.nome.focus();
 }
 $("novo").onclick = () => abrir(null);
-$("cancelar").onclick = () => $("form").classList.add("hide");
+$("cancelar").onclick = voltar;
 
 $("form").onsubmit = async e => {
   e.preventDefault();
@@ -580,7 +649,9 @@ $("form").onsubmit = async e => {
     : await sb.from("clientes").insert(d);
   if (error) return msg("Erro ao salvar: " + erroEtapa(error.message), true);
   if (editId && clientes.find(c => c.id === editId)?.status !== d.status) await registrar(editId, "Etapa", STATUS[d.status]);
-  msg("Salvo."); e.target.classList.add("hide"); carregar();
+  msg("Salvo.");
+  await carregar();
+  editId ? abrir(clientes.find(c => c.id === editId), false) : voltar();
 };
 
 $("busca").oninput = $("fstatus").onchange = desenhar;
@@ -595,15 +666,13 @@ async function reduzir(file, max = 1600) {
   return new Promise(r => cv.toBlob(r, "image/jpeg", 0.85));
 }
 async function enviarFoto(file, pasta) {
-  const { data: { user } } = await sb.auth.getUser();
-  const path = `${user.id}/${pasta}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+  const path = `${await uid()}/${pasta}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
   const { error } = await sb.storage.from("fichas").upload(path, await reduzir(file), { contentType: "image/jpeg" });
   if (error) throw error;
   return path;
 }
 async function galeria() {
-  const { data: { user } } = await sb.auth.getUser();
-  const pasta = `${user.id}/lotes`;
+  const pasta = `${await uid()}/lotes`;
   const { data, error } = await sb.storage.from("fichas").list(pasta, { sortBy: { column: "created_at", order: "desc" } });
   if (error) return msg("Erro ao listar as fotos: " + error.message, true);
   const fotos = data.filter(f => f.id);
