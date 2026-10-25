@@ -40,7 +40,7 @@
 const $ = id => document.getElementById(id);
 const cfg = window.CRM_CONFIG;
 const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
-const STATUS = ["lead","visita","proposta","negociacao","fechado","perdido"];
+const STATUS = ["lead","visita","visita_feita","proposta","documentacao","negociacao","aprovado","contrato","fechado","perdido"];
 let linhas = [];
 
 function parseCSV(t) {
