@@ -103,6 +103,21 @@
   .zona.over{border-color:var(--pri);background:rgba(20,83,154,.07)}
   .hitem{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
   .hitem button{padding:1px 7px;font-size:12px;flex:none;opacity:.55}.hitem:hover button{opacity:1}
+  .tabv{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+  .tabv th,.tabv td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+  .tabv th{color:var(--mut);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  .tabv td.n,.tabv th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tabv tr:last-child td{border-bottom:none}.tabv button{padding:4px 9px;font-size:13px}
+  .rolagem{overflow-x:auto}
+  .pg{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid;white-space:nowrap}
+  .pg.recebido{color:var(--ok)}.pg.parcial{color:#b26a00}.pg.pendente{color:var(--mut)}
+  .grafico{display:flex;align-items:flex-end;gap:2px;height:170px;padding:22px 0 0;border-bottom:1px solid var(--bd)}
+  .grafico .col2{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+  .grafico .b{width:70%;max-width:38px;background:var(--pri);border-radius:4px 4px 0 0}
+  .grafico .col2:hover .b{filter:brightness(1.2)}
+  .grafico .v{font-size:11px;color:var(--tx);white-space:nowrap;margin-bottom:3px}
+  .eixo{display:flex;gap:2px}.eixo span{flex:1;min-width:0;text-align:center;font-size:11px;color:var(--mut);padding-top:4px}
+  .meta{height:12px;border-radius:6px;background:var(--bd);overflow:hidden;margin:6px 0}.meta i{display:block;height:100%;background:var(--ok);border-radius:6px}
   .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;margin-left:4px;text-align:center}
   .ag{display:grid;grid-template-columns:76px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:10px;background:var(--card);margin-bottom:8px}
   .ag.atras{border-left-color:var(--bad)}.ag.feito{opacity:.65;border-left-color:var(--ok)}
@@ -158,7 +173,7 @@
     <span><b id="marcanome">CRM Imobiliário</b><small id="marcasub">Clientes e imóveis</small></span>
   </a>
   <nav id="menu" class="hide">
-    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="perfil">Meu perfil</button>
+    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="vendas">Minhas vendas</button><button data-nav="perfil">Meu perfil</button>
     <a id="lvitrine" href="vitrine.html" target="_blank" rel="noopener">Ver meu site ↗</a>
   </nav>
   <span class="conta"><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
@@ -223,6 +238,8 @@
         <div><label>Possui filhos?</label><select name="tem_filhos"><option value="">-</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
         <div><label>Etapa</label><select name="status"></select></div>
         <div><label>Orçamento (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
+        <div><label>Imóvel de interesse (do portfólio)</label><select name="imovel_id"></select></div>
+        <div><label>Valor do imóvel (R$)</label><input name="valor_imovel" type="number" step="1000" min="0"></div>
         <div><label>Interesse (tipo, bairro...)</label><input name="interesse"></div>
         <div><label>Origem</label><input name="origem" placeholder="indicação, Instagram, placa..."></div>
       </div>
@@ -290,6 +307,37 @@
           <button class="pri" data-acao="novocomp">+ Novo compromisso</button></div>
       </div>
       <div id="aglista"></div>
+    </section>
+
+    <section id="vendas" class="hide">
+      <div class="secao-tit"><h2>Minhas vendas</h2>
+        <div class="bar" style="margin:0">
+          <select id="vano"></select>
+          <select id="vmes"><option value="">Ano todo</option></select>
+          <button id="vimportar">Importar vendas concluídas</button>
+          <button id="vexportar">Exportar planilha</button>
+          <button class="pri" id="vnova">+ Registrar venda</button>
+        </div>
+      </div>
+      <div id="vaviso"></div>
+      <div class="kpis" id="vkpis"></div>
+      <div class="duas">
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Sua comissão por mês</h3><span class="mut" style="font-size:13px">últimos 12 meses</span></div>
+          <div class="grafico" id="vgraf" role="img" aria-label="Comissão por mês nos últimos 12 meses"></div><div class="eixo" id="veixo"></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Meta do mês</h3><span class="mut" id="vmesatual" style="font-size:13px"></span></div>
+          <div id="vmeta"></div>
+          <div class="bar" style="margin:10px 0 0">
+            <input id="vmetain" type="number" min="0" step="500" placeholder="Meta de comissão por mês (R$)" style="flex:1">
+            <input id="vpctin" type="number" min="0" step="0.5" placeholder="Comissão padrão %" style="max-width:170px;min-width:0">
+            <button id="vmetasalvar">Salvar</button>
+          </div>
+        </div>
+      </div>
+      <h3 style="margin:18px 0 8px">Vendas</h3>
+      <div class="rolagem"><table class="tabv" id="vtab"></table></div>
     </section>
 
     <section id="portfolio" class="hide">
@@ -374,6 +422,28 @@
     <label style="margin-top:10px">Local</label><input name="local" placeholder="Endereço ou ponto de encontro">
     <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2"></textarea>
     <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar</button><button type="button" id="agcancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="vdlg">
+  <form id="vform">
+    <h3 id="vtit" style="margin-top:0">Registrar venda</h3>
+    <div class="row">
+      <div><label>Cliente</label><select name="cliente_id"></select></div>
+      <div><label>Imóvel do portfólio</label><select name="imovel_id"></select></div>
+      <div style="grid-column:1/-1"><label>Descrição do imóvel (se não estiver no portfólio)</label><input name="imovel_desc" placeholder="Ex.: Apartamento 2 quartos – Residencial Flores, Samambaia"></div>
+      <div><label>Data da venda</label><input name="data_venda" type="date" required></div>
+      <div><label>Valor da venda (R$)</label><input name="valor_venda" type="number" min="0" step="1000" required></div>
+      <div><label>Comissão (%)</label><input name="comissao_pct" type="number" min="0" max="100" step="0.1" required></div>
+      <div><label>Sua parte da comissão (%)</label><input name="divisao_pct" type="number" min="0" max="100" step="1" required title="Se divide com imobiliária ou parceiro, coloque a sua porcentagem"></div>
+      <div><label>Forma de pagamento</label><select name="forma_pagamento"><option>Financiamento – Minha Casa Minha Vida</option><option>Financiamento bancário</option><option>À vista</option><option>Consórcio</option><option>Permuta</option><option>Outro</option></select></div>
+      <div><label>Recebimento da comissão</label><select name="pagamento_status"><option value="pendente">A receber</option><option value="parcial">Recebida em parte</option><option value="recebido">Recebida</option></select></div>
+      <div><label>Valor já recebido (R$)</label><input name="valor_recebido" type="number" min="0" step="50"></div>
+      <div><label>Data do recebimento</label><input name="data_recebimento" type="date"></div>
+    </div>
+    <div class="etapa" style="margin:12px 0 0" id="vcalc"></div>
+    <label class="chk2" style="margin-top:10px"><input type="checkbox" name="marcar_vendido" checked> Marcar o imóvel do portfólio como vendido</label>
+    <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2" placeholder="Ex.: construtora paga a comissão em 2 parcelas"></textarea>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar venda</button><button type="button" id="vcancel">Cancelar</button></div>
   </form>
 </dialog>
 <dialog id="okdlg">
@@ -494,6 +564,8 @@ async function carregar() {
   ]);
   faltaV6 = !!(im.error || pf.error);
   imoveis = im.data || []; perfil = pf.data || null;
+  const vd = await sb.from("vendas").select("*").order("data_venda", { ascending: false });
+  faltaV8 = !!vd.error; vendas = vd.data || [];
   const ag = await sb.from("compromissos").select("*").order("quando");
   faltaV7 = !!ag.error; agenda = ag.data || [];
   marca(); badgeAgenda();
@@ -522,6 +594,7 @@ function desenhar() {
   if (telaAtual === "inicio") return desenharInicio();
   if (telaAtual === "portfolio") return desenharPortfolio();
   if (telaAtual === "agenda") return desenharAgenda();
+  if (telaAtual === "vendas") return desenharVendas();
   if (telaAtual === "cliente") return agendaCliente();
   const itens = filtrados();
   if (visao === "funil") {
@@ -548,6 +621,7 @@ function desenhar() {
         <span class="mut">${esc(c.telefone)} ${c.interesse ? "· " + esc(c.interesse) : ""}
         ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
         ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span><br>
+        ${interesse(c) ? `<small>${interesse(c)}</small><br>` : ""}
         <small>${ultimoContato(c)}</small>
       </div>
       <div class="bar" style="margin:0">
@@ -582,7 +656,8 @@ $("lista").onclick = $("funil").onclick = async e => {
   }
 };
 
-const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v5.sql no SQL Editor do Supabase." : m;
+const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v5.sql no SQL Editor do Supabase."
+  : /imovel_id|valor_imovel|meta_mensal|comissao_padrao/.test(m) ? "Falta um passo: rode o schema_v8.sql no SQL Editor do Supabase." : m;
 async function mover(id, status) {
   const { error } = await sb.from("clientes").update({ status, atualizado_em: new Date().toISOString() }).eq("id", id);
   if (error) return msg("Erro ao mover: " + erroEtapa(error.message), true);
@@ -591,6 +666,7 @@ async function mover(id, status) {
   await carregar();
   const c = clientes.find(x => x.id === id);
   if (editId === id && c) { $("form").status.value = status; $("fsub").innerHTML = subtitulo(c); historico(); }
+  oferecerVenda(c);
 }
 
 // Esteira do cliente aberto: etapas concluídas, atual (com dica e dias parado) e botões para andar.
@@ -783,7 +859,8 @@ async function relatorio(c, empilhar = true) {
       ${linha("Data de nascimento", c.data_nascimento ? dataBR(c.data_nascimento + "T12:00") + ` (${idade} anos)` : "")}
       ${linha("Tipo de renda", esc(c.tipo_renda))}${linha("Renda mensal", c.renda ? dinheiro(c.renda) : "")}
       ${linha("Possui filhos", c.tem_filhos == null ? "" : c.tem_filhos ? "Sim" : "Não")}
-      ${linha("Orçamento", c.orcamento ? dinheiro(c.orcamento) : "")}${linha("Interesse", esc(c.interesse))}
+      ${linha("Orçamento", c.orcamento ? dinheiro(c.orcamento) : "")}
+      ${linha("Imóvel de interesse", esc(imoveis.find(i => i.id === c.imovel_id)?.titulo))}${linha("Valor do imóvel", c.valor_imovel ? dinheiro(c.valor_imovel) : "")}${linha("Interesse", esc(c.interesse))}
       ${linha("Origem", esc(c.origem))}${linha("Observações", esc(c.observacoes).replace(/\n/g, "<br>"))}
       ${linha("Cadastrado em", dataBR(c.criado_em, true))}
     </table>
@@ -806,8 +883,8 @@ $("ordem").onchange = desenhar;
 // Telas do menu (início, clientes, portfólio, perfil) e telas internas (cliente, relatório, imóvel).
 // As internas entram no histórico do navegador, então o botão voltar do celular também funciona.
 let telaAtual = "inicio", nivel = 0, base = "inicio";
-const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", portfolio: "portfolio", imovel: "imovelform", perfil: "perfilform" };
-const RAIZ = ["inicio", "clientes", "agenda", "portfolio", "perfil"];
+const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", portfolio: "portfolio", vendas: "vendas", imovel: "imovelform", perfil: "perfilform" };
+const RAIZ = ["inicio", "clientes", "agenda", "portfolio", "vendas", "perfil"];
 function tela(t) {
   telaAtual = t;
   $("topo").classList.toggle("hide", t !== "clientes");
@@ -860,7 +937,11 @@ $("favatar").onchange = async e => {
   msg("Foto atualizada."); avatar(clientes.find(c => c.id === editId));
 };
 
-const subtitulo = c => `${STATUS[c.status]}${c.telefone ? " · " + esc(c.telefone) : ""}<br>${ultimoContato(c)}`;
+const interesse = c => {
+  const i = imoveis.find(x => x.id === c.imovel_id), v = c.valor_imovel || i?.preco;
+  return i || v ? `🏘 ${i ? esc(i.titulo) : "Imóvel"}${v ? " · " + dinheiro(v) : ""}` : "";
+};
+const subtitulo = c => `${STATUS[c.status]}${c.telefone ? " · " + esc(c.telefone) : ""}${interesse(c) ? "<br>" + interesse(c) : ""}<br>${ultimoContato(c)}`;
 function abrir(c, empilhar = true) {
   editId = c?.id ?? null;
   $("ftitulo").textContent = c ? c.nome : "Novo cliente";
@@ -868,6 +949,8 @@ function abrir(c, empilhar = true) {
   $("avatar").classList.toggle("hide", !c);
   if (c) avatar(c);
   const f = $("form"); f.reset();
+  f.imovel_id.innerHTML = '<option value="">—</option>' + imoveis.filter(i => i.status !== "vendido" || i.id === c?.imovel_id)
+    .map(i => `<option value="${i.id}">${esc(i.titulo)}${i.preco ? " – " + dinheiro(i.preco) : ""}</option>`).join("");
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
   for (const id of ["hist", "docs", "brel", "agcli"]) $(id).classList.toggle("hide", !c);
@@ -877,6 +960,7 @@ function abrir(c, empilhar = true) {
   if (!c) f.nome.focus();
 }
 $("novo").onclick = () => abrir(null);
+$("form").imovel_id.onchange = e => { const i = imoveis.find(x => x.id === e.target.value); if (i?.preco) $("form").valor_imovel.value = i.preco; };
 $("cancelar").onclick = voltar;
 
 $("form").onsubmit = async e => {
@@ -885,6 +969,9 @@ $("form").onsubmit = async e => {
   d.orcamento = d.orcamento === "" ? null : Number(d.orcamento);
   d.renda = d.renda === "" ? null : Number(d.renda);
   d.tem_filhos = d.tem_filhos === "" ? null : d.tem_filhos === "sim";
+  d.imovel_id = d.imovel_id || null;
+  d.valor_imovel = d.valor_imovel === "" ? null : Number(d.valor_imovel);
+  if (faltaV8) { delete d.imovel_id; delete d.valor_imovel; } // colunas ainda não criadas no banco
   for (const k of ["data_nascimento", "tipo_renda"]) if (d[k] === "") d[k] = null;
   d.atualizado_em = new Date().toISOString();
   const foto = $("ffoto").files[0];
@@ -897,10 +984,12 @@ $("form").onsubmit = async e => {
     ? await sb.from("clientes").update(d).eq("id", editId)
     : await sb.from("clientes").insert(d);
   if (error) return msg("Erro ao salvar: " + erroEtapa(error.message), true);
-  if (editId && clientes.find(c => c.id === editId)?.status !== d.status) await registrar(editId, "Etapa", STATUS[d.status]);
+  const mudou = editId && clientes.find(c => c.id === editId)?.status !== d.status;
+  if (mudou) await registrar(editId, "Etapa", STATUS[d.status]);
   msg("Salvo.");
   await carregar();
   editId ? abrir(clientes.find(c => c.id === editId), false) : voltar();
+  if (mudou) oferecerVenda(clientes.find(c => c.id === editId));
 };
 
 $("busca").oninput = $("fstatus").onchange = desenhar;
@@ -1049,7 +1138,7 @@ document.addEventListener("click", e => {
   if (a === "novoimovel") abrirImovel(null);
   if (a === "share") compartilharSite();
   if (a === "contato") { $("ordem").value = "contato"; irRaiz("clientes"); }
-  if (["clientes", "agenda", "portfolio", "perfil"].includes(a)) irRaiz(a);
+  if (["clientes", "agenda", "portfolio", "vendas", "perfil"].includes(a)) irRaiz(a);
   if (a === "novocomp") abrirComp({});
   if (a === "agvisita") abrirComp({ tipo: "visita", cliente_id: editId });
   if (a === "agretorno") abrirComp({ tipo: "retorno", cliente_id: editId });
@@ -1198,6 +1287,201 @@ $("okform").onsubmit = async e => {
   // Visita feita move o cliente para "Visita realizada".
   if (c && a.tipo === "visita" && ["lead", "visita"].includes(c.status)) await mover(c.id, "visita_feita");
   else await carregar();
+};
+
+// ---------- Minhas vendas: vendas concluídas, comissões e meta ----------
+let vendas = [], faltaV8 = false, vendaId = null;
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const PG = { pendente: "A receber", parcial: "Recebida em parte", recebido: "Recebida" };
+const comTotal = v => Number(v.valor_venda || 0) * Number(v.comissao_pct || 0) / 100;
+const minha = v => comTotal(v) * Number(v.divisao_pct ?? 100) / 100;
+const recebido = v => v.pagamento_status === "recebido" ? minha(v) : Number(v.valor_recebido || 0);
+const aReceber = v => Math.max(0, minha(v) - recebido(v));
+const pctPadrao = () => perfil?.comissao_padrao ?? 5;
+const isoLocal = d => new Date(d).toLocaleDateString("sv"); // aaaa-mm-dd no fuso do aparelho
+const dataCurta = d => d ? new Date(d + "T12:00").toLocaleDateString("pt-BR") : "";
+const din = v => "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nomeVenda = v => clientes.find(c => c.id === v.cliente_id)?.nome || v.cliente_nome || "—";
+const imovelVenda = v => imoveis.find(i => i.id === v.imovel_id)?.titulo || v.imovel_desc || "—";
+for (let m = 1; m <= 12; m++) $("vmes").add(new Option(new Date(2000, m - 1, 1).toLocaleDateString("pt-BR", { month: "long" }), m));
+
+function vendasFiltradas() {
+  const ano = $("vano").value, mes = $("vmes").value;
+  return vendas.filter(v => (ano === "todos" || v.data_venda.startsWith(ano)) && (!mes || +v.data_venda.slice(5, 7) === +mes));
+}
+function desenharVendas() {
+  if (faltaV8) {
+    $("vaviso").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v8.sql</b> no SQL Editor do Supabase para ativar Minhas vendas.</div>';
+    for (const id of ["vkpis", "vgraf", "veixo", "vmeta", "vtab"]) $(id).innerHTML = "";
+    return;
+  }
+  const atual = $("vano").value || String(new Date().getFullYear());
+  const anos = [...new Set([new Date().getFullYear(), ...vendas.map(v => +v.data_venda.slice(0, 4))])].sort((a, b) => b - a);
+  $("vano").innerHTML = anos.map(a => `<option ${String(a) === atual ? "selected" : ""}>${a}</option>`).join("")
+    + `<option value="todos" ${atual === "todos" ? "selected" : ""}>Todos os anos</option>`;
+
+  const lista = vendasFiltradas(), soma = f => lista.reduce((t, v) => t + f(v), 0);
+  const vgv = soma(v => Number(v.valor_venda)), com = soma(minha);
+  const ciclos = lista.map(v => { const c = clientes.find(x => x.id === v.cliente_id); return c ? (new Date(v.data_venda + "T12:00") - new Date(c.criado_em)) / 864e5 : null; })
+    .filter(x => x != null && x >= 0);
+  const sem = clientes.filter(c => c.status === "fechado" && !vendas.some(v => v.cliente_id === c.id));
+  $("vaviso").innerHTML = sem.length ? `<div class="etapa"><strong>${sem.length} cliente${sem.length > 1 ? "s" : ""} em "Chaves entregues" sem venda registrada.</strong>
+    <p>Clique em "Importar vendas concluídas" para trazer ${sem.length > 1 ? "todos" : "ele"} de uma vez.</p></div>` : "";
+  $("vkpis").innerHTML = [
+    [lista.length, "vendas no período"],
+    [dinheiro(vgv), "volume vendido (VGV)"],
+    [din(com), "sua comissão"],
+    [din(soma(recebido)), "comissão recebida"],
+    [din(soma(aReceber)), "comissão a receber"],
+    [lista.length ? dinheiro(Math.round(vgv / lista.length)) : "—", "valor médio por venda"],
+    [ciclos.length ? Math.round(ciclos.reduce((a, b) => a + b, 0) / ciclos.length) + " dias" : "—", "do cadastro até a venda (média)"]
+  ].map(([n, t]) => `<div><b>${n}</b><span>${t}</span></div>`).join("");
+
+  // Gráfico: sua comissão nos últimos 12 meses (não depende do filtro).
+  const hoje = new Date(), meses = [];
+  for (let k = 11; k >= 0; k--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - k, 1);
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, doMes = vendas.filter(v => v.data_venda.startsWith(chave));
+    meses.push({ chave, rot: MESES[d.getMonth()] + (d.getMonth() === 0 || k === 11 ? "/" + String(d.getFullYear()).slice(2) : ""),
+      nome: d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }), total: doMes.reduce((t, v) => t + minha(v), 0), n: doMes.length });
+  }
+  const max = Math.max(...meses.map(m => m.total));
+  const rotulo = m => m.total > 0 && (m.total === max || m === meses[11]); // só o maior mês e o mês atual levam valor
+  $("vgraf").innerHTML = max ? meses.map(m => `
+    <div class="col2" title="${m.nome}: ${din(m.total)} em ${m.n} venda${m.n === 1 ? "" : "s"}">
+      ${rotulo(m) ? `<span class="v">${dinheiro(Math.round(m.total))}</span>` : ""}
+      <div class="b" style="height:${m.total ? Math.max(2, m.total / max * 82) : 0}%"></div>
+    </div>`).join("") : '<p class="mut" style="margin:auto">Nenhuma venda nos últimos 12 meses.</p>';
+  $("veixo").innerHTML = max ? meses.map(m => `<span>${m.rot}</span>`).join("") : "";
+
+  // Meta do mês atual.
+  const mesAtual = meses[11], meta = Number(perfil?.meta_mensal) || 0;
+  $("vmesatual").textContent = mesAtual.nome;
+  $("vmeta").innerHTML = `<div style="font-size:26px;font-weight:700">${din(mesAtual.total)}${meta ? ` <span class="mut" style="font-size:14px;font-weight:400">de ${din(meta)}</span>` : ""}</div>`
+    + (meta ? `<div class="meta"><i style="width:${Math.min(100, mesAtual.total / meta * 100)}%"></i></div>
+      <div class="mut">${mesAtual.total >= meta ? "Meta batida! 🎉" : "Faltam " + din(meta - mesAtual.total) + " para a meta"}</div>`
+      : '<p class="mut" style="margin:6px 0 0">Defina abaixo uma meta mensal de comissão para acompanhar o progresso.</p>');
+  if (document.activeElement !== $("vmetain")) $("vmetain").value = perfil?.meta_mensal ?? "";
+  if (document.activeElement !== $("vpctin")) $("vpctin").value = perfil?.comissao_padrao ?? "";
+
+  $("vtab").innerHTML = `<thead><tr><th>Data</th><th>Cliente</th><th>Imóvel</th><th>Pagamento</th><th class="n">Valor da venda</th><th class="n">Comissão</th><th class="n">Sua comissão</th><th>Recebimento</th><th></th></tr></thead><tbody>`
+    + (lista.length ? lista.map(v => `<tr>
+      <td>${dataCurta(v.data_venda)}</td>
+      <td>${v.cliente_id && clientes.some(c => c.id === v.cliente_id) ? `<a href="#" data-vcli="${v.cliente_id}">${esc(nomeVenda(v))}</a>` : esc(nomeVenda(v))}</td>
+      <td>${esc(imovelVenda(v))}</td>
+      <td><small>${esc(v.forma_pagamento || "")}</small></td>
+      <td class="n">${dinheiro(v.valor_venda)}</td>
+      <td class="n">${Number(v.comissao_pct).toLocaleString("pt-BR")}%${Number(v.divisao_pct) !== 100 ? ` <small class="mut">(sua parte ${Number(v.divisao_pct)}%)</small>` : ""}</td>
+      <td class="n"><strong>${din(minha(v))}</strong></td>
+      <td><span class="pg ${v.pagamento_status}">${PG[v.pagamento_status]}</span>${v.pagamento_status !== "recebido" && aReceber(v) ? `<br><small class="mut">falta ${din(aReceber(v))}</small>` : ""}</td>
+      <td style="white-space:nowrap"><button data-vedit="${v.id}">Editar</button> <button class="bad" data-vdel="${v.id}" title="Excluir">✕</button></td>
+    </tr>`).join("") + `<tr><td colspan="4"><strong>Total (${lista.length})</strong></td><td class="n"><strong>${dinheiro(vgv)}</strong></td><td></td><td class="n"><strong>${din(com)}</strong></td><td colspan="2"><small class="mut">a receber ${din(soma(aReceber))}</small></td></tr>`
+      : '<tr><td colspan="9" class="mut">Nenhuma venda neste período. Use "+ Registrar venda" ou "Importar vendas concluídas".</td></tr>')
+    + "</tbody>";
+}
+$("vano").onchange = $("vmes").onchange = desenhar;
+$("vtab").onclick = async e => {
+  const b = e.target.closest("[data-vedit],[data-vdel],[data-vcli]"); if (!b) return;
+  e.preventDefault();
+  if (b.dataset.vcli) return abrir(clientes.find(c => c.id === b.dataset.vcli));
+  const v = vendas.find(x => x.id === (b.dataset.vedit || b.dataset.vdel));
+  if (b.dataset.vedit) abrirVenda(v);
+  if (b.dataset.vdel && confirm("Excluir esta venda?")) {
+    const { error } = await sb.from("vendas").delete().eq("id", v.id);
+    error ? msg(error.message, true) : (msg("Venda excluída."), carregar());
+  }
+};
+
+function abrirVenda(v = {}) {
+  if (faltaV8) return msg("Rode o schema_v8.sql no SQL Editor do Supabase para ativar Minhas vendas.", true);
+  vendaId = v.id || null;
+  const f = $("vform"); f.reset();
+  f.cliente_id.innerHTML = '<option value="">—</option>' + clientes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+  f.imovel_id.innerHTML = '<option value="">— não está no portfólio —</option>' + imoveis.filter(i => i.status !== "vendido" || i.id === v.imovel_id)
+    .map(i => `<option value="${i.id}">${esc(i.titulo)}${i.preco ? " – " + dinheiro(i.preco) : ""}</option>`).join("");
+  const val = { data_venda: isoLocal(new Date()), comissao_pct: pctPadrao(), divisao_pct: 100, ...v };
+  for (const el of f.elements) if (el.name && val[el.name] != null && el.type !== "checkbox") el.value = val[el.name];
+  $("vtit").textContent = vendaId ? "Editar venda" : "Registrar venda";
+  calcVenda(); $("vdlg").showModal();
+}
+function calcVenda() {
+  const f = $("vform"), v = { valor_venda: +f.valor_venda.value || 0, comissao_pct: +f.comissao_pct.value || 0, divisao_pct: +f.divisao_pct.value || 0 };
+  $("vcalc").innerHTML = `Comissão total: <strong>${din(comTotal(v))}</strong> · Sua parte (${v.divisao_pct}%): <strong>${din(minha(v))}</strong>`;
+}
+$("vform").addEventListener("input", calcVenda);
+$("vform").cliente_id.onchange = e => {
+  const c = clientes.find(x => x.id === e.target.value), f = $("vform"); if (!c) return;
+  if (c.imovel_id && !f.imovel_id.value) f.imovel_id.value = c.imovel_id;
+  if (!+f.valor_venda.value) f.valor_venda.value = c.valor_imovel || imoveis.find(i => i.id === c.imovel_id)?.preco || "";
+  calcVenda();
+};
+$("vform").imovel_id.onchange = e => { const i = imoveis.find(x => x.id === e.target.value); if (i?.preco) $("vform").valor_venda.value = i.preco; calcVenda(); };
+$("vcancel").onclick = () => $("vdlg").close();
+$("vform").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, d = Object.fromEntries(new FormData(f));
+  const c = clientes.find(x => x.id === d.cliente_id), i = imoveis.find(x => x.id === d.imovel_id);
+  const r = {
+    cliente_id: d.cliente_id || null, cliente_nome: c?.nome || null, imovel_id: d.imovel_id || null, imovel_desc: d.imovel_desc.trim() || i?.titulo || null,
+    data_venda: d.data_venda, valor_venda: +d.valor_venda, comissao_pct: +d.comissao_pct, divisao_pct: +d.divisao_pct, forma_pagamento: d.forma_pagamento,
+    pagamento_status: d.pagamento_status, valor_recebido: +d.valor_recebido || 0, data_recebimento: d.data_recebimento || null, obs: d.obs.trim() || null
+  };
+  if (r.pagamento_status === "recebido" && !r.valor_recebido) r.valor_recebido = Math.round(minha(r) * 100) / 100;
+  const { error } = vendaId ? await sb.from("vendas").update(r).eq("id", vendaId) : await sb.from("vendas").insert(r);
+  if (error) return msg("Erro ao salvar a venda: " + error.message, true);
+  $("vdlg").close();
+  if (i && f.marcar_vendido.checked && i.status !== "vendido") await sb.from("imoveis").update({ status: "vendido" }).eq("id", i.id);
+  if (c && !vendaId) await registrar(c.id, "Anotação", `Venda registrada: ${dinheiro(r.valor_venda)} · sua comissão ${din(minha(r))}`);
+  msg("Venda salva."); await carregar();
+};
+$("vnova").onclick = () => abrirVenda();
+
+// Ao chegar em "Chaves entregues", oferece registrar a venda (uma vez por cliente).
+function oferecerVenda(c) {
+  if (!c || c.status !== "fechado" || faltaV8 || vendas.some(v => v.cliente_id === c.id)) return;
+  if (confirm(`${c.nome} chegou em "Chaves entregues". Registrar a venda e a comissão agora?`))
+    abrirVenda({ cliente_id: c.id, imovel_id: c.imovel_id, valor_venda: c.valor_imovel || imoveis.find(i => i.id === c.imovel_id)?.preco || "" });
+}
+
+// Importa de uma vez os clientes em "Chaves entregues" que ainda não têm venda registrada.
+$("vimportar").onclick = async () => {
+  if (faltaV8) return msg("Rode o schema_v8.sql no SQL Editor do Supabase para ativar Minhas vendas.", true);
+  const pend = clientes.filter(c => c.status === "fechado" && !vendas.some(v => v.cliente_id === c.id));
+  if (!pend.length) return msg('Nada novo para importar: todos os clientes em "Chaves entregues" já têm venda registrada.');
+  if (!confirm(`Importar ${pend.length} venda${pend.length > 1 ? "s" : ""} de clientes em "Chaves entregues"?\nUsa o valor do imóvel de interesse e a comissão padrão de ${pctPadrao()}%. Depois confira cada uma.`)) return;
+  const { data: et } = await sb.from("interacoes").select("cliente_id,criado_em").eq("tipo", "Etapa").eq("texto", STATUS.fechado)
+    .in("cliente_id", pend.map(c => c.id)).order("criado_em", { ascending: false });
+  const linhas = pend.map(c => {
+    const i = imoveis.find(x => x.id === c.imovel_id), quando = et?.find(x => x.cliente_id === c.id)?.criado_em || c.atualizado_em;
+    return { cliente_id: c.id, cliente_nome: c.nome, imovel_id: c.imovel_id || null, imovel_desc: i?.titulo || c.interesse || null,
+      data_venda: isoLocal(quando), valor_venda: c.valor_imovel || i?.preco || c.orcamento || 0, comissao_pct: pctPadrao(), divisao_pct: 100,
+      obs: "Importada do CRM: confira os valores" };
+  });
+  const { error } = await sb.from("vendas").insert(linhas);
+  if (error) return msg("Erro ao importar: " + error.message, true);
+  msg(`${linhas.length} venda${linhas.length > 1 ? "s importadas" : " importada"}. Confira os valores na tabela.`); await carregar();
+};
+
+// Planilha (CSV) das vendas do período, abre no Excel / Google Planilhas.
+$("vexportar").onclick = () => {
+  const num = n => Number(n || 0).toFixed(2).replace(".", ",");
+  const cab = ["Data", "Cliente", "Imóvel", "Forma de pagamento", "Valor da venda", "Comissão %", "Comissão total", "Sua parte %", "Sua comissão", "Recebimento", "Valor recebido", "Data do recebimento", "Observações"];
+  const linhas = vendasFiltradas().map(v => [dataCurta(v.data_venda), nomeVenda(v), imovelVenda(v), v.forma_pagamento || "", num(v.valor_venda), num(v.comissao_pct),
+    num(comTotal(v)), num(v.divisao_pct), num(minha(v)), PG[v.pagamento_status], num(recebido(v)), dataCurta(v.data_recebimento), v.obs || ""]);
+  if (!linhas.length) return msg("Nenhuma venda no período escolhido para exportar.");
+  const csv = "﻿" + [cab, ...linhas].map(l => l.map(x => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `vendas-${$("vano").value}${$("vmes").value ? "-" + String($("vmes").value).padStart(2, "0") : ""}.csv`;
+  a.click();
+};
+
+// Meta mensal e comissão padrão ficam no perfil do corretor.
+$("vmetasalvar").onclick = async () => {
+  const meta = $("vmetain").value === "" ? null : +$("vmetain").value, pct = $("vpctin").value === "" ? null : +$("vpctin").value;
+  const { error } = await sb.from("perfil").upsert({ user_id: await uid(), meta_mensal: meta, comissao_padrao: pct });
+  if (error) return msg("Erro ao salvar: " + erroEtapa(error.message), true);
+  msg("Meta e comissão padrão salvas."); await carregar();
 };
 
 // Envio rápido de fotos direto do cartão do imóvel (sem abrir o cadastro).
