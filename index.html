@@ -114,6 +114,8 @@
   .rolagem{overflow-x:auto}
   .pg{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid;white-space:nowrap}
   .pg.recebido{color:var(--ok)}.pg.parcial{color:#b26a00}.pg.pendente{color:var(--mut)}
+  .kpis div.liq{background:#eaf6ee;border-color:var(--ok)}.kpis div.liq b{color:var(--ok)}.kpis div.neg{background:#fdeceb;border-color:var(--bad)}.kpis div.neg b{color:var(--bad)}
+  .catl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:6px 0}.catl .contbar{grid-column:1/-1}
   .grafico{display:flex;align-items:flex-end;gap:2px;height:170px;padding:22px 0 0;border-bottom:1px solid var(--bd)}
   .grafico .col2{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
   .grafico .b{width:70%;max-width:38px;background:var(--pri);border-radius:4px 4px 0 0}
@@ -228,7 +230,7 @@
     <span><b id="marcanome">CRM Imobiliário</b><small id="marcasub">Clientes e imóveis</small></span>
   </a>
   <nav id="menu" class="hide">
-    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="vendas">Minhas vendas</button><button data-nav="perfil">Meu perfil</button>
+    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="vendas">Minhas vendas</button><button data-nav="gastos">Gastos</button><button data-nav="perfil">Meu perfil</button>
     <a id="lvitrine" href="vitrine.html" target="_blank" rel="noopener">Ver meu site ↗</a>
   </nav>
   <span class="conta"><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
@@ -411,6 +413,32 @@
       <div class="rolagem"><table class="tabv" id="vtab"></table></div>
     </section>
 
+    <section id="gastos" class="hide">
+      <div class="secao-tit"><h2>Gastos e líquido do mês</h2>
+        <div class="bar" style="margin:0">
+          <select id="gano"></select>
+          <select id="gmes"><option value="">Ano todo</option></select>
+          <button id="gexportar">Exportar planilha</button>
+          <button class="pri" id="gnovo">+ Registrar gasto</button>
+        </div>
+      </div>
+      <div id="gaviso"></div>
+      <div class="kpis" id="gkpis"></div>
+      <div class="duas">
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Para onde foi o dinheiro</h3><span class="mut" id="gtotcat" style="font-size:13px"></span></div>
+          <div id="gcats"></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Líquido mês a mês</h3><span class="mut" style="font-size:13px">comissão recebida − gastos</span></div>
+          <div class="grafico" id="ggraf" role="img" aria-label="Líquido por mês nos últimos 12 meses"></div><div class="eixo" id="geixo"></div>
+        </div>
+      </div>
+      <h3 style="margin:18px 0 8px">Gastos do período</h3>
+      <div class="rolagem"><table class="tabv" id="gtab"></table></div>
+      <p class="mut" style="font-size:13px">A comissão recebida entra no mês da <strong>data do recebimento</strong> informada na venda (sem data, vale a data da venda). Só conta a sua parte da comissão.</p>
+    </section>
+
     <section id="portfolio" class="hide">
       <div class="secao-tit"><h2>Portfólio de imóveis</h2>
         <div class="bar" style="margin:0">
@@ -495,6 +523,18 @@
     <label style="margin-top:10px">Local</label><input name="local" placeholder="Endereço ou ponto de encontro">
     <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2"></textarea>
     <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar</button><button type="button" id="agcancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="gdlg">
+  <form id="gform">
+    <h3 id="gtit" style="margin-top:0">Registrar gasto</h3>
+    <div class="row">
+      <div><label>Data</label><input name="data" type="date" required></div>
+      <div><label>Valor (R$)</label><input name="valor" type="number" min="0" step="0.01" inputmode="decimal" required></div>
+      <div style="grid-column:1/-1"><label>Categoria</label><select name="categoria"></select></div>
+      <div style="grid-column:1/-1"><label>Descrição (opcional)</label><input name="descricao" placeholder="Ex.: Uber para visita no Riacho Fundo"></div>
+    </div>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar gasto</button><button type="button" id="gcancel">Cancelar</button></div>
   </form>
 </dialog>
 <dialog id="vdlg">
@@ -687,6 +727,8 @@ async function carregar() {
   faltaV10 = !!pr.error; propostas = pr.data || [];
   const vd = await sb.from("vendas").select("*").order("data_venda", { ascending: false });
   faltaV8 = !!vd.error; vendas = vd.data || [];
+  const gs = await sb.from("gastos").select("*").order("data", { ascending: false }).order("criado_em", { ascending: false });
+  faltaV12 = !!gs.error; gastos = gs.data || [];
   const ap = await sb.from("interacoes").select("cliente_id,texto").like("texto", "Apresentou o imóvel:%");
   apresentados = new Set((ap.data || []).map(x => x.cliente_id + "|" + x.texto.replace("Apresentou o imóvel: ", "")));
   const ag = await sb.from("compromissos").select("*").order("quando");
@@ -718,6 +760,7 @@ function desenhar() {
   if (telaAtual === "portfolio") return desenharPortfolio();
   if (telaAtual === "agenda") return desenharAgenda();
   if (telaAtual === "vendas") return desenharVendas();
+  if (telaAtual === "gastos") return desenharGastos();
   if (telaAtual === "cliente") { propostasCliente(); matchCliente(); return agendaCliente(); }
   const itens = filtrados();
   if (visao === "funil") {
@@ -1009,8 +1052,8 @@ $("ordem").onchange = desenhar;
 // Telas do menu (início, clientes, portfólio, perfil) e telas internas (cliente, relatório, imóvel).
 // As internas entram no histórico do navegador, então o botão voltar do celular também funciona.
 let telaAtual = "inicio", nivel = 0, base = "inicio";
-const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", portfolio: "portfolio", vendas: "vendas", imovel: "imovelform", perfil: "perfilform" };
-const RAIZ = ["inicio", "clientes", "agenda", "portfolio", "vendas", "perfil"];
+const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", portfolio: "portfolio", vendas: "vendas", gastos: "gastos", imovel: "imovelform", perfil: "perfilform" };
+const RAIZ = ["inicio", "clientes", "agenda", "portfolio", "vendas", "gastos", "perfil"];
 function tela(t) {
   telaAtual = t;
   $("topo").classList.toggle("hide", t !== "clientes");
@@ -1230,7 +1273,8 @@ function desenharInicio() {
     [fin, "em documentação / financiamento", "clientes"],
     [clientes.filter(c => c.status === "fechado").length, "vendas concluídas", "clientes"],
     [imoveis.filter(i => i.status === "disponivel").length, "imóveis disponíveis", "portfolio"],
-    ...(vendas.some(v => v.pagamento_status !== "recebido") ? [[din(vendas.reduce((t, v) => t + aReceber(v), 0)), "comissões a receber", "vendas"]] : [])
+    ...(vendas.some(v => v.pagamento_status !== "recebido") ? [[din(vendas.reduce((t, v) => t + aReceber(v), 0)), "comissões a receber", "vendas"]] : []),
+    ...(!faltaV12 && gastos.length ? [[din(liquidoDoMes(chaveMes(new Date()))), "líquido do mês", "gastos"]] : [])
   ].map(([n, txt, a]) => `<div class="click" data-acao="${a}"><b>${n}</b><span>${txt}</span></div>`).join("");
   $("pend").innerHTML = pend.length ? pend.slice(0, 6).map(c => `
     <div class="item" data-e="${c.id}"><span><strong>${esc(c.nome)}</strong><br><small>${ultimoContato(c)}</small></span><span class="tag">${STATUS[c.status]}</span></div>`).join("")
@@ -1274,7 +1318,7 @@ document.addEventListener("click", e => {
   if (a === "novoimovel") abrirImovel(null);
   if (a === "share") compartilharSite();
   if (a === "contato") { $("ordem").value = "contato"; irRaiz("clientes"); }
-  if (["clientes", "agenda", "portfolio", "vendas", "perfil"].includes(a)) irRaiz(a);
+  if (["clientes", "agenda", "portfolio", "vendas", "gastos", "perfil"].includes(a)) irRaiz(a);
   if (a === "novocomp") abrirComp({});
   if (a === "agvisita") abrirComp({ tipo: "visita", cliente_id: editId });
   if (a === "agretorno") abrirComp({ tipo: "retorno", cliente_id: editId });
@@ -2055,6 +2099,127 @@ $("iexcluir").onclick = async () => {
   const { error } = await sb.from("imoveis").delete().eq("id", i.id);
   if (error) return msg(error.message, true);
   msg("Imóvel excluído."); await carregar(); voltar();
+};
+
+
+// ---------- Gastos: o que o corretor gasta para vender, abatido da comissão recebida ----------
+let gastos = [], faltaV12 = false, gastoId = null;
+const CAT = {
+  transporte: ["🚗", "Transporte (gasolina, Uber, estacionamento, pedágio)"],
+  alimentacao: ["🍽️", "Alimentação"],
+  divulgacao: ["📣", "Divulgação (anúncios, impulsionamento, placas, material)"],
+  portais: ["🌐", "Portais, sistemas e CRM"],
+  documentacao: ["📄", "Documentação e taxas (cartório, certidões, avaliação)"],
+  telefone: ["📱", "Telefone e internet"],
+  impostos: ["🧾", "Impostos e contribuições (MEI, INSS, ISS)"],
+  creci: ["🪪", "CRECI, sindicato e anuidades"],
+  capacitacao: ["🎓", "Cursos e capacitação"],
+  escritorio: ["🖨️", "Escritório e materiais"],
+  parceria: ["🤝", "Repasse a parceiro / indicação"],
+  outros: ["📌", "Outros"]
+};
+const chaveMes = d => { const x = new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, "0")}`; };
+const mesDe = dataIso => dataIso.slice(0, 7);
+// Comissão que o corretor recebeu no mês (a parte dele), pela data do recebimento.
+const recebidoNoMes = ym => vendas.filter(v => (!meuId || v.user_id === meuId) && mesDe(v.data_recebimento || v.data_venda) === ym).reduce((t, v) => t + recebido(v), 0);
+const gastoNoMes = ym => gastos.filter(g => mesDe(g.data) === ym).reduce((t, g) => t + Number(g.valor), 0);
+const liquidoDoMes = ym => recebidoNoMes(ym) - gastoNoMes(ym);
+function gastosFiltrados() {
+  const ano = $("gano").value, mes = $("gmes").value;
+  return gastos.filter(g => (ano === "todos" || g.data.startsWith(ano)) && (!mes || +g.data.slice(5, 7) === +mes));
+}
+for (let m = 1; m <= 12; m++) $("gmes").add(new Option(new Date(2000, m - 1, 1).toLocaleDateString("pt-BR", { month: "long" }), m));
+function desenharGastos() {
+  if (faltaV12) {
+    $("gaviso").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v12.sql</b> no SQL Editor do Supabase para ativar os Gastos.</div>';
+    for (const id of ["gkpis", "gcats", "ggraf", "geixo", "gtab"]) $(id).innerHTML = "";
+    return;
+  }
+  $("gaviso").innerHTML = "";
+  const atual = $("gano").value || String(new Date().getFullYear());
+  const anos = [...new Set([new Date().getFullYear(), ...gastos.map(g => +g.data.slice(0, 4)), ...vendas.map(v => +(v.data_recebimento || v.data_venda).slice(0, 4))])].sort((a, b) => b - a);
+  if (!$("gano").options.length || $("gano").dataset.n !== String(anos.length)) {
+    $("gano").innerHTML = anos.map(a => `<option ${String(a) === atual ? "selected" : ""}>${a}</option>`).join("") + `<option value="todos" ${atual === "todos" ? "selected" : ""}>Todos os anos</option>`;
+    $("gano").dataset.n = String(anos.length);
+    if (!$("gmes").dataset.ini) { $("gmes").value = String(new Date().getMonth() + 1); $("gmes").dataset.ini = "1"; }
+  }
+  const ano = $("gano").value, mes = $("gmes").value;
+  const lista = gastosFiltrados(), totG = lista.reduce((t, g) => t + Number(g.valor), 0);
+  const recs = vendas.filter(v => (!meuId || v.user_id === meuId) && (ano === "todos" || (v.data_recebimento || v.data_venda).startsWith(ano)) && (!mes || +(v.data_recebimento || v.data_venda).slice(5, 7) === +mes));
+  const totR = recs.reduce((t, v) => t + recebido(v), 0), liq = totR - totG;
+  $("gkpis").innerHTML = [
+    [din(totR), "comissão recebida no período", ""],
+    [din(totG), "gastos no período", ""],
+    [din(liq), "LÍQUIDO no período", liq < 0 ? "neg" : "liq"],
+    [totR ? Math.round(totG / totR * 100) + "%" : "—", "da comissão foi para gastos", ""]
+  ].map(([n, t, c]) => `<div class="${c}"><b>${n}</b><span>${t}</span></div>`).join("");
+
+  const porCat = {};
+  for (const g of lista) porCat[g.categoria] = (porCat[g.categoria] || 0) + Number(g.valor);
+  const ordem = Object.entries(porCat).sort((a, b) => b[1] - a[1]), maxC = ordem[0]?.[1] || 1;
+  $("gtotcat").textContent = ordem.length ? din(totG) : "";
+  $("gcats").innerHTML = ordem.length ? ordem.map(([k, v]) => `<div class="catl"><span>${(CAT[k] || CAT.outros)[0]} ${esc((CAT[k] || CAT.outros)[1].split(" (")[0])}</span><strong>${din(v)}</strong>
+      <div class="contbar"><i style="width:${v / maxC * 100}%"></i></div></div>`).join("") : '<p class="mut" style="margin:0">Nenhum gasto neste período.</p>';
+
+  const hoje = new Date(), meses = [];
+  for (let k = 11; k >= 0; k--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - k, 1), ym = chaveMes(d);
+    meses.push({ rot: MESES[d.getMonth()] + (d.getMonth() === 0 || k === 11 ? "/" + String(d.getFullYear()).slice(2) : ""),
+      nome: d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }), rec: recebidoNoMes(ym), gas: gastoNoMes(ym) });
+  }
+  const maxL = Math.max(...meses.map(m => m.rec - m.gas));
+  $("ggraf").innerHTML = maxL > 0 ? meses.map((m, i) => { const l = m.rec - m.gas; return `
+    <div class="col2" title="${m.nome}: recebido ${din(m.rec)} − gastos ${din(m.gas)} = líquido ${din(l)}">
+      ${l > 0 && (l === maxL || i === 11) ? `<span class="v">${dinheiro(Math.round(l))}</span>` : ""}
+      <div class="b" style="height:${l > 0 ? Math.max(2, l / maxL * 82) : 0}%"></div></div>`; }).join("") : '<p class="mut" style="margin:auto">Ainda não há líquido positivo nos últimos 12 meses.</p>';
+  $("geixo").innerHTML = maxL > 0 ? meses.map(m => `<span>${m.rot}</span>`).join("") : "";
+
+  $("gtab").innerHTML = '<thead><tr><th>Data</th><th>Categoria</th><th>Descrição</th><th class="n">Valor</th><th></th></tr></thead><tbody>'
+    + (lista.length ? lista.map(g => `<tr><td>${dataCurta(g.data)}</td><td>${(CAT[g.categoria] || CAT.outros)[0]} ${esc((CAT[g.categoria] || CAT.outros)[1].split(" (")[0])}</td>
+      <td>${esc(g.descricao || "")}</td><td class="n"><strong>${din(g.valor)}</strong></td>
+      <td style="white-space:nowrap"><button data-gedit="${g.id}">Editar</button> <button class="bad" data-gdel="${g.id}" title="Excluir">✕</button></td></tr>`).join("")
+      + `<tr><td colspan="3"><strong>Total (${lista.length})</strong></td><td class="n"><strong>${din(totG)}</strong></td><td></td></tr>`
+      : '<tr><td colspan="5" class="mut">Nenhum gasto neste período. Use "+ Registrar gasto".</td></tr>') + "</tbody>";
+}
+$("gano").onchange = $("gmes").onchange = desenhar;
+$("gform").categoria.innerHTML = Object.entries(CAT).map(([k, [ic, nome]]) => `<option value="${k}">${ic} ${esc(nome)}</option>`).join("");
+function abrirGasto(g = {}) {
+  if (faltaV12) return msg("Rode o schema_v12.sql no SQL Editor do Supabase para ativar os Gastos.", true);
+  gastoId = g.id || null;
+  const f = $("gform"); f.reset();
+  const val = { data: isoLocal(new Date()), categoria: "transporte", ...g };
+  for (const el of f.elements) if (el.name && val[el.name] != null) el.value = val[el.name];
+  $("gtit").textContent = gastoId ? "Editar gasto" : "Registrar gasto";
+  $("gdlg").showModal(); f.valor.focus();
+}
+$("gnovo").onclick = () => abrirGasto();
+$("gcancel").onclick = () => $("gdlg").close();
+$("gform").onsubmit = async e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target));
+  const r = { data: d.data, categoria: d.categoria, valor: +d.valor, descricao: d.descricao.trim() || null };
+  const { error } = gastoId ? await sb.from("gastos").update(r).eq("id", gastoId) : await sb.from("gastos").insert(r);
+  if (error) return msg("Erro ao salvar o gasto: " + error.message, true);
+  $("gdlg").close(); msg("Gasto salvo."); await carregar();
+};
+$("gtab").onclick = async e => {
+  const b = e.target.closest("[data-gedit],[data-gdel]"); if (!b) return;
+  const g = gastos.find(x => x.id === (b.dataset.gedit || b.dataset.gdel));
+  if (b.dataset.gedit) abrirGasto(g);
+  if (b.dataset.gdel && confirm("Excluir este gasto?")) {
+    const { error } = await sb.from("gastos").delete().eq("id", g.id);
+    error ? msg(error.message, true) : (msg("Gasto excluído."), carregar());
+  }
+};
+$("gexportar").onclick = () => {
+  const lista = gastosFiltrados();
+  if (!lista.length) return msg("Nenhum gasto no período escolhido para exportar.");
+  const cab = ["Data", "Categoria", "Descrição", "Valor"];
+  const linhas = lista.map(g => [dataCurta(g.data), (CAT[g.categoria] || CAT.outros)[1], g.descricao || "", Number(g.valor).toFixed(2).replace(".", ",")]);
+  const csv = "﻿" + [cab, ...linhas].map(l => l.map(x => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = "gastos.csv"; a.click(); URL.revokeObjectURL(a.href);
 };
 
 // ---------- Equipe: corretores que compartilham clientes, agenda, portfólio e vendas ----------
