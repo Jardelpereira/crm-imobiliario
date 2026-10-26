@@ -10,8 +10,7 @@
 <meta property="og:image" content="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1200&q=70&auto=format&fit=crop">
 <meta property="og:type" content="website">
 <style>
-  :root{--bg:#f4f6f9;--card:#fff;--tx:#1d2330;--mut:#667085;--pri:#14539a;--acc:#f2a516;--navy:#0b2545;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828;--zap:#1fa855}
-  @media (prefers-color-scheme:dark){:root{--bg:#10141b;--card:#1a1f28;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140;--pri:#3d7fd6}}
+  :root{color-scheme:light;--bg:#fdf8f3;--card:#fffdfb;--tx:#33302d;--mut:#7a7168;--pri:#1f7a8c;--acc:#f29b4b;--navy:#2b6777;--bd:#eee3d6;--ok:#12805c;--bad:#c62828;--zap:#1fa855}
   *{box-sizing:border-box}
   body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx)}
   a{color:inherit}
@@ -23,7 +22,7 @@
   .zap{display:inline-flex;align-items:center;gap:8px;background:var(--zap);color:#fff;text-decoration:none;font-weight:600;border-radius:999px;padding:9px 16px;border:none;cursor:pointer;font-size:15px}
   .zap svg{width:18px;height:18px}
   .hero{color:#fff;padding:72px 0 56px;
-    background:linear-gradient(90deg,rgba(11,37,69,.92),rgba(11,37,69,.35)),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1800&q=70&auto=format&fit=crop") center/cover}
+    background:linear-gradient(90deg,rgba(31,95,110,.92),rgba(31,95,110,.35)),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1800&q=70&auto=format&fit=crop") center/cover}
   .hero h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:0 0 10px;max-width:640px}
   .hero p{font-size:18px;opacity:.92;margin:0 0 26px;max-width:560px}
   .busca{background:var(--card);color:var(--tx);border-radius:14px;padding:14px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;box-shadow:0 10px 30px rgba(0,0,0,.25)}
@@ -39,14 +38,14 @@
   .tit h2{margin:0;font-size:26px}.tit span{color:var(--mut)}
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
   .im{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s,box-shadow .15s}
-  .im:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(11,37,69,.18)}
+  .im:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(31,95,110,.18)}
   .capa{position:relative;aspect-ratio:4/3;background:#dbe4f0 center/cover}
-  .preco{position:absolute;left:12px;bottom:12px;background:rgba(11,37,69,.92);color:#fff;font-weight:700;font-size:17px;padding:5px 12px;border-radius:8px}
+  .preco{position:absolute;left:12px;bottom:12px;background:rgba(31,95,110,.92);color:#fff;font-weight:700;font-size:17px;padding:5px 12px;border-radius:8px}
   .selo{position:absolute;left:12px;top:12px;background:var(--acc);color:#1b1300;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px}
   .selo.vendido{background:var(--bad);color:#fff}.selo.reservado{background:#7c3aed;color:#fff}
   .ilustra{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:6px}
   .gal .ilustra{right:auto;left:12px;bottom:12px;top:auto}
-  .em-breve .capa::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(11,37,69,.55),transparent 60%)}
+  .em-breve .capa::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(31,95,110,.55),transparent 60%)}
   .passos{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
   .passo{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
   .passo .img{aspect-ratio:16/9;background:#dbe4f0 center/cover}
@@ -74,7 +73,7 @@
   .gal .ant{left:10px}.gal .prox{right:10px}
   .gal .fechar{top:12px;right:12px;transform:none;font-size:18px}
   .gal .cont{position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:2px 8px;border-radius:6px}
-  .thumbs{display:flex;gap:6px;overflow-x:auto;padding:8px;background:#0b0f16}
+  .thumbs{display:flex;gap:6px;overflow-x:auto;padding:8px;background:#efe6da}
   .thumbs img{width:76px;height:56px;object-fit:cover;border-radius:6px;opacity:.55;cursor:pointer;flex:none;border:2px solid transparent}
   .thumbs img.on{opacity:1;border-color:var(--acc)}
   .det{padding:20px;display:grid;grid-template-columns:1fr 280px;gap:24px}
