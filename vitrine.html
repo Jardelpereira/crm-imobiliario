@@ -9,9 +9,12 @@
 <meta property="og:description" content="Veja fotos, valores e fale direto com o corretor pelo WhatsApp.">
 <meta property="og:image" content="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1200&q=70&auto=format&fit=crop">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#faf6f0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f4f6f9;--card:#fff;--tx:#1d2330;--mut:#667085;--pri:#14539a;--acc:#f2a516;--navy:#0b2545;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828;--zap:#1fa855}
-  @media (prefers-color-scheme:dark){:root{--bg:#10141b;--card:#1a1f28;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140;--pri:#3d7fd6}}
+  :root{--bg:#faf6f0;--card:#fff;--tx:#2b2620;--mut:#75695d;--pri:#2f7a64;--acc:#e9a23b;--navy:#1f4036;--bd:#ece3d6;--ok:#1e7f4f;--bad:#c62828;--zap:#1fa855}
   *{box-sizing:border-box}
   body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx)}
   a{color:inherit}
@@ -89,6 +92,25 @@
   @media (max-width:760px){.det{grid-template-columns:1fr}}
   #msg{padding:60px 16px;text-align:center;color:var(--mut)}
   .hide{display:none!important}
+  /* Tema claro e acolhedor (creme, verde-sálvia e dourado) */
+  body{font-family:"Nunito",system-ui,sans-serif}
+  h1,h2,h3,.marca b{font-weight:800;letter-spacing:-.01em}
+  header{background:rgba(255,255,255,.94);backdrop-filter:blur(8px);color:var(--tx);border-bottom:1px solid var(--bd)}
+  .marca{color:var(--tx)}.marca svg{color:var(--pri)}.marca small{opacity:1;color:var(--mut)}
+  .hero{color:var(--tx);background:linear-gradient(90deg,rgba(255,250,243,.97) 0%,rgba(255,250,243,.86) 44%,rgba(255,250,243,.08) 80%),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1800&q=70&auto=format&fit=crop") center/cover}
+  .hero p{color:var(--mut);opacity:1}
+  .busca{border:1px solid var(--bd);box-shadow:0 14px 34px rgba(60,40,20,.12)}
+  .busca input,.busca select{background:#fffdfa}
+  .faixa{color:var(--tx);gap:8px}.faixa span{background:rgba(255,255,255,.92);padding:4px 12px;border-radius:99px;box-shadow:0 1px 4px rgba(0,0,0,.08)}.faixa span::before{color:var(--pri)}
+  .im,.passo,.sobre{border-radius:16px;box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06)}
+  .im:hover{box-shadow:0 16px 34px rgba(60,40,20,.15)}
+  .capa,.passo .img{background-color:#efe7db}
+  .preco{background:rgba(255,255,255,.95);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .em-breve .capa::after{background:linear-gradient(0deg,rgba(31,64,54,.3),transparent 60%)}
+  .banner{background:linear-gradient(135deg,#2f7a64,#3f9479);box-shadow:0 12px 30px rgba(47,122,100,.25)}
+  .banner .zap{background:#fff;color:var(--pri)}
+  .foto{background-color:var(--pri)}
+  footer{background:#f1ebe2;color:var(--mut)}
 </style>
 </head>
 <body>

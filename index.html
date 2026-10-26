@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRM Imobiliário</title>
+<meta name="theme-color" content="#faf6f0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f4f6f9;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#14539a;--acc:#f2a516;--navy:#0b2545;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828}
-  @media (prefers-color-scheme:dark){:root{--bg:#10141b;--card:#1a1f28;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140;--pri:#3d7fd6}}
+  :root{--bg:#faf6f0;--card:#fff;--tx:#2b2620;--mut:#75695d;--pri:#2f7a64;--acc:#e9a23b;--navy:#1f4036;--bd:#ece3d6;--ok:#1e7f4f;--bad:#c62828}
   *{box-sizing:border-box}
   body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
   header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--bd)}
@@ -27,7 +30,7 @@
   .tag.fechado{color:var(--ok);border-color:var(--ok)}.tag.perdido{color:var(--bad);border-color:var(--bad)}
   .mut{color:var(--mut)}.hide{display:none!important}
   #msg{min-height:20px;margin:8px 0}
-  a{color:var(--pri)}@media (prefers-color-scheme:dark){a{color:#8fb0ff}}
+  a{color:var(--pri)}
   .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
   .gal p{grid-column:1/-1;margin:0}.gal figure{margin:0}.gal img{width:100%;height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
   .gal figcaption{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);margin-top:4px}
@@ -168,6 +171,35 @@
   .kpis div{border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
   .kpis b{display:block;font-size:20px}
   .kpis span{font-size:12px;color:var(--mut)}
+  /* Tema claro e acolhedor (creme, verde-sálvia e dourado) */
+  body{font-family:"Nunito",system-ui,sans-serif}
+  h1,h2,h3,h4,.marca b{font-weight:800;letter-spacing:-.01em}
+  .card{border-radius:14px;box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06)}
+  input,select,textarea{background:#fffdfa}
+  input:focus,select:focus,textarea:focus{outline:3px solid rgba(47,122,100,.18);border-color:var(--pri)}
+  button{border-radius:10px}button.pri{box-shadow:0 2px 10px rgba(47,122,100,.25)}
+  header.topbar{background:#fff;color:var(--tx);border-bottom:1px solid var(--bd);box-shadow:0 2px 14px rgba(60,40,20,.05)}
+  .marca{color:var(--tx)}.marca svg{color:var(--pri)}.marca small{opacity:1;color:var(--mut)}
+  #menu button,#menu a{color:var(--mut);font-weight:600}
+  #menu button:hover{background:var(--bg);color:var(--tx)}
+  #menu button.on{background:#e7f2ed;color:var(--pri)}
+  #menu a{color:#9a5b13}
+  .conta .mut{color:var(--mut)}.conta button{color:var(--tx);border-color:var(--bd);background:#fff}
+  .hero{color:var(--tx);border:1px solid var(--bd);box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06);min-height:270px;
+    background:linear-gradient(90deg,rgba(255,250,243,.97) 0%,rgba(255,250,243,.86) 44%,rgba(255,250,243,.08) 80%),url("https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .hero h1{font-size:32px}.hero p{color:var(--mut);opacity:1}
+  .btn-ghost{background:#fff;border-color:var(--bd);color:var(--tx)}
+  .login{box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06);border-radius:18px}
+  .login-hero{background:linear-gradient(0deg,rgba(31,64,54,.82),rgba(31,64,54,.05) 65%),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .im{border-radius:14px;box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06)}.im:hover{box-shadow:0 12px 28px rgba(60,40,20,.13)}
+  .im .capa{background-color:#efe7db}
+  .im .preco{background:rgba(255,255,255,.95);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .upcard{background:rgba(31,64,54,.45)}.upcard:hover{background:rgba(31,64,54,.62)}
+  .kpis div{background:var(--card);border-radius:12px}
+  .etapa,.cards3 > div{background:#fffaf2}
+  .ag,.tabv,.prop{border-radius:12px;background:var(--card)}
+  .slot{background:#fffdfa}
+  .grafico .b{background:var(--pri)}
   @media print{
     :root{--bg:#fff;--card:#fff;--tx:#000;--mut:#555;--bd:#ccc}
     body{background:#fff}
