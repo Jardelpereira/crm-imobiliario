@@ -139,6 +139,15 @@
   @media (max-width:760px){.login{grid-template-columns:1fr;min-height:0}.login-hero{min-height:230px}}
   .cab{display:flex;align-items:center;gap:14px;margin-bottom:14px}
   .cab h2{margin:0;font-size:22px}
+  .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 14px}
+  .cards3 > div{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;background:var(--bg);min-width:0}
+  .cards3 span{display:block;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+  .cards3 b{display:block;font-size:20px;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
+  .cards3 small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+  .cards3 .sit{border-left:4px solid var(--pri)}.cards3 .sit.fechado{border-left-color:var(--ok)}.cards3 .sit.perdido{border-left-color:var(--bad)}
+  @media (max-width:640px){.cards3{grid-template-columns:1fr}}
+  .aviso{position:fixed;right:16px;bottom:16px;z-index:50;max-width:360px;background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--acc);border-radius:12px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .aviso h4{margin:0 0 4px}.aviso p{margin:0 0 10px;color:var(--mut);font-size:14px}
   .avatar{flex:0 0 72px;width:72px;height:72px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;overflow:hidden;cursor:pointer;position:relative;margin:0}
   .avatar img{width:100%;height:100%;object-fit:cover}
   .avatar small{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);font-size:10px;font-weight:400;text-align:center;padding:2px 0}
@@ -226,6 +235,7 @@
         <label class="avatar hide" id="avatar" title="Trocar foto do cliente"><span id="avini"></span><small>foto</small><input id="favatar" type="file" accept="image/*" hidden></label>
         <div><h2 id="ftitulo">Novo cliente</h2><div id="fsub" class="mut"></div></div>
       </div>
+      <div class="cards3 hide" id="fcards"></div>
       <div id="esteira" class="hide"></div>
       <div class="row">
         <div><label>Nome *</label><input name="nome" required></div>
@@ -262,7 +272,9 @@
         <div class="bar" style="margin:10px 0 0"><button type="button" class="bad" id="hlimpaetapas">Apagar registros de mudança de etapa</button></div>
       </div>
       <div class="hist hide" id="docs">
-        <strong>Documentos</strong> <span id="docresumo" class="mut"></span>
+        <div class="secao-tit" style="margin:0"><span><strong>Documentos</strong> <span id="docresumo" class="mut"></span></span>
+          <label class="chk2" style="font-size:13px">Prazo para entregar: <input type="date" id="docprazo" style="width:auto;flex:none;min-width:0;padding:5px 8px"></label></div>
+        <div id="docprazoinfo" style="font-size:13px"></div>
         <div id="doclista" style="margin-top:6px"></div>
         <div class="bar" style="margin:8px 0 0">
           <input id="docnovo" placeholder="Outro documento (ex.: certidão de dependente)">
@@ -416,6 +428,7 @@
       <div><label>Cliente</label><select name="cliente_id"></select></div>
       <div><label>Data</label><input name="data" type="date" required></div>
       <div><label>Hora</label><input name="hora" type="time" required></div>
+      <div><label>Me avisar (com som)</label><select name="lembrete_min"><option value="0">Na hora</option><option value="15">15 min antes</option><option value="30" selected>30 min antes</option><option value="60">1 hora antes</option><option value="120">2 horas antes</option><option value="1440">1 dia antes</option></select></div>
       <div><label>Duração</label><select name="duracao"><option value="30">30 min</option><option value="60" selected>1 hora</option><option value="90">1h30</option><option value="120">2 horas</option></select></div>
       <div><label>Imóvel (opcional)</label><select name="imovel_id"></select></div>
     </div>
@@ -446,6 +459,18 @@
     <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar venda</button><button type="button" id="vcancel">Cancelar</button></div>
   </form>
 </dialog>
+<dialog id="lmdlg">
+  <h3 style="margin-top:0">Mensagem para o cliente</h3>
+  <p class="mut" style="margin:0 0 8px;font-size:14px" id="lmpara"></p>
+  <textarea id="lmtexto" rows="11" style="font-size:14px"></textarea>
+  <div class="bar" style="margin:12px 0 0">
+    <button type="button" class="pri" id="lmzap">Enviar no WhatsApp</button>
+    <button type="button" id="lmcopiar">Copiar mensagem</button>
+    <button type="button" id="lmfechar">Fechar</button>
+  </div>
+  <p class="mut" style="font-size:12px;margin:8px 0 0">Você pode editar o texto antes de enviar ou copiar.</p>
+</dialog>
+<div class="aviso hide" id="aviso"></div>
 <dialog id="okdlg">
   <form id="okform">
     <h3 style="margin-top:0">Como foi?</h3>
@@ -564,6 +589,7 @@ async function carregar() {
   ]);
   faltaV6 = !!(im.error || pf.error);
   imoveis = im.data || []; perfil = pf.data || null;
+  faltaV9 = !!(await sb.from("clientes").select("prazo_docs").limit(1)).error;
   const vd = await sb.from("vendas").select("*").order("data_venda", { ascending: false });
   faltaV8 = !!vd.error; vendas = vd.data || [];
   const ag = await sb.from("compromissos").select("*").order("quando");
@@ -665,7 +691,7 @@ async function mover(id, status) {
   await registrar(id, "Etapa", STATUS[status]);
   await carregar();
   const c = clientes.find(x => x.id === id);
-  if (editId === id && c) { $("form").status.value = status; $("fsub").innerHTML = subtitulo(c); historico(); }
+  if (editId === id && c) { $("form").status.value = status; $("fsub").innerHTML = subtitulo(c); cardsCliente(c); historico(); }
   oferecerVenda(c);
 }
 
@@ -777,6 +803,7 @@ async function documentos() {
   docs = data;
   const tipos = [...DOCS, ...data.map(d => d.tipo).filter(t => !DOCS.includes(t))];
   $("docresumo").textContent = `· ${data.filter(d => d.entregue).length} de ${tipos.length} entregues`;
+  infoPrazo(tipos.filter(t => !data.find(d => d.tipo === t)?.entregue));
   $("doclista").innerHTML = tipos.map(t => { const d = data.find(x => x.tipo === t) || {}; return `
     <div class="doc">
       <label class="chk"><input type="checkbox" data-ok="${esc(t)}" ${d.entregue ? "checked" : ""}> ${esc(t)}</label>
@@ -941,12 +968,14 @@ const interesse = c => {
   const i = imoveis.find(x => x.id === c.imovel_id), v = c.valor_imovel || i?.preco;
   return i || v ? `🏘 ${i ? esc(i.titulo) : "Imóvel"}${v ? " · " + dinheiro(v) : ""}` : "";
 };
-const subtitulo = c => `${STATUS[c.status]}${c.telefone ? " · " + esc(c.telefone) : ""}${interesse(c) ? "<br>" + interesse(c) : ""}<br>${ultimoContato(c)}`;
+const subtitulo = c => `${c.telefone ? esc(c.telefone) + "<br>" : ""}${ultimoContato(c)}`;
 function abrir(c, empilhar = true) {
   editId = c?.id ?? null;
   $("ftitulo").textContent = c ? c.nome : "Novo cliente";
   $("fsub").innerHTML = c ? subtitulo(c) : "";
   $("avatar").classList.toggle("hide", !c);
+  $("fcards").classList.toggle("hide", !c);
+  if (c) cardsCliente(c);
   if (c) avatar(c);
   const f = $("form"); f.reset();
   f.imovel_id.innerHTML = '<option value="">—</option>' + imoveis.filter(i => i.status !== "vendido" || i.id === c?.imovel_id)
@@ -1161,6 +1190,7 @@ const diaTxt = d => {
 function badgeAgenda() {
   const n = agenda.filter(a => !a.feito && new Date(a.quando) < diaSeguinte(0)).length;
   $("agbadge").textContent = n; $("agbadge").classList.toggle("hide", !n);
+  verificarAvisos();
 }
 function linkGoogle(a, c, i) {
   const f = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -1184,7 +1214,7 @@ function itemAgenda(a, comCliente = true) {
       ${atras ? '<small class="alerta">Atrasado</small>' : ""}</div>
     <div class="bar">${a.feito ? '<span class="tag fechado">Concluído</span>' : `
       <button type="button" class="pri" data-agok="${a.id}">✓ Concluir</button>
-      ${c?.telefone ? `<button type="button" data-aglembra="${a.id}">Lembrar cliente</button>` : ""}
+      ${c ? `<button type="button" data-aglembra="${a.id}">Mensagem ao cliente</button>` : ""}
       <button type="button" data-agedit="${a.id}">Reagendar</button>
       <a class="btn" target="_blank" rel="noopener" href="${esc(linkGoogle(a, c, i))}" title="Salvar no Google Agenda para receber aviso no celular">Google Agenda</a>`}
       <button type="button" class="bad" data-agdel="${a.id}" title="Excluir">✕</button></div>
@@ -1227,7 +1257,10 @@ function abrirComp(a) {
   const p = n => String(n).padStart(2, "0");
   f.data.value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   f.hora.value = `${p(d.getHours())}:${p(d.getMinutes())}`;
-  for (const k of ["tipo", "cliente_id", "imovel_id", "duracao", "local", "obs"]) if (a[k] != null) f[k].value = a[k];
+  for (const k of ["tipo", "cliente_id", "imovel_id", "duracao", "local", "obs", "lembrete_min"]) if (a[k] != null) f[k].value = a[k];
+  // Ao escolher o cliente, já sugere o imóvel de interesse dele.
+  f.cliente_id.onchange = () => { const c = clientes.find(x => x.id === f.cliente_id.value); if (c?.imovel_id && !f.imovel_id.value) f.imovel_id.value = c.imovel_id; };
+  if (!a.imovel_id) f.cliente_id.onchange();
   $("agtit").textContent = compId ? "Reagendar" : "Novo compromisso";
   $("agdlg").showModal();
 }
@@ -1237,10 +1270,14 @@ $("agform").onsubmit = async e => {
   const f = e.target, d = Object.fromEntries(new FormData(f));
   const r = {
     tipo: d.tipo, cliente_id: d.cliente_id || null, imovel_id: d.imovel_id || null, duracao: Number(d.duracao),
-    quando: new Date(`${d.data}T${d.hora}`).toISOString(), local: d.local.trim() || null, obs: d.obs.trim() || null
+    quando: new Date(`${d.data}T${d.hora}`).toISOString(), local: d.local.trim() || null, obs: d.obs.trim() || null,
+    lembrete_min: Number(d.lembrete_min)
   };
-  const { error } = compId ? await sb.from("compromissos").update(r).eq("id", compId) : await sb.from("compromissos").insert(r);
+  if (faltaV9) delete r.lembrete_min; // coluna ainda não criada no banco
+  const { data: salvo, error } = compId ? await sb.from("compromissos").update(r).eq("id", compId).select().single()
+    : await sb.from("compromissos").insert(r).select().single();
   if (error) return msg("Erro ao salvar o compromisso: " + error.message, true);
+  pedirPermissaoAviso();
   $("agdlg").close();
   const c = clientes.find(x => x.id === r.cliente_id);
   const quando = `${NOME_AG[r.tipo]} ${diaTxt(r.quando)} às ${hora(r.quando)}`;
@@ -1249,6 +1286,8 @@ $("agform").onsubmit = async e => {
   // Agendar visita de quem está no primeiro contato já move o cliente na esteira.
   if (c && r.tipo === "visita" && c.status === "lead") await mover(c.id, "visita");
   else await carregar();
+  // Já oferece a mensagem de confirmação para o cliente (editável, WhatsApp ou copiar).
+  if (c) mensagemCliente(salvo);
 };
 
 $("app").addEventListener("click", async e => {
@@ -1264,16 +1303,131 @@ $("app").addEventListener("click", async e => {
     const { error } = await sb.from("compromissos").delete().eq("id", a.id);
     error ? msg(error.message, true) : carregar();
   }
-  if (b.dataset.aglembra) {
-    const c = clientes.find(x => x.id === a.cliente_id);
-    let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
-    const oque = { visita: "nossa visita", retorno: "nossa conversa", assinatura: "a assinatura", reuniao: "nossa reunião", outro: "nosso compromisso" }[a.tipo];
-    const texto = `Olá ${c.nome.split(" ")[0]}! Passando para confirmar ${oque} ${diaTxt(a.quando)} às ${hora(a.quando)}${a.local ? " em " + a.local : ""}. Posso confirmar?`;
-    open(`https://wa.me/${n}?text=${encodeURIComponent(texto)}`, "_blank");
-    await registrar(c.id, "WhatsApp", `Lembrete: ${NOME_AG[a.tipo].toLowerCase()} ${diaTxt(a.quando)} às ${hora(a.quando)}`);
-    carregar();
-  }
+  if (b.dataset.aglembra) mensagemCliente(a);
 });
+
+// ---------- Cards do cliente, prazo dos documentos, mensagem de lembrete e aviso com som ----------
+let faltaV9 = false, lembrando = null;
+function cardsCliente(c) {
+  const i = imoveis.find(x => x.id === c.imovel_id), v = c.valor_imovel || i?.preco, n = FLUXO.indexOf(c.status);
+  $("fcards").innerHTML = `
+    <div><span>Imóvel de interesse</span><b>${i ? esc(i.titulo) : "Não definido"}</b>
+      <small>${i ? esc([i.bairro, i.cidade].filter(Boolean).join(", ")) || "&nbsp;" : "Escolha no campo “Imóvel de interesse” abaixo"}</small></div>
+    <div><span>Valor do imóvel</span><b>${v ? dinheiro(v) : "—"}</b><small>${c.renda ? "Renda do cliente: " + dinheiro(c.renda) : "&nbsp;"}</small></div>
+    <div class="sit ${c.status}"><span>Situação atual</span><b>${STATUS[c.status]}</b>
+      <small>${c.status === "perdido" ? "Fora da esteira" : `Etapa ${n + 1} de ${FLUXO.length}`}</small></div>`;
+}
+
+// Prazo para o cliente entregar os documentos (mostrado no bloco Documentos e na mensagem de lembrete).
+function infoPrazo(pend) {
+  const c = clientes.find(x => x.id === editId);
+  $("docprazo").value = c?.prazo_docs || "";
+  $("docprazo").disabled = faltaV9;
+  $("docprazo").title = faltaV9 ? "Rode o schema_v9.sql no Supabase para usar o prazo" : "";
+  if (!c) return;
+  if (!pend.length) return $("docprazoinfo").innerHTML = '<span style="color:var(--ok)">✓ Todos os documentos entregues.</span>';
+  if (!c.prazo_docs) return $("docprazoinfo").innerHTML = "";
+  const dias = Math.ceil((new Date(c.prazo_docs + "T23:59") - new Date()) / 864e5);
+  const quando = dias < 0 ? `venceu há ${-dias} dia${dias < -1 ? "s" : ""}` : dias === 0 ? "vence hoje" : `faltam ${dias} dia${dias > 1 ? "s" : ""}`;
+  $("docprazoinfo").innerHTML = `<span class="${dias <= 3 ? "alerta" : "mut"}">⏰ ${pend.length} documento${pend.length > 1 ? "s" : ""} pendente${pend.length > 1 ? "s" : ""} · prazo ${dataCurta(c.prazo_docs)} (${quando})</span>`;
+}
+$("docprazo").onchange = async e => {
+  if (!editId) return;
+  if (faltaV9) return msg("Rode o schema_v9.sql no SQL Editor do Supabase para usar o prazo.", true);
+  const { error } = await sb.from("clientes").update({ prazo_docs: e.target.value || null }).eq("id", editId);
+  if (error) return msg("Erro ao salvar o prazo: " + error.message, true);
+  msg("Prazo dos documentos salvo."); await carregar(); documentos();
+};
+
+// Mensagem de confirmação para o cliente: texto editável, enviar pelo WhatsApp ou copiar e colar.
+async function mensagemCliente(a) {
+  const c = clientes.find(x => x.id === a?.cliente_id); if (!c) return;
+  const i = imoveis.find(x => x.id === (a.imovel_id || c.imovel_id)), v = c.valor_imovel || i?.preco;
+  const { data: dcs } = await sb.from("documentos").select("tipo,entregue").eq("cliente_id", c.id);
+  const tipos = [...DOCS, ...(dcs || []).map(d => d.tipo).filter(t => !DOCS.includes(t))];
+  const pend = tipos.filter(t => !(dcs || []).find(d => d.tipo === t)?.entregue);
+  const oque = { visita: "nossa visita", retorno: "nosso retorno", assinatura: "a assinatura do contrato", reuniao: "nossa reunião", outro: "nosso compromisso" }[a.tipo];
+  const dia = new Date(a.quando).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
+  const linhas = [
+    `Olá, ${c.nome.split(" ")[0]}! Tudo bem? 😊`, "",
+    `Passando para confirmar ${oque}:`,
+    `📅 ${dia} (${diaTxt(a.quando)}) às ${hora(a.quando)}`
+  ];
+  if (a.local) linhas.push(`📍 ${a.local}`);
+  if (i) linhas.push(`🏡 Imóvel: ${i.titulo}${v ? " – " + dinheiro(v) : ""}`);
+  else if (v) linhas.push(`🏡 Valor do imóvel: ${dinheiro(v)}`);
+  // Documentos pendentes entram quando já existe checklist, prazo ou o cliente está na etapa de documentação.
+  if (pend.length && (c.prazo_docs || (dcs || []).length || c.status === "documentacao")) {
+    linhas.push("", "📄 Documentos que ainda faltam:", ...pend.map(t => `• ${t}`));
+    if (c.prazo_docs) linhas.push(`⏰ Prazo para entrega: ${dataCurta(c.prazo_docs)}`);
+    linhas.push("Se puder, já traga ou me envie esses documentos. 🙏");
+  }
+  linhas.push("", "Posso confirmar? Qualquer dúvida, estou à disposição.");
+  if (perfil?.nome) linhas.push(perfil.nome + (perfil.creci ? " – CRECI " + perfil.creci : ""));
+  lembrando = { a, c };
+  $("lmtexto").value = linhas.join("\n");
+  $("lmpara").textContent = `Para ${c.nome}${c.telefone ? " · " + c.telefone : " (sem telefone cadastrado: use Copiar)"}`;
+  $("lmzap").disabled = !c.telefone;
+  $("lmcopiar").textContent = "Copiar mensagem";
+  $("lmdlg").showModal();
+}
+$("lmfechar").onclick = () => $("lmdlg").close();
+$("lmzap").onclick = async () => {
+  const { a, c } = lembrando;
+  let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+  open(`https://wa.me/${n}?text=${encodeURIComponent($("lmtexto").value)}`, "_blank");
+  $("lmdlg").close();
+  await registrar(c.id, "WhatsApp", `Lembrete enviado: ${NOME_AG[a.tipo].toLowerCase()} ${diaTxt(a.quando)} às ${hora(a.quando)}`);
+  carregar();
+};
+$("lmcopiar").onclick = async () => {
+  try { await navigator.clipboard.writeText($("lmtexto").value); }
+  catch { $("lmtexto").select(); document.execCommand("copy"); }
+  $("lmcopiar").textContent = "Copiado ✓";
+  const { a, c } = lembrando;
+  registrar(c.id, "Anotação", `Mensagem de lembrete copiada: ${NOME_AG[a.tipo].toLowerCase()} ${diaTxt(a.quando)} às ${hora(a.quando)}`);
+};
+
+// Aviso com som antes de cada compromisso (funciona enquanto o CRM estiver aberto no navegador).
+const avisados = new Set((() => { try { return JSON.parse(localStorage.getItem("avisados") || "[]"); } catch { return []; } })());
+const guardarAvisados = () => { try { localStorage.setItem("avisados", JSON.stringify([...avisados].slice(-300))); } catch {} };
+function bip() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    for (const t of [0, 0.35, 0.7]) {
+      const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime + t;
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
+      o.connect(g).connect(ctx.destination); o.start(t0); o.stop(t0 + 0.3);
+    }
+  } catch {}
+}
+function pedirPermissaoAviso() { try { if (Notification.permission === "default") Notification.requestPermission(); } catch {} }
+function verificarAvisos() {
+  const agora = Date.now();
+  for (const a of agenda) {
+    if (a.feito || avisados.has(a.id)) continue;
+    const t = new Date(a.quando).getTime(), antes = (a.lembrete_min ?? 30) * 6e4;
+    if (agora >= t - antes && agora < t + 30 * 6e4) { avisados.add(a.id); guardarAvisados(); return mostrarAviso(a); }
+  }
+}
+function mostrarAviso(a) {
+  const c = clientes.find(x => x.id === a.cliente_id);
+  const titulo = `${NOME_AG[a.tipo]} ${diaTxt(a.quando)} às ${hora(a.quando)}`, corpo = [c?.nome, a.local].filter(Boolean).join(" · ");
+  bip();
+  try { if (Notification.permission === "granted") new Notification("🔔 " + titulo, { body: corpo }); } catch {}
+  $("aviso").innerHTML = `<h4>🔔 ${esc(titulo)}</h4><p>${esc(corpo) || "Compromisso na agenda"}</p>
+    <div class="bar" style="margin:0">${c ? `<button class="pri" data-avlm="${a.id}">Mensagem ao cliente</button><button data-avcli="${c.id}">Abrir cliente</button>` : ""}<button>OK</button></div>`;
+  $("aviso").classList.remove("hide");
+}
+$("aviso").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.avlm) mensagemCliente(agenda.find(x => x.id === b.dataset.avlm));
+  if (b.dataset.avcli) abrir(clientes.find(x => x.id === b.dataset.avcli));
+  $("aviso").classList.add("hide");
+};
+setInterval(verificarAvisos, 30000);
+
 $("okcancel").onclick = () => $("okdlg").close();
 $("okform").onsubmit = async e => {
   e.preventDefault();
