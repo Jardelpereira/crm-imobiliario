@@ -123,6 +123,12 @@
   .contbar{height:8px;border-radius:4px;background:var(--bd);overflow:hidden;min-width:120px;margin:4px 0 2px}
   .contbar i{display:block;height:100%;background:var(--pri);border-radius:4px}
   .cont.perto .contbar i{background:var(--acc)}.cont.atrasado .contbar i{background:var(--bad)}.cont.atrasado small{color:var(--bad)}
+  .match{display:grid;grid-template-columns:84px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)}
+  .match:last-child{border-bottom:none}
+  .match .mfoto{width:84px;height:64px;border-radius:10px;background:#efe7db center/cover}
+  .match .minfo small{display:block;margin-top:2px}
+  @media (max-width:700px){.match{grid-template-columns:64px 1fr}.match .mfoto{width:64px;height:52px}.match .bar{grid-column:1/-1}}
+  #novidades{border-left:5px solid var(--acc)}
   .receber{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)}
   .receber:last-child{border-bottom:none}.receber .cont{grid-column:1/-1}
   .meta{height:12px;border-radius:6px;background:var(--bd);overflow:hidden;margin:6px 0}.meta i{display:block;height:100%;background:var(--ok);border-radius:6px}
@@ -288,15 +294,19 @@
         <div><label>Parcela desejada (R$/mês)<span id="pcthint"></span></label><input name="parcela_desejada" type="number" step="50" min="0"></div>
         <div><label>Possui filhos?</label><select name="tem_filhos"><option value="">-</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
         <div><label>Etapa</label><select name="status"></select></div>
-        <div><label>Orçamento (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
+        <div><label>Orçamento / valor máximo (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
         <div><label>Imóvel de interesse (do portfólio)</label><select name="imovel_id"></select></div>
         <div><label>Valor do imóvel (R$)</label><input name="valor_imovel" type="number" step="1000" min="0"></div>
-        <div><label>Interesse (tipo, bairro...)</label><input name="interesse"></div>
+        <div><label>Interesse: tipo e regiões (separe por vírgula)</label><input name="interesse" placeholder="Ex.: casa, Riacho Fundo, Samambaia"></div>
         <div><label>Origem</label><input name="origem" placeholder="indicação, Instagram, placa..."></div>
       </div>
       <label style="margin-top:10px">Observações</label><textarea name="observacoes" rows="3"></textarea>
       <label style="margin-top:10px">Foto da ficha deste cliente <span id="ftemfoto"></span></label><input id="ffoto" type="file" accept="image/*">
       <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button><button type="button" id="brel" class="hide">📄 Relatório</button></div>
+      <div class="hist hide" id="matchcli">
+        <strong>Imóveis que combinam com este cliente</strong>
+        <div id="matchlista" style="margin-top:4px"></div>
+      </div>
       <div class="hist hide" id="agcli">
         <div class="secao-tit" style="margin:0 0 8px"><strong>Agenda deste cliente</strong>
           <div class="bar" style="margin:0"><button type="button" data-acao="agvisita">📅 Agendar visita</button><button type="button" data-acao="agretorno">📞 Agendar retorno</button></div></div>
@@ -342,6 +352,7 @@
         </div>
       </div>
       <div id="avisoperfil"></div>
+      <div class="card hide" id="novidades" style="margin-bottom:12px"></div>
       <div class="card" style="margin-bottom:12px">
         <div class="secao-tit"><h3>Agenda de hoje</h3><div class="bar" style="margin:0"><button data-acao="novocomp">+ Agendar</button><button data-acao="agenda">Ver agenda</button></div></div>
         <div id="aghoje"></div>
@@ -676,6 +687,8 @@ async function carregar() {
   faltaV10 = !!pr.error; propostas = pr.data || [];
   const vd = await sb.from("vendas").select("*").order("data_venda", { ascending: false });
   faltaV8 = !!vd.error; vendas = vd.data || [];
+  const ap = await sb.from("interacoes").select("cliente_id,texto").like("texto", "Apresentou o imóvel:%");
+  apresentados = new Set((ap.data || []).map(x => x.cliente_id + "|" + x.texto.replace("Apresentou o imóvel: ", "")));
   const ag = await sb.from("compromissos").select("*").order("quando");
   faltaV7 = !!ag.error; agenda = ag.data || [];
   marca(); badgeAgenda();
@@ -705,7 +718,7 @@ function desenhar() {
   if (telaAtual === "portfolio") return desenharPortfolio();
   if (telaAtual === "agenda") return desenharAgenda();
   if (telaAtual === "vendas") return desenharVendas();
-  if (telaAtual === "cliente") { propostasCliente(); return agendaCliente(); }
+  if (telaAtual === "cliente") { propostasCliente(); matchCliente(); return agendaCliente(); }
   const itens = filtrados();
   if (visao === "funil") {
     $("funil").innerHTML = Object.entries(STATUS).map(([k, v]) => {
@@ -1068,9 +1081,9 @@ function abrir(c, empilhar = true) {
     .map(i => `<option value="${i.id}">${esc(i.titulo)}${i.preco ? " – " + dinheiro(i.preco) : ""}</option>`).join("");
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
-  for (const id of ["hist", "docs", "brel", "agcli", "propcli"]) $(id).classList.toggle("hide", !c);
+  for (const id of ["hist", "docs", "brel", "agcli", "propcli", "matchcli"]) $(id).classList.toggle("hide", !c);
   $("esteira").classList.add("hide"); $("resumo").textContent = "";
-  if (c) { historico(); documentos(); propostasCliente(); }
+  if (c) { historico(); documentos(); propostasCliente(); matchCliente(); }
   dicaParcela();
   if (empilhar) ir({ t: "cliente", id: editId }); else tela("cliente");
   if (!c) f.nome.focus();
@@ -1204,6 +1217,7 @@ async function marca() {
 }
 
 function desenharInicio() {
+  desenharNovidades();
   const ativos = clientes.filter(c => !["fechado", "perdido"].includes(c.status));
   const t = c => resumo[c.id] ? new Date(resumo[c.id].ultimo).getTime() : 0;
   const pend = ativos.filter(c => !resumo[c.id] || diasDesde(resumo[c.id].ultimo) > 7).sort((a, b) => t(a) - t(b));
@@ -1513,6 +1527,88 @@ function dicaParcela() {
 }
 $("form").parcela_desejada.addEventListener("input", dicaParcela);
 $("form").renda.addEventListener("input", dicaParcela);
+
+
+// ---------- Imóveis que combinam com o cliente (orçamento e região/tipo do campo Interesse) ----------
+let apresentados = new Set();
+const descartados = new Set((() => { try { return JSON.parse(localStorage.getItem("descartados") || "[]"); } catch { return []; } })());
+const guardarDescartados = () => { try { localStorage.setItem("descartados", JSON.stringify([...descartados].slice(-500))); } catch {} };
+const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+// "casa, Riacho Fundo / Samambaia" -> ["casa", "riacho fundo", "samambaia"]
+const desejos = c => norm(c.interesse).split(/[,;/]|\s+e\s+|\s+ou\s+/).map(t => t.trim()).filter(t => t.length >= 3);
+function combina(c, i) {
+  if (i.status !== "disponivel" || ["fechado", "perdido"].includes(c.status)) return null;
+  const orc = Number(c.orcamento) || 0, preco = Number(i.preco) || 0;
+  if (orc && preco && preco > orc * 1.1) return null; // fora do bolso (tolerância de 10%)
+  const okValor = !!(orc && preco);
+  const alvo = norm([i.bairro, i.cidade, i.titulo, i.tipo, i.descricao].join(" "));
+  const quer = desejos(c), regioes = quer.filter(t => alvo.includes(t));
+  if (quer.length && !regioes.length) return null; // escreveu tipo/região e nada bate
+  if (!okValor && !regioes.length) return null;
+  return { okValor, regioes, pontos: (okValor ? 1 : 0) + regioes.length * 2 };
+}
+const chaveMatch = (c, i) => `${c.id}|${i.id}`;
+const jaApresentado = (c, i) => apresentados.has(`${c.id}|${i.titulo}`);
+// Imóveis cadastrados nos últimos 30 dias que combinam com clientes e ainda não foram enviados nem dispensados.
+function novidades() {
+  const lista = [];
+  for (const i of imoveis.filter(x => diasDesde(x.criado_em) <= 30))
+    for (const c of clientes) {
+      const m = combina(c, i);
+      if (m && !jaApresentado(c, i) && !descartados.has(chaveMatch(c, i))) lista.push({ c, i, m });
+    }
+  return lista.sort((a, b) => b.m.pontos - a.m.pontos || new Date(b.i.criado_em) - new Date(a.i.criado_em));
+}
+function itemMatch({ c, i, m }, comCliente = true) {
+  const porque = [m.okValor && `💰 dentro do orçamento (${dinheiro(c.orcamento)})`, m.regioes.length && `📍 ${m.regioes.join(", ")}`].filter(Boolean).join(" · ");
+  return `<div class="match">
+    <div class="mfoto" style="background-image:url('${i.fotos?.[0] ? urlFoto(i.fotos[0]) : ilustra(i.id)}')"></div>
+    <div class="minfo">
+      <strong>${esc(i.titulo)}</strong> <span class="mut">· ${precoTxt(i)}</span>
+      <small class="mut">${esc([i.bairro, i.cidade].filter(Boolean).join(", "))}${i.quartos != null ? ` · ${i.quartos} quarto${i.quartos == 1 ? "" : "s"}` : ""}</small>
+      ${comCliente ? `<small>Combina com <a href="#" data-mcli="${c.id}"><strong>${esc(c.nome)}</strong></a> · ${porque}</small>` : `<small>${porque}</small>`}
+      ${jaApresentado(c, i) ? '<small style="color:var(--ok)">✓ Já enviado ao cliente</small>' : ""}
+    </div>
+    <div class="bar" style="margin:0">
+      ${c.telefone ? `<button type="button" class="pri" data-mzap="${chaveMatch(c, i)}">Enviar no WhatsApp</button>` : `<button type="button" data-mcli="${c.id}">Abrir cliente</button>`}
+      ${comCliente ? `<button type="button" data-mdis="${chaveMatch(c, i)}" title="Não mostrar mais este par">Dispensar</button>` : ""}
+    </div>
+  </div>`;
+}
+function desenharNovidades() {
+  const lista = novidades();
+  $("novidades").classList.toggle("hide", !lista.length);
+  if (!lista.length) return;
+  $("novidades").innerHTML = `<div class="secao-tit"><h3>🔔 Imóveis novos para seus clientes</h3>
+      <span class="mut">${lista.length} oportunidade${lista.length > 1 ? "s" : ""} de contato</span></div>`
+    + lista.slice(0, 8).map(x => itemMatch(x)).join("")
+    + (lista.length > 8 ? `<p class="mut" style="margin:8px 0 0">E mais ${lista.length - 8}. Envie ou dispense os de cima para ver os próximos.</p>` : "");
+}
+function matchCliente() {
+  const c = clientes.find(x => x.id === editId); if (!c) return;
+  const lista = imoveis.map(i => ({ c, i, m: combina(c, i) })).filter(x => x.m).sort((a, b) => b.m.pontos - a.m.pontos);
+  $("matchlista").innerHTML = lista.length ? lista.map(x => itemMatch(x, false)).join("")
+    : `<p class="mut" style="margin:0">${c.orcamento || c.interesse ? "Nenhum imóvel disponível combina agora. Assim que entrar um, ele aparece aqui e na página inicial."
+      : "Preencha o Orçamento e o Interesse (tipo e regiões, separados por vírgula) para o CRM avisar quando entrar um imóvel com a cara deste cliente."}</p>`;
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-mzap],[data-mdis],[data-mcli]"); if (!b) return;
+  e.preventDefault();
+  if (b.dataset.mcli) return abrir(clientes.find(c => c.id === b.dataset.mcli));
+  const [cid, iid] = (b.dataset.mzap || b.dataset.mdis).split("|");
+  const c = clientes.find(x => x.id === cid), i = imoveis.find(x => x.id === iid);
+  if (b.dataset.mdis) { descartados.add(`${cid}|${iid}`); guardarDescartados(); return desenhar(); }
+  let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+  const w = open("", "_blank"); // abre já, para o navegador não bloquear
+  const texto = [`Olá, ${c.nome.split(" ")[0]}! Tudo bem? 😊`, "Chegou um imóvel com a sua cara:", "",
+    `🏡 ${i.titulo} – ${precoTxt(i)}`, [i.bairro, i.cidade].some(Boolean) && `📍 ${[i.bairro, i.cidade].filter(Boolean).join(", ")}`,
+    [i.quartos != null && `${i.quartos} quarto${i.quartos == 1 ? "" : "s"}`, i.vagas != null && `${i.vagas} vaga${i.vagas == 1 ? "" : "s"}`, i.area && `${i.area} m²`].filter(Boolean).join(" · "),
+    i.mcmv && "✅ Aceita Minha Casa Minha Vida", "", `Veja as fotos: ${await linkSite(i.id)}`, "", "Quer agendar uma visita?"].filter(x => x !== false && x != null).join("\n").replace(/\n{3,}/g, "\n\n");
+  w.location = `https://wa.me/${n}?text=${encodeURIComponent(texto)}`;
+  await registrar(c.id, "WhatsApp", "Apresentou o imóvel: " + i.titulo);
+  await carregar();
+  if (editId === c.id) historico();
+});
 
 // ---------- Cards do cliente, prazo dos documentos, mensagem de lembrete e aviso com som ----------
 let faltaV9 = false, lembrando = null;
