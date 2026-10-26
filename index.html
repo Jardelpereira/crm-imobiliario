@@ -1909,7 +1909,7 @@ function equipeUI() {
   if (!equipe) return box.innerHTML = `<strong>Equipe</strong>
     <p class="mut" style="margin:4px 0 10px">Junte-se a outro corretor para os dois verem e editarem os mesmos clientes, agenda, portfólio e vendas. Cada um continua com o próprio login.</p>
     <div class="bar"><input id="eqnome" placeholder="Nome da equipe (ex.: Jardel & Gleice Imóveis)"><button type="button" class="pri" data-eq="criar">Criar equipe</button></div>
-    <div class="bar" style="margin:0"><input id="eqcodigo" placeholder="Recebeu um código? Digite aqui (ex.: A1B2C3)" style="text-transform:uppercase"><button type="button" data-eq="entrar">Entrar na equipe</button></div>`;
+    <div class="bar" style="margin:0"><input id="eqcodigo" placeholder="Recebeu um código? Digite aqui (ex.: A1B2C3D4E5F6)" style="text-transform:uppercase"><button type="button" data-eq="entrar">Entrar na equipe</button></div>`;
   box.innerHTML = `<strong>Equipe: ${esc(equipe.nome)}</strong>
     <p style="margin:6px 0">Código para convidar: <b style="font-size:20px;letter-spacing:.12em">${esc(equipe.codigo)}</b>
       <button type="button" data-eq="convite" style="margin-left:6px">Copiar convite</button></p>
