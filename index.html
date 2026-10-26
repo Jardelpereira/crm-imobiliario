@@ -116,6 +116,12 @@
   .pg.recebido{color:var(--ok)}.pg.parcial{color:#b26a00}.pg.pendente{color:var(--mut)}
   .kpis div.liq{background:#eaf6ee;border-color:var(--ok)}.kpis div.liq b{color:var(--ok)}.kpis div.neg{background:#fdeceb;border-color:var(--bad)}.kpis div.neg b{color:var(--bad)}
   .catl{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:6px 0}.catl .contbar{grid-column:1/-1}
+  .postgrid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+  @media (max-width:760px){.postgrid{grid-template-columns:1fr}}
+  #pcanvas{width:100%;max-height:520px;object-fit:contain;border-radius:10px;border:1px solid var(--bd);background:var(--bd)}
+  .pfotos{display:flex;gap:6px;overflow-x:auto;padding:2px 0}
+  .pfotos img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer;flex:none}
+  .pfotos img.sel{border-color:var(--pri)}
   .grafico{display:flex;align-items:flex-end;gap:2px;height:170px;padding:22px 0 0;border-bottom:1px solid var(--bd)}
   .grafico .col2{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
   .grafico .b{width:70%;max-width:38px;background:var(--pri);border-radius:4px 4px 0 0}
@@ -536,6 +542,36 @@
     </div>
     <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar gasto</button><button type="button" id="gcancel">Cancelar</button></div>
   </form>
+</dialog>
+<dialog id="pdlg" style="max-width:920px">
+  <h3 style="margin-top:0">Criar post do imóvel</h3>
+  <div class="postgrid">
+    <div>
+      <canvas id="pcanvas" width="1080" height="1350"></canvas>
+      <p class="mut" id="pnota" style="font-size:12px;margin:6px 0 0"></p>
+    </div>
+    <div>
+      <div class="row">
+        <div><label>Formato</label><select id="pformato">
+          <option value="1080x1350">Feed (4:5) · Instagram e Facebook</option>
+          <option value="1080x1920">Story / Status (9:16)</option>
+          <option value="1080x1080">Quadrado (1:1)</option></select></div>
+        <div><label>Faixa de destaque</label><select id="pfaixa">
+          <option>NOVO NO PORTFÓLIO</option><option>OPORTUNIDADE</option><option>ACEITA MINHA CASA MINHA VIDA</option><option>ÚLTIMAS UNIDADES</option><option>BAIXOU O PREÇO</option><option>VENDA</option><option>ALUGUEL</option><option value="">Sem faixa</option></select></div>
+      </div>
+      <label style="margin-top:10px">Foto principal</label>
+      <div id="pfotos" class="pfotos"></div>
+      <label style="margin-top:10px">Legenda (pode editar)</label>
+      <textarea id="plegenda" rows="9"></textarea>
+      <div class="bar" style="margin:10px 0 0">
+        <button class="pri" id="pbaixar" type="button">⬇ Baixar imagem</button>
+        <button id="pcopiar" type="button">📋 Copiar legenda</button>
+        <button id="pcomp" type="button">📤 Compartilhar</button>
+        <button id="pfechar" type="button">Fechar</button>
+      </div>
+      <p class="mut" style="font-size:12px;margin:8px 0 0">No celular, "Compartilhar" abre o Instagram, o WhatsApp ou o Facebook com a imagem. No computador, baixe a imagem, copie a legenda e cole na rede social.</p>
+    </div>
+  </div>
 </dialog>
 <dialog id="vdlg">
   <form id="vform">
@@ -1243,7 +1279,7 @@ function cartao(i, acoes = true) {
       <h4>${esc(i.titulo)}</h4>
       <div class="mut" style="font-size:13px">${esc([i.bairro, i.cidade].filter(Boolean).join(", "))}${i.mcmv ? " · Aceita MCMV" : ""}${i.publicado ? "" : " · <b>oculto no site</b>"}</div>
       <div class="specs">${specs(i)}</div>
-      ${acoes ? `<div class="bar"><button data-ie="${i.id}">Editar</button><button data-is="${i.id}">Compartilhar</button></div>` : ""}
+      ${acoes ? `<div class="bar"><button data-ie="${i.id}">Editar</button><button data-is="${i.id}">Compartilhar</button><button data-ip="${i.id}">📸 Criar post</button></div>` : ""}
     </div>
   </div>`;
 }
@@ -1308,7 +1344,7 @@ $("pgrid").onclick = e => {
   const b = e.target.closest("button"), card = e.target.closest("[data-im]");
   if (!card || e.target.closest(".upcard")) return;
   const i = imoveis.find(x => x.id === card.dataset.im);
-  b?.dataset.is ? compartilharImovel(i) : abrirImovel(i);
+  b?.dataset.ip ? abrirPost(i) : b?.dataset.is ? compartilharImovel(i) : abrirImovel(i);
 };
 
 // Atalhos (botões com data-acao) usados no início e no portfólio.
@@ -1577,7 +1613,7 @@ $("form").renda.addEventListener("input", dicaParcela);
 let apresentados = new Set();
 const descartados = new Set((() => { try { return JSON.parse(localStorage.getItem("descartados") || "[]"); } catch { return []; } })());
 const guardarDescartados = () => { try { localStorage.setItem("descartados", JSON.stringify([...descartados].slice(-500))); } catch {} };
-const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const norm = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 // "casa, Riacho Fundo / Samambaia" -> ["casa", "riacho fundo", "samambaia"]
 const desejos = c => norm(c.interesse).split(/[,;/]|\s+e\s+|\s+ou\s+/).map(t => t.trim()).filter(t => t.length >= 3);
 function combina(c, i) {
@@ -2220,6 +2256,127 @@ $("gexportar").onclick = () => {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
   a.download = "gastos.csv"; a.click(); URL.revokeObjectURL(a.href);
+};
+
+
+// ---------- Gerador de posts (sem API): imagem + legenda prontas para publicar nas redes ----------
+let postImovel = null, postFoto = null, postImg = null;
+const semAcento = t => String(t || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const hashtag = t => "#" + semAcento(t).replace(/[^a-zA-Z0-9]/g, "").toLowerCase();
+function carregarImg(url) {
+  return new Promise(ok => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => ok(im); im.onerror = () => ok(null); im.src = url; });
+}
+function foneBonito(t) {
+  const n = String(t || "").replace(/\D/g, "").replace(/^55(?=\d{10,11}$)/, "");
+  return n.length === 11 ? `(${n.slice(0, 2)}) ${n.slice(2, 7)}-${n.slice(7)}` : n.length === 10 ? `(${n.slice(0, 2)}) ${n.slice(2, 6)}-${n.slice(6)}` : String(t || "");
+}
+async function legendaPost(i) {
+  const local = [i.bairro, i.cidade].filter(Boolean).join(", ");
+  const carac = [i.quartos != null && `${i.quartos} quarto${i.quartos == 1 ? "" : "s"}`, i.banheiros != null && `${i.banheiros} banheiro${i.banheiros == 1 ? "" : "s"}`,
+    i.vagas != null && `${i.vagas} vaga${i.vagas == 1 ? "" : "s"}`, i.area && `${i.area} m²`].filter(Boolean).join(" · ");
+  const tags = [...new Set(["imoveis", "imobiliaria", "corretordeimoveis", i.tipo, i.bairro, i.cidade, i.finalidade === "aluguel" ? "aluguel" : "casaavenda",
+    i.mcmv && "minhacasaminhavida"].filter(Boolean).map(hashtag).filter(h => h.length > 3))].join(" ");
+  return [`🏡 ${i.titulo}`, "", `💰 ${precoTxt(i)}`, local && `📍 ${local}`, carac && `✨ ${carac}`, i.mcmv && "✅ Aceita Minha Casa Minha Vida", "",
+    "Quer conhecer? Chame no WhatsApp:", perfil?.whatsapp ? `📲 ${foneBonito(perfil.whatsapp)}` : "", `🔗 Veja mais fotos: ${await linkSite(i.id)}`, "",
+    perfil?.nome ? `${perfil.nome}${perfil.creci ? " · CRECI " + perfil.creci : ""}` : "", "", tags].filter(x => x !== false && x != null).join("\n").replace(/\n{3,}/g, "\n\n");
+}
+function quebrar(ctx, texto, larg, maxLinhas) {
+  const palavras = texto.split(/\s+/), linhas = []; let atual = "";
+  for (const p of palavras) {
+    const t = atual ? atual + " " + p : p;
+    if (ctx.measureText(t).width > larg && atual) { linhas.push(atual); atual = p; } else atual = t;
+  }
+  if (atual) linhas.push(atual);
+  if (linhas.length > maxLinhas) { linhas.length = maxLinhas; linhas[maxLinhas - 1] = linhas[maxLinhas - 1].replace(/\s*\S*$/, "") + "…"; }
+  return linhas;
+}
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+function desenharPost() {
+  const i = postImovel, cv = $("pcanvas"), [W, H] = $("pformato").value.split("x").map(Number);
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d"), fonte = getComputedStyle(document.body).fontFamily || "system-ui, sans-serif";
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const verde = css("--pri") || "#2f7d5d", ouro = css("--acc") || "#e0a526";
+  // Fundo: foto cobrindo tudo, ou degradê quando a foto não carrega.
+  const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, verde); g.addColorStop(1, "#1b3b30");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  if (postImg) {
+    const k = Math.max(W / postImg.width, H / postImg.height), w = postImg.width * k, h = postImg.height * k;
+    ctx.drawImage(postImg, (W - w) / 2, (H - h) / 2, w, h);
+  }
+  const base = H * 0.5, sombra = ctx.createLinearGradient(0, base, 0, H);
+  sombra.addColorStop(0, "rgba(10,25,20,0)"); sombra.addColorStop(0.55, "rgba(10,25,20,.78)"); sombra.addColorStop(1, "rgba(10,25,20,.94)");
+  ctx.fillStyle = sombra; ctx.fillRect(0, base, W, H - base);
+  const topo = ctx.createLinearGradient(0, 0, 0, H * 0.18); topo.addColorStop(0, "rgba(10,25,20,.45)"); topo.addColorStop(1, "rgba(10,25,20,0)");
+  ctx.fillStyle = topo; ctx.fillRect(0, 0, W, H * 0.18);
+  const m = 64, ec = W / 1080;
+  // Faixa de destaque.
+  const faixa = $("pfaixa").value;
+  if (faixa) {
+    ctx.font = `800 ${34 * ec}px ${fonte}`; const tw = ctx.measureText(faixa).width + 56 * ec;
+    ctx.fillStyle = ouro; rr(ctx, m, m, tw, 68 * ec, 34 * ec); ctx.fill();
+    ctx.fillStyle = "#2a1c00"; ctx.textBaseline = "middle"; ctx.fillText(faixa, m + 28 * ec, m + 35 * ec);
+  }
+  // Bloco de texto de baixo para cima.
+  ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#fff";
+  let y = H - m;
+  const contato = [perfil?.nome, perfil?.creci && "CRECI " + perfil.creci].filter(Boolean).join(" · ");
+  const fone = perfil?.whatsapp ? "📲 " + foneBonito(perfil.whatsapp) : "";
+  ctx.font = `700 ${38 * ec}px ${fonte}`; ctx.fillStyle = "#fff";
+  if (fone) { ctx.fillText(fone, m, y); y -= 52 * ec; }
+  if (contato) { ctx.font = `600 ${30 * ec}px ${fonte}`; ctx.fillStyle = "rgba(255,255,255,.85)"; ctx.fillText(contato, m, y); y -= 34 * ec; }
+  ctx.fillStyle = ouro; ctx.fillRect(m, y - 6 * ec, 120 * ec, 6 * ec); y -= 44 * ec;
+  const carac = [i.quartos != null && `🛏 ${i.quartos}`, i.banheiros != null && `🚿 ${i.banheiros}`, i.vagas != null && `🚗 ${i.vagas}`, i.area && `📐 ${i.area} m²`].filter(Boolean).join("    ");
+  if (carac) { ctx.font = `600 ${40 * ec}px ${fonte}`; ctx.fillStyle = "#fff"; ctx.fillText(carac, m, y); y -= 62 * ec; }
+  const local = [i.bairro, i.cidade].filter(Boolean).join(", ") + (i.mcmv ? " · Aceita MCMV" : "");
+  if (local.trim()) { ctx.font = `600 ${38 * ec}px ${fonte}`; ctx.fillStyle = "rgba(255,255,255,.9)"; ctx.fillText("📍 " + local, m, y); y -= 62 * ec; }
+  // Preço em etiqueta.
+  const preco = precoTxt(i); ctx.font = `800 ${70 * ec}px ${fonte}`;
+  const pw = ctx.measureText(preco).width + 64 * ec;
+  ctx.fillStyle = ouro; rr(ctx, m, y - 86 * ec, pw, 100 * ec, 22 * ec); ctx.fill();
+  ctx.fillStyle = "#2a1c00"; ctx.fillText(preco, m + 32 * ec, y - 12 * ec); y -= 130 * ec;
+  // Título (até 3 linhas).
+  ctx.font = `800 ${58 * ec}px ${fonte}`; ctx.fillStyle = "#fff";
+  const linhas = quebrar(ctx, i.titulo, W - 2 * m, 3);
+  for (let k = linhas.length - 1; k >= 0; k--) { ctx.fillText(linhas[k], m, y); y -= 70 * ec; }
+  $("pnota").textContent = postImg ? "" : "Sem foto do imóvel (ou não carregou): o post usa o fundo colorido. Suba fotos no cadastro do imóvel.";
+}
+async function escolherFotoPost(url) {
+  postFoto = url; postImg = url ? await carregarImg(url) : null;
+  for (const im of $("pfotos").querySelectorAll("img")) im.classList.toggle("sel", im.dataset.u === (url || ""));
+  desenharPost();
+}
+async function abrirPost(i) {
+  postImovel = i;
+  const fotos = (i.fotos || []).map(urlFoto);
+  $("pfotos").innerHTML = fotos.length ? fotos.map(u => `<img src="${esc(u)}" data-u="${esc(u)}" alt="">`).join("") : '<span class="mut" style="font-size:13px">Este imóvel ainda não tem fotos.</span>';
+  $("pfaixa").value = i.mcmv ? "ACEITA MINHA CASA MINHA VIDA" : i.finalidade === "aluguel" ? "ALUGUEL" : "NOVO NO PORTFÓLIO";
+  $("plegenda").value = await legendaPost(i);
+  $("pdlg").showModal();
+  await escolherFotoPost(fotos[0] || null);
+}
+$("pfotos").onclick = e => { const im = e.target.closest("img"); if (im) escolherFotoPost(im.dataset.u); };
+$("pformato").onchange = $("pfaixa").onchange = desenharPost;
+$("pfechar").onclick = () => $("pdlg").close();
+const arquivoPost = () => new Promise(ok => $("pcanvas").toBlob(b => ok(b), "image/jpeg", 0.92));
+$("pbaixar").onclick = async () => {
+  const b = await arquivoPost();
+  if (!b) return msg("Não foi possível gerar a imagem. Tente escolher outra foto.", true);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(b); a.download = "post-" + semAcento(postImovel.titulo).toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) + ".jpg";
+  a.click(); URL.revokeObjectURL(a.href);
+};
+$("pcopiar").onclick = async () => {
+  try { await navigator.clipboard.writeText($("plegenda").value); msg("Legenda copiada. Cole na rede social."); }
+  catch { $("plegenda").select(); msg("Selecionei a legenda: use Ctrl+C para copiar."); }
+};
+$("pcomp").onclick = async () => {
+  const b = await arquivoPost();
+  if (!b) return msg("Não foi possível gerar a imagem. Tente escolher outra foto.", true);
+  const arq = new File([b], "post.jpg", { type: "image/jpeg" });
+  if (navigator.canShare?.({ files: [arq] })) {
+    try { await navigator.share({ files: [arq], text: $("plegenda").value }); } catch (e) { if (e.name !== "AbortError") msg("Não foi possível compartilhar: " + e.message, true); }
+  } else msg("Este aparelho não compartilha imagens direto. Use \"Baixar imagem\" e \"Copiar legenda\".", true);
 };
 
 // ---------- Equipe: corretores que compartilham clientes, agenda, portfólio e vendas ----------
