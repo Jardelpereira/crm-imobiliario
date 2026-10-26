@@ -45,7 +45,7 @@ declare cod text; eq uuid;
 begin
   if auth.uid() is null then raise exception 'Faça login primeiro'; end if;
   if exists (select 1 from membros where user_id = auth.uid()) then raise exception 'Você já faz parte de uma equipe'; end if;
-  cod := upper(substr(md5(random()::text || clock_timestamp()::text), 1, 6));
+  cod := upper(substr(md5(random()::text || clock_timestamp()::text || gen_random_uuid()::text), 1, 12));
   insert into equipes (nome, codigo, criado_por) values (coalesce(nullif(trim(nome), ''), 'Minha equipe'), cod, auth.uid()) returning id into eq;
   insert into membros (user_id, equipe_id) values (auth.uid(), eq);
   return cod;
