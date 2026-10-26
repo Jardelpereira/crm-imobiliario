@@ -120,6 +120,11 @@
   .grafico .col2:hover .b{filter:brightness(1.2)}
   .grafico .v{font-size:11px;color:var(--tx);white-space:nowrap;margin-bottom:3px}
   .eixo{display:flex;gap:2px}.eixo span{flex:1;min-width:0;text-align:center;font-size:11px;color:var(--mut);padding-top:4px}
+  .contbar{height:8px;border-radius:4px;background:var(--bd);overflow:hidden;min-width:120px;margin:4px 0 2px}
+  .contbar i{display:block;height:100%;background:var(--pri);border-radius:4px}
+  .cont.perto .contbar i{background:var(--acc)}.cont.atrasado .contbar i{background:var(--bad)}.cont.atrasado small{color:var(--bad)}
+  .receber{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)}
+  .receber:last-child{border-bottom:none}.receber .cont{grid-column:1/-1}
   .meta{height:12px;border-radius:6px;background:var(--bd);overflow:hidden;margin:6px 0}.meta i{display:block;height:100%;background:var(--ok);border-radius:6px}
   .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;margin-left:4px;text-align:center}
   .ag{display:grid;grid-template-columns:76px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:10px;background:var(--card);margin-bottom:8px}
@@ -375,6 +380,7 @@
       </div>
       <div id="vaviso"></div>
       <div class="kpis" id="vkpis"></div>
+      <div class="card" id="vreceber" style="margin:12px 0 0"></div>
       <div class="duas">
         <div class="card" style="margin:0">
           <div class="secao-tit"><h3>Sua comissão por mês</h3><span class="mut" style="font-size:13px">últimos 12 meses</span></div>
@@ -1209,7 +1215,8 @@ function desenharInicio() {
     [pend.length, "sem contato há 7+ dias", "contato"],
     [fin, "em documentação / financiamento", "clientes"],
     [clientes.filter(c => c.status === "fechado").length, "vendas concluídas", "clientes"],
-    [imoveis.filter(i => i.status === "disponivel").length, "imóveis disponíveis", "portfolio"]
+    [imoveis.filter(i => i.status === "disponivel").length, "imóveis disponíveis", "portfolio"],
+    ...(vendas.some(v => v.pagamento_status !== "recebido") ? [[din(vendas.reduce((t, v) => t + aReceber(v), 0)), "comissões a receber", "vendas"]] : [])
   ].map(([n, txt, a]) => `<div class="click" data-acao="${a}"><b>${n}</b><span>${txt}</span></div>`).join("");
   $("pend").innerHTML = pend.length ? pend.slice(0, 6).map(c => `
     <div class="item" data-e="${c.id}"><span><strong>${esc(c.nome)}</strong><br><small>${ultimoContato(c)}</small></span><span class="tag">${STATUS[c.status]}</span></div>`).join("")
@@ -1653,6 +1660,28 @@ const comTotal = v => Number(v.valor_venda || 0) * Number(v.comissao_pct || 0) /
 const minha = v => comTotal(v) * Number(v.divisao_pct ?? 100) / 100;
 const recebido = v => v.pagamento_status === "recebido" ? minha(v) : Number(v.valor_recebido || 0);
 const aReceber = v => Math.max(0, minha(v) - recebido(v));
+// Prazo para receber a comissão: 30 dias a partir da data da venda.
+const PRAZO_COMISSAO = 30;
+const previsao = v => { const d = new Date(v.data_venda + "T12:00"); d.setDate(d.getDate() + PRAZO_COMISSAO); return d; };
+function contador(v) {
+  if (v.pagamento_status === "recebido") return '<span class="pg recebido">Recebida ✓</span>';
+  const prev = previsao(v), passados = Math.floor((Date.now() - new Date(v.data_venda + "T12:00")) / 864e5);
+  const faltam = Math.ceil((prev - Date.now()) / 864e5), pct = Math.min(100, Math.max(0, passados / PRAZO_COMISSAO * 100));
+  const txt = faltam < 0 ? `Atrasada há ${-faltam} dia${faltam < -1 ? "s" : ""}` : faltam === 0 ? "Vence hoje" : `Faltam ${faltam} dia${faltam > 1 ? "s" : ""}`;
+  return `<div class="cont ${faltam < 0 ? "atrasado" : faltam <= 5 ? "perto" : ""}" title="Dia ${Math.min(passados, PRAZO_COMISSAO)} de ${PRAZO_COMISSAO}">
+    <div class="contbar"><i style="width:${pct}%"></i></div><small>${txt} · previsão ${prev.toLocaleDateString("pt-BR")}</small></div>`;
+}
+function desenharReceber() {
+  const pend = vendas.filter(v => v.pagamento_status !== "recebido" && aReceber(v) > 0 && (!$("vcorretor").value || v.user_id === $("vcorretor").value))
+    .sort((a, b) => previsao(a) - previsao(b));
+  const total = pend.reduce((t, v) => t + aReceber(v), 0), atras = pend.filter(v => previsao(v) < new Date()).length;
+  $("vreceber").innerHTML = `<div class="secao-tit" style="margin-bottom:4px"><h3>Comissões a receber</h3>
+      <span><strong>${din(total)}</strong>${atras ? ` <span class="alerta">· ${atras} atrasada${atras > 1 ? "s" : ""}</span>` : ""}</span></div>`
+    + (pend.length ? pend.map(v => `<div class="receber">
+        <span><strong>${esc(nomeVenda(v))}</strong> <small class="mut">· ${esc(imovelVenda(v))} · venda em ${dataCurta(v.data_venda)}</small></span>
+        <strong>${din(aReceber(v))}</strong>${contador(v)}</div>`).join("")
+      : '<p class="mut" style="margin:0">Nenhuma comissão pendente. 🎉</p>');
+}
 const pctPadrao = () => perfil?.comissao_padrao ?? 5;
 const isoLocal = d => new Date(d).toLocaleDateString("sv"); // aaaa-mm-dd no fuso do aparelho
 const dataCurta = d => d ? new Date(d + "T12:00").toLocaleDateString("pt-BR") : "";
@@ -1669,7 +1698,7 @@ function vendasFiltradas() {
 function desenharVendas() {
   if (faltaV8) {
     $("vaviso").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v8.sql</b> no SQL Editor do Supabase para ativar Minhas vendas.</div>';
-    for (const id of ["vkpis", "vgraf", "veixo", "vmeta", "vtab"]) $(id).innerHTML = "";
+    for (const id of ["vkpis", "vreceber", "vgraf", "veixo", "vmeta", "vtab"]) $(id).innerHTML = "";
     return;
   }
   const atual = $("vano").value || String(new Date().getFullYear());
@@ -1687,6 +1716,7 @@ function desenharVendas() {
   const sem = clientes.filter(c => c.status === "fechado" && !vendas.some(v => v.cliente_id === c.id));
   $("vaviso").innerHTML = sem.length ? `<div class="etapa"><strong>${sem.length} cliente${sem.length > 1 ? "s" : ""} em "Chaves entregues" sem venda registrada.</strong>
     <p>Clique em "Importar vendas concluídas" para trazer ${sem.length > 1 ? "todos" : "ele"} de uma vez.</p></div>` : "";
+  desenharReceber();
   $("vkpis").innerHTML = [
     [lista.length, "vendas no período"],
     [dinheiro(vgv), "volume vendido (VGV)"],
@@ -1733,7 +1763,7 @@ function desenharVendas() {
       <td class="n">${dinheiro(v.valor_venda)}</td>
       <td class="n">${Number(v.comissao_pct).toLocaleString("pt-BR")}%${Number(v.divisao_pct) !== 100 ? ` <small class="mut">(sua parte ${Number(v.divisao_pct)}%)</small>` : ""}</td>
       <td class="n"><strong>${din(minha(v))}</strong></td>
-      <td><span class="pg ${v.pagamento_status}">${PG[v.pagamento_status]}</span>${v.pagamento_status !== "recebido" && aReceber(v) ? `<br><small class="mut">falta ${din(aReceber(v))}</small>` : ""}</td>
+      <td>${v.pagamento_status === "parcial" ? '<span class="pg parcial">Recebida em parte</span>' : ""}${contador(v)}${v.pagamento_status !== "recebido" && aReceber(v) ? `<small class="mut">falta ${din(aReceber(v))}</small>` : ""}</td>
       <td style="white-space:nowrap"><button data-vedit="${v.id}">Editar</button> <button class="bad" data-vdel="${v.id}" title="Excluir">✕</button></td>
     </tr>`).join("") + `<tr><td colspan="4"><strong>Total (${lista.length})</strong></td><td class="n"><strong>${dinheiro(vgv)}</strong></td><td></td><td class="n"><strong>${din(com)}</strong></td><td colspan="2"><small class="mut">a receber ${din(soma(aReceber))}</small></td></tr>`
       : '<tr><td colspan="9" class="mut">Nenhuma venda neste período. Use "+ Registrar venda" ou "Importar vendas concluídas".</td></tr>')
