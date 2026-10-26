@@ -139,7 +139,10 @@
   @media (max-width:760px){.login{grid-template-columns:1fr;min-height:0}.login-hero{min-height:230px}}
   .cab{display:flex;align-items:center;gap:14px;margin-bottom:14px}
   .cab h2{margin:0;font-size:22px}
-  .cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 14px}
+  .cards3{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 14px}
+  @media (max-width:980px){.cards3{grid-template-columns:repeat(2,1fr)}}
+  .pct-ok{color:var(--ok)}.pct-atencao{color:#b26a00}.pct-alto{color:var(--bad)}
+  .prop{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px}
   .cards3 > div{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;background:var(--bg);min-width:0}
   .cards3 span{display:block;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
   .cards3 b{display:block;font-size:20px;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
@@ -245,6 +248,7 @@
         <div><label>Data de nascimento</label><input name="data_nascimento" type="date"></div>
         <div><label>Tipo de renda</label><select name="tipo_renda"><option value="">-</option><option value="formal">Formal</option><option value="informal">Informal</option></select></div>
         <div><label>Renda mensal (R$)</label><input name="renda" type="number" step="50" min="0"></div>
+        <div><label>Parcela desejada (R$/mês)<span id="pcthint"></span></label><input name="parcela_desejada" type="number" step="50" min="0"></div>
         <div><label>Possui filhos?</label><select name="tem_filhos"><option value="">-</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
         <div><label>Etapa</label><select name="status"></select></div>
         <div><label>Orçamento (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
@@ -270,6 +274,11 @@
         </div>
         <ul id="hlista" style="padding-left:18px;margin:0"></ul>
         <div class="bar" style="margin:10px 0 0"><button type="button" class="bad" id="hlimpaetapas">Apagar registros de mudança de etapa</button></div>
+      </div>
+      <div class="hist hide" id="propcli">
+        <div class="secao-tit" style="margin:0 0 8px"><strong>Propostas / simulações do banco</strong>
+          <button type="button" data-acao="novaprop">+ Registrar proposta</button></div>
+        <div id="proplista"></div>
       </div>
       <div class="hist hide" id="docs">
         <div class="secao-tit" style="margin:0"><span><strong>Documentos</strong> <span id="docresumo" class="mut"></span></span>
@@ -459,6 +468,30 @@
     <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar venda</button><button type="button" id="vcancel">Cancelar</button></div>
   </form>
 </dialog>
+<dialog id="prdlg" style="max-width:620px">
+  <form id="prform">
+    <h3 id="prtit" style="margin-top:0">Proposta do banco</h3>
+    <div class="row">
+      <div><label>Data da simulação</label><input name="data" type="date" required></div>
+      <div><label>Banco</label><input name="banco" required></div>
+      <div><label>Modalidade</label><select name="modalidade"><option value="">—</option><option>MCMV Faixa 1</option><option>MCMV Faixa 2</option><option>MCMV Faixa 3</option><option>MCMV Faixa 4</option><option>SBPE</option><option>Pró-Cotista</option><option>Outra</option></select></div>
+      <div><label>Situação</label><select name="status"><option value="simulada">Simulada</option><option value="em_analise">Em análise</option><option value="aprovada">Aprovada</option><option value="reprovada">Reprovada</option></select></div>
+      <div><label>Valor do imóvel (R$)</label><input name="valor_imovel" type="number" min="0" step="1000"></div>
+      <div><label>Entrada (R$)</label><input name="entrada" type="number" min="0" step="100"></div>
+      <div><label>FGTS (R$)</label><input name="fgts" type="number" min="0" step="100"></div>
+      <div><label>Subsídio (R$)</label><input name="subsidio" type="number" min="0" step="100"></div>
+      <div><label>Valor financiado (R$)</label><input name="valor_financiado" type="number" min="0" step="100"></div>
+      <div><label>Prazo (meses)</label><input name="prazo_meses" type="number" min="1" step="1"></div>
+      <div><label>Juros (% ao ano)</label><input name="taxa_juros" type="number" min="0" step="0.01"></div>
+      <div><label>Sistema</label><select name="sistema"><option>PRICE</option><option>SAC</option></select></div>
+      <div><label>1ª parcela informada pelo banco (R$)</label><input name="parcela" type="number" min="0" step="0.01"></div>
+      <div><label>Renda considerada (R$)</label><input name="renda_considerada" type="number" min="0" step="50"></div>
+    </div>
+    <div class="etapa" style="margin:12px 0 0" id="prcalc"></div>
+    <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2" placeholder="Ex.: aprovado com renda composta; falta certidão do cônjuge"></textarea>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar proposta</button><button type="button" id="prcancel">Cancelar</button></div>
+  </form>
+</dialog>
 <dialog id="lmdlg">
   <h3 style="margin-top:0">Mensagem para o cliente</h3>
   <p class="mut" style="margin:0 0 8px;font-size:14px" id="lmpara"></p>
@@ -590,6 +623,8 @@ async function carregar() {
   faltaV6 = !!(im.error || pf.error);
   imoveis = im.data || []; perfil = pf.data || null;
   faltaV9 = !!(await sb.from("clientes").select("prazo_docs").limit(1)).error;
+  const pr = await sb.from("propostas").select("*").order("data", { ascending: false }).order("criado_em", { ascending: false });
+  faltaV10 = !!pr.error; propostas = pr.data || [];
   const vd = await sb.from("vendas").select("*").order("data_venda", { ascending: false });
   faltaV8 = !!vd.error; vendas = vd.data || [];
   const ag = await sb.from("compromissos").select("*").order("quando");
@@ -621,7 +656,7 @@ function desenhar() {
   if (telaAtual === "portfolio") return desenharPortfolio();
   if (telaAtual === "agenda") return desenharAgenda();
   if (telaAtual === "vendas") return desenharVendas();
-  if (telaAtual === "cliente") return agendaCliente();
+  if (telaAtual === "cliente") { propostasCliente(); return agendaCliente(); }
   const itens = filtrados();
   if (visao === "funil") {
     $("funil").innerHTML = Object.entries(STATUS).map(([k, v]) => {
@@ -885,6 +920,8 @@ async function relatorio(c, empilhar = true) {
       ${linha("Telefone / WhatsApp", esc(c.telefone))}${linha("E-mail", esc(c.email))}${linha("CPF", esc(c.cpf))}
       ${linha("Data de nascimento", c.data_nascimento ? dataBR(c.data_nascimento + "T12:00") + ` (${idade} anos)` : "")}
       ${linha("Tipo de renda", esc(c.tipo_renda))}${linha("Renda mensal", c.renda ? dinheiro(c.renda) : "")}
+      ${linha("Parcela desejada", c.parcela_desejada ? din(c.parcela_desejada) + (pctRenda(c.parcela_desejada, c.renda) != null ? " (" + pctTxt(pctRenda(c.parcela_desejada, c.renda)) + ")" : "") : "")}
+      ${(p => p ? linha("Última proposta", `${dataCurta(p.data)} · ${esc(p.banco)} · ${STATUS_PROP[p.status]}${p.parcela ? " · parcela " + din(p.parcela) : ""}${pctRenda(p.parcela, p.renda_considerada || c.renda) != null ? " (" + pctTxt(pctRenda(p.parcela, p.renda_considerada || c.renda)) + ")" : ""}`) : "")(ultimaProposta(c.id))}
       ${linha("Possui filhos", c.tem_filhos == null ? "" : c.tem_filhos ? "Sim" : "Não")}
       ${linha("Orçamento", c.orcamento ? dinheiro(c.orcamento) : "")}
       ${linha("Imóvel de interesse", esc(imoveis.find(i => i.id === c.imovel_id)?.titulo))}${linha("Valor do imóvel", c.valor_imovel ? dinheiro(c.valor_imovel) : "")}${linha("Interesse", esc(c.interesse))}
@@ -982,9 +1019,10 @@ function abrir(c, empilhar = true) {
     .map(i => `<option value="${i.id}">${esc(i.titulo)}${i.preco ? " – " + dinheiro(i.preco) : ""}</option>`).join("");
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
-  for (const id of ["hist", "docs", "brel", "agcli"]) $(id).classList.toggle("hide", !c);
+  for (const id of ["hist", "docs", "brel", "agcli", "propcli"]) $(id).classList.toggle("hide", !c);
   $("esteira").classList.add("hide"); $("resumo").textContent = "";
-  if (c) { historico(); documentos(); }
+  if (c) { historico(); documentos(); propostasCliente(); }
+  dicaParcela();
   if (empilhar) ir({ t: "cliente", id: editId }); else tela("cliente");
   if (!c) f.nome.focus();
 }
@@ -997,6 +1035,8 @@ $("form").onsubmit = async e => {
   const d = Object.fromEntries(new FormData(e.target));
   d.orcamento = d.orcamento === "" ? null : Number(d.orcamento);
   d.renda = d.renda === "" ? null : Number(d.renda);
+  d.parcela_desejada = d.parcela_desejada === "" ? null : Number(d.parcela_desejada);
+  if (faltaV10) delete d.parcela_desejada; // coluna ainda não criada no banco
   d.tem_filhos = d.tem_filhos === "" ? null : d.tem_filhos === "sim";
   d.imovel_id = d.imovel_id || null;
   d.valor_imovel = d.valor_imovel === "" ? null : Number(d.valor_imovel);
@@ -1171,6 +1211,7 @@ document.addEventListener("click", e => {
   if (a === "novocomp") abrirComp({});
   if (a === "agvisita") abrirComp({ tipo: "visita", cliente_id: editId });
   if (a === "agretorno") abrirComp({ tipo: "retorno", cliente_id: editId });
+  if (a === "novaprop") abrirProposta();
 });
 
 // ---------- Agenda: visitas, retornos e outros compromissos ----------
@@ -1306,6 +1347,120 @@ $("app").addEventListener("click", async e => {
   if (b.dataset.aglembra) mensagemCliente(a);
 });
 
+
+// ---------- Parcela desejada e propostas/simulações do banco ----------
+let propostas = [], faltaV10 = false, propId = null;
+const STATUS_PROP = { simulada: "Simulada", em_analise: "Em análise", aprovada: "Aprovada", reprovada: "Reprovada" };
+const ultimaProposta = id => propostas.find(p => p.cliente_id === id); // já vem ordenada da mais recente para a mais antiga
+// Quanto a parcela consome da renda. Referência do Minha Casa Minha Vida: até 30% da renda bruta familiar.
+const pctRenda = (parcela, renda) => parcela && renda ? parcela / renda * 100 : null;
+const corPct = p => p == null ? "mut" : p <= 30 ? "pct-ok" : p <= 35 ? "pct-atencao" : "pct-alto";
+const pctTxt = p => p == null ? "" : `${p.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% da renda`;
+
+function cardParcela(c) {
+  const p = ultimaProposta(c.id), rendaP = p?.renda_considerada || c.renda;
+  if (p?.parcela) {
+    const pc = pctRenda(p.parcela, rendaP), pd = pctRenda(c.parcela_desejada, c.renda);
+    return `<div><span>Parcela (proposta ${esc(p.banco)})</span><b>${din(p.parcela)}<small style="display:inline">/mês</small></b>
+      <small class="${corPct(pc)}"><strong>${pctTxt(pc) || "informe a renda"}</strong>${pc > 30 ? " · acima de 30%" : ""}</small>
+      ${c.parcela_desejada ? `<small>Desejada: ${din(c.parcela_desejada)}${pd != null ? ` (${pctTxt(pd)})` : ""}</small>` : ""}</div>`;
+  }
+  if (c.parcela_desejada) {
+    const pd = pctRenda(c.parcela_desejada, c.renda);
+    return `<div><span>Parcela desejada</span><b>${din(c.parcela_desejada)}<small style="display:inline">/mês</small></b>
+      <small class="${corPct(pd)}"><strong>${pctTxt(pd) || "informe a renda para calcular"}</strong>${pd > 30 ? " · acima de 30%" : ""}</small></div>`;
+  }
+  return `<div><span>Parcela</span><b>—</b><small>Informe a parcela desejada ou registre a proposta do banco</small></div>`;
+}
+
+function propostasCliente() {
+  if (!editId) return;
+  if (faltaV10) return $("proplista").innerHTML = '<p class="mut" style="margin:0">Rode o schema_v10.sql no SQL Editor do Supabase para registrar propostas.</p>';
+  const c = clientes.find(x => x.id === editId), lista = propostas.filter(p => p.cliente_id === editId);
+  $("proplista").innerHTML = lista.length ? lista.map(p => {
+    const pc = pctRenda(p.parcela, p.renda_considerada || c?.renda);
+    const partes = [["Imóvel", p.valor_imovel], ["Entrada", p.entrada], ["FGTS", p.fgts], ["Subsídio", p.subsidio]].filter(([, v]) => v);
+    return `<div class="prop">
+      <div class="secao-tit" style="margin:0 0 4px"><strong>${dataCurta(p.data)} · ${esc(p.banco)}${p.modalidade ? " · " + esc(p.modalidade) : ""}</strong>
+        <span class="tag ${p.status === "aprovada" ? "fechado" : p.status === "reprovada" ? "perdido" : ""}">${STATUS_PROP[p.status]}</span></div>
+      <div><b style="font-size:18px">${p.parcela ? din(p.parcela) + "/mês" : "Parcela não informada"}</b>
+        ${pc != null ? ` <span class="${corPct(pc)}"><strong>${pctTxt(pc)}</strong></span>` : ""}</div>
+      <small class="mut">${[p.valor_financiado && "Financiado " + dinheiro(p.valor_financiado), p.prazo_meses && p.prazo_meses + " meses",
+        p.taxa_juros && p.taxa_juros.toLocaleString("pt-BR") + "% a.a.", p.sistema].filter(Boolean).join(" · ")}</small>
+      ${partes.length ? `<small class="mut" style="display:block">${partes.map(([t, v]) => `${t} ${dinheiro(v)}`).join(" · ")}</small>` : ""}
+      ${p.obs ? `<small style="display:block">${esc(p.obs)}</small>` : ""}
+      <div class="bar" style="margin:6px 0 0"><button type="button" data-propedit="${p.id}">Editar</button><button type="button" class="bad" data-propdel="${p.id}">✕</button></div>
+    </div>`;
+  }).join("") : '<p class="mut" style="margin:0">Nenhuma proposta registrada. Quando o banco devolver a simulação, clique em "+ Registrar proposta".</p>';
+}
+$("proplista").onclick = async e => {
+  const b = e.target.closest("[data-propedit],[data-propdel]"); if (!b) return;
+  const p = propostas.find(x => x.id === (b.dataset.propedit || b.dataset.propdel));
+  if (b.dataset.propedit) abrirProposta(p);
+  if (b.dataset.propdel && confirm("Excluir esta proposta?")) {
+    const { error } = await sb.from("propostas").delete().eq("id", p.id);
+    error ? msg(error.message, true) : (msg("Proposta excluída."), await carregar(), cardsCliente(clientes.find(c => c.id === editId)));
+  }
+};
+
+function abrirProposta(p = {}) {
+  if (faltaV10) return msg("Rode o schema_v10.sql no SQL Editor do Supabase para registrar propostas.", true);
+  const c = clientes.find(x => x.id === (p.cliente_id || editId)); if (!c) return;
+  propId = p.id || null;
+  const f = $("prform"); f.reset();
+  const i = imoveis.find(x => x.id === c.imovel_id);
+  const val = { data: isoLocal(new Date()), banco: "Caixa", prazo_meses: 420, sistema: "PRICE",
+    valor_imovel: c.valor_imovel || i?.preco, renda_considerada: c.renda, ...p };
+  for (const el of f.elements) if (el.name && val[el.name] != null) el.value = val[el.name];
+  f.valor_financiado.dataset.manual = p.valor_financiado ? "1" : "";
+  $("prtit").textContent = (propId ? "Editar proposta – " : "Proposta do banco – ") + c.nome;
+  calcProposta(); $("prdlg").showModal();
+}
+// Financiado = imóvel − entrada − FGTS − subsídio (até a pessoa digitar outro valor).
+function calcProposta() {
+  const f = $("prform"), n = k => Number(f[k].value) || 0;
+  if (!f.valor_financiado.dataset.manual && n("valor_imovel")) f.valor_financiado.value = Math.max(0, n("valor_imovel") - n("entrada") - n("fgts") - n("subsidio")) || "";
+  const fin = n("valor_financiado"), meses = n("prazo_meses"), taxa = n("taxa_juros"), parcela = n("parcela"), renda = n("renda_considerada");
+  let est = null;
+  if (fin && meses && taxa) {
+    const i = Math.pow(1 + taxa / 100, 1 / 12) - 1;
+    est = f.sistema.value === "SAC" ? fin / meses + fin * i : fin * i / (1 - Math.pow(1 + i, -meses));
+  }
+  const pc = pctRenda(parcela, renda), pe = pctRenda(est, renda);
+  $("prcalc").innerHTML = [
+    parcela ? `Parcela informada: <strong>${din(parcela)}</strong> → <strong class="${corPct(pc)}">${pctTxt(pc) || "informe a renda"}</strong>` : "",
+    est ? `Estimativa pelo sistema ${f.sistema.value}: ${din(est)}${pe != null ? ` (${pctTxt(pe)})` : ""} <small class="mut">sem seguros e taxas; use a parcela que o banco informar</small>`
+      + (!parcela ? ` <button type="button" id="prusar" style="padding:3px 8px;font-size:12px">Usar estimativa</button>` : "") : "",
+    '<small class="mut">Referência do Minha Casa Minha Vida: a parcela pode comprometer até 30% da renda bruta familiar.</small>'
+  ].filter(Boolean).join("<br>");
+  if ($("prusar")) $("prusar").onclick = () => { f.parcela.value = est.toFixed(2); calcProposta(); };
+}
+$("prform").addEventListener("input", e => { if (e.target.name === "valor_financiado") e.target.dataset.manual = e.target.value ? "1" : ""; calcProposta(); });
+$("prcancel").onclick = () => $("prdlg").close();
+$("prform").onsubmit = async e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target)), cid = propId ? propostas.find(p => p.id === propId).cliente_id : editId;
+  for (const k of ["valor_imovel", "entrada", "fgts", "subsidio", "valor_financiado", "prazo_meses", "taxa_juros", "parcela", "renda_considerada"])
+    d[k] = d[k] === "" ? null : Number(d[k]);
+  d.obs = d.obs.trim() || null; d.modalidade = d.modalidade || null;
+  const { error } = propId ? await sb.from("propostas").update(d).eq("id", propId) : await sb.from("propostas").insert({ ...d, cliente_id: cid });
+  if (error) return msg("Erro ao salvar a proposta: " + error.message, true);
+  $("prdlg").close();
+  if (!propId) await registrar(cid, "Anotação", `Proposta ${d.banco}${d.parcela ? ": parcela " + din(d.parcela) : ""}${pctRenda(d.parcela, d.renda_considerada) != null ? " (" + pctTxt(pctRenda(d.parcela, d.renda_considerada)) + ")" : ""}`);
+  msg("Proposta salva.");
+  await carregar();
+  const c = clientes.find(x => x.id === cid);
+  if (c && editId === cid) { cardsCliente(c); historico(); }
+};
+
+// Dica ao lado do campo: quanto a parcela desejada consome da renda.
+function dicaParcela() {
+  const f = $("form"), p = pctRenda(Number(f.parcela_desejada.value), Number(f.renda.value));
+  $("pcthint").innerHTML = p == null ? "" : ` · <span class="${corPct(p)}">${pctTxt(p)}</span>`;
+}
+$("form").parcela_desejada.addEventListener("input", dicaParcela);
+$("form").renda.addEventListener("input", dicaParcela);
+
 // ---------- Cards do cliente, prazo dos documentos, mensagem de lembrete e aviso com som ----------
 let faltaV9 = false, lembrando = null;
 function cardsCliente(c) {
@@ -1314,6 +1469,7 @@ function cardsCliente(c) {
     <div><span>Imóvel de interesse</span><b>${i ? esc(i.titulo) : "Não definido"}</b>
       <small>${i ? esc([i.bairro, i.cidade].filter(Boolean).join(", ")) || "&nbsp;" : "Escolha no campo “Imóvel de interesse” abaixo"}</small></div>
     <div><span>Valor do imóvel</span><b>${v ? dinheiro(v) : "—"}</b><small>${c.renda ? "Renda do cliente: " + dinheiro(c.renda) : "&nbsp;"}</small></div>
+    ${cardParcela(c)}
     <div class="sit ${c.status}"><span>Situação atual</span><b>${STATUS[c.status]}</b>
       <small>${c.status === "perdido" ? "Fora da esteira" : `Etapa ${n + 1} de ${FLUXO.length}`}</small></div>`;
 }
