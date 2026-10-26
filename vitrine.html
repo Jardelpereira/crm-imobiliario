@@ -213,9 +213,12 @@ const linkImovel = i => { const u = new URL(location.href); u.search = ""; u.has
 
 async function iniciar() {
   sb = supabase.createClient(CRM_CONFIG.SUPABASE_URL, CRM_CONFIG.SUPABASE_ANON_KEY);
+  // Mostra o portfólio de toda a equipe do corretor (ou só dele, se não tiver equipe).
+  const eq = await sb.rpc("equipe_de", { u: corretor });
+  const equipe = eq.data?.length ? eq.data.map(x => typeof x === "string" ? x : Object.values(x)[0]) : [corretor];
   const [pf, im] = await Promise.all([
     sb.from("perfil").select("*").eq("user_id", corretor).maybeSingle(),
-    sb.from("imoveis").select("*").eq("user_id", corretor).eq("publicado", true)
+    sb.from("imoveis").select("*").in("user_id", equipe).eq("publicado", true)
       .order("destaque", { ascending: false }).order("criado_em", { ascending: false })
   ]);
   if (im.error) return falha("Este site ainda está sendo configurado. Volte em breve!");

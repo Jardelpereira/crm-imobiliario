@@ -335,6 +335,7 @@
         <div class="bar" style="margin:0">
           <select id="vano"></select>
           <select id="vmes"><option value="">Ano todo</option></select>
+          <select id="vcorretor" class="hide"><option value="">Toda a equipe</option></select>
           <button id="vimportar">Importar vendas concluídas</button>
           <button id="vexportar">Exportar planilha</button>
           <button class="pri" id="vnova">+ Registrar venda</button>
@@ -422,6 +423,7 @@
       <label style="margin-top:10px">Sobre você</label>
       <textarea name="bio" rows="4" placeholder="Ex.: Especialista em Minha Casa Minha Vida no DF. Cuido de tudo, da simulação à entrega das chaves."></textarea>
       <div class="bar" style="margin-top:12px"><button class="pri" type="submit">Salvar perfil</button><button type="button" id="pver">Ver meu site ↗</button></div>
+      <div class="hist" id="equipebox"></div>
     </form>
 
     <div id="lista"></div>
@@ -615,9 +617,18 @@ async function carregar() {
     const r = resumo[h.cliente_id] ||= { n: 0, ultimo: h.criado_em, tipo: h.tipo };
     r.n++;
   }
-  const u = await uid();
+  const u = await uid(); meuId = u;
+  const eq = await sb.rpc("equipe_de", { u });
+  faltaV11 = !!eq.error;
+  equipeIds = eq.data?.length ? eq.data.map(x => typeof x === "string" ? x : Object.values(x)[0]) : [u];
+  const [pfs, eqs] = await Promise.all([
+    sb.from("perfil").select("user_id,nome").in("user_id", equipeIds),
+    faltaV11 ? { data: null } : sb.from("equipes").select("*").maybeSingle()
+  ]);
+  nomes = Object.fromEntries((pfs.data || []).map(x => [x.user_id, x.nome]));
+  equipe = eqs.data || null;
   const [im, pf] = await Promise.all([
-    sb.from("imoveis").select("*").eq("user_id", u).order("destaque", { ascending: false }).order("criado_em", { ascending: false }),
+    sb.from("imoveis").select("*").in("user_id", equipeIds).order("destaque", { ascending: false }).order("criado_em", { ascending: false }),
     sb.from("perfil").select("*").eq("user_id", u).maybeSingle()
   ]);
   faltaV6 = !!(im.error || pf.error);
@@ -683,7 +694,7 @@ function desenhar() {
         ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
         ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span><br>
         ${interesse(c) ? `<small>${interesse(c)}</small><br>` : ""}
-        <small>${ultimoContato(c)}</small>
+        <small>${ultimoContato(c)}</small>${resp(c) ? `<small class="mut"> · cadastrado por ${resp(c)}</small>` : ""}
       </div>
       <div class="bar" style="margin:0">
         ${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}
@@ -979,7 +990,7 @@ $("marca").onclick = e => { e.preventDefault(); if ($("menu").classList.contains
 history.replaceState(null, "");
 
 // Foto do cliente: fica em <usuário>/perfil/<cliente>.jpg no bucket privado "fichas".
-const caminhoAvatar = async id => `${await uid()}/perfil/${id}.jpg`;
+const caminhoAvatar = async id => `${clientes.find(c => c.id === id)?.user_id || await uid()}/perfil/${id}.jpg`;
 async function avatar(c) {
   const ini = c.nome.split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
   $("avini").textContent = ini;
@@ -1079,12 +1090,15 @@ async function enviarFoto(file, pasta) {
   return path;
 }
 async function galeria() {
-  const pasta = `${await uid()}/lotes`;
-  const { data, error } = await sb.storage.from("fichas").list(pasta, { sortBy: { column: "created_at", order: "desc" } });
-  if (error) return msg("Erro ao listar as fotos: " + error.message, true);
-  const fotos = data.filter(f => f.id);
+  const fotos = [];
+  for (const id of equipeIds) {
+    const { data, error } = await sb.storage.from("fichas").list(`${id}/lotes`, { sortBy: { column: "created_at", order: "desc" } });
+    if (error) return msg("Erro ao listar as fotos: " + error.message, true);
+    fotos.push(...data.filter(f => f.id).map(f => ({ ...f, caminho: `${id}/lotes/${f.name}` })));
+  }
+  fotos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   if (!fotos.length) return $("galeria").innerHTML = '<p class="mut">Nenhuma foto enviada ainda.</p>';
-  const { data: urls, error: e2 } = await sb.storage.from("fichas").createSignedUrls(fotos.map(f => `${pasta}/${f.name}`), 3600);
+  const { data: urls, error: e2 } = await sb.storage.from("fichas").createSignedUrls(fotos.map(f => f.caminho), 3600);
   if (e2) return msg("Erro ao abrir as fotos: " + e2.message, true);
   $("galeria").innerHTML = urls.map((u, i) => `
     <figure>
@@ -1617,7 +1631,8 @@ for (let m = 1; m <= 12; m++) $("vmes").add(new Option(new Date(2000, m - 1, 1).
 
 function vendasFiltradas() {
   const ano = $("vano").value, mes = $("vmes").value;
-  return vendas.filter(v => (ano === "todos" || v.data_venda.startsWith(ano)) && (!mes || +v.data_venda.slice(5, 7) === +mes));
+  const quem = $("vcorretor").value;
+  return vendas.filter(v => (ano === "todos" || v.data_venda.startsWith(ano)) && (!mes || +v.data_venda.slice(5, 7) === +mes) && (!quem || v.user_id === quem));
 }
 function desenharVendas() {
   if (faltaV8) {
@@ -1630,6 +1645,9 @@ function desenharVendas() {
   $("vano").innerHTML = anos.map(a => `<option ${String(a) === atual ? "selected" : ""}>${a}</option>`).join("")
     + `<option value="todos" ${atual === "todos" ? "selected" : ""}>Todos os anos</option>`;
 
+  const quem = $("vcorretor").value;
+  $("vcorretor").innerHTML = '<option value="">Toda a equipe</option>' + equipeIds.map(id => `<option value="${id}" ${id === quem ? "selected" : ""}>${id === meuId ? "Minhas vendas" : esc(nomes[id] || "Corretor da equipe")}</option>`).join("");
+  $("vcorretor").classList.toggle("hide", equipeIds.length < 2);
   const lista = vendasFiltradas(), soma = f => lista.reduce((t, v) => t + f(v), 0);
   const vgv = soma(v => Number(v.valor_venda)), com = soma(minha);
   const ciclos = lista.map(v => { const c = clientes.find(x => x.id === v.cliente_id); return c ? (new Date(v.data_venda + "T12:00") - new Date(c.criado_em)) / 864e5 : null; })
@@ -1676,7 +1694,7 @@ function desenharVendas() {
 
   $("vtab").innerHTML = `<thead><tr><th>Data</th><th>Cliente</th><th>Imóvel</th><th>Pagamento</th><th class="n">Valor da venda</th><th class="n">Comissão</th><th class="n">Sua comissão</th><th>Recebimento</th><th></th></tr></thead><tbody>`
     + (lista.length ? lista.map(v => `<tr>
-      <td>${dataCurta(v.data_venda)}</td>
+      <td>${dataCurta(v.data_venda)}${resp(v) ? `<br><small class="mut">${resp(v)}</small>` : ""}</td>
       <td>${v.cliente_id && clientes.some(c => c.id === v.cliente_id) ? `<a href="#" data-vcli="${v.cliente_id}">${esc(nomeVenda(v))}</a>` : esc(nomeVenda(v))}</td>
       <td>${esc(imovelVenda(v))}</td>
       <td><small>${esc(v.forma_pagamento || "")}</small></td>
@@ -1689,7 +1707,7 @@ function desenharVendas() {
       : '<tr><td colspan="9" class="mut">Nenhuma venda neste período. Use "+ Registrar venda" ou "Importar vendas concluídas".</td></tr>')
     + "</tbody>";
 }
-$("vano").onchange = $("vmes").onchange = desenhar;
+$("vano").onchange = $("vmes").onchange = $("vcorretor").onchange = desenhar;
 $("vtab").onclick = async e => {
   const b = e.target.closest("[data-vedit],[data-vdel],[data-vcli]"); if (!b) return;
   e.preventDefault();
@@ -1881,7 +1899,51 @@ $("iexcluir").onclick = async () => {
   msg("Imóvel excluído."); await carregar(); voltar();
 };
 
+// ---------- Equipe: corretores que compartilham clientes, agenda, portfólio e vendas ----------
+let equipeIds = [], nomes = {}, equipe = null, meuId = null, faltaV11 = false;
+// Quem cadastrou o registro (só aparece quando há mais de uma pessoa na equipe).
+const resp = r => equipeIds.length > 1 && r?.user_id ? (r.user_id === meuId ? "você" : esc((nomes[r.user_id] || "equipe").split(" ")[0])) : "";
+function equipeUI() {
+  const box = $("equipebox");
+  if (faltaV11) return box.innerHTML = '<strong>Equipe</strong><p class="mut">Para trabalhar com outro corretor vendo os mesmos dados, rode o <b>schema_v11.sql</b> no SQL Editor do Supabase.</p>';
+  if (!equipe) return box.innerHTML = `<strong>Equipe</strong>
+    <p class="mut" style="margin:4px 0 10px">Junte-se a outro corretor para os dois verem e editarem os mesmos clientes, agenda, portfólio e vendas. Cada um continua com o próprio login.</p>
+    <div class="bar"><input id="eqnome" placeholder="Nome da equipe (ex.: Jardel & Gleice Imóveis)"><button type="button" class="pri" data-eq="criar">Criar equipe</button></div>
+    <div class="bar" style="margin:0"><input id="eqcodigo" placeholder="Recebeu um código? Digite aqui (ex.: A1B2C3)" style="text-transform:uppercase"><button type="button" data-eq="entrar">Entrar na equipe</button></div>`;
+  box.innerHTML = `<strong>Equipe: ${esc(equipe.nome)}</strong>
+    <p style="margin:6px 0">Código para convidar: <b style="font-size:20px;letter-spacing:.12em">${esc(equipe.codigo)}</b>
+      <button type="button" data-eq="convite" style="margin-left:6px">Copiar convite</button></p>
+    <p class="mut" style="margin:0 0 6px">Membros: ${equipeIds.map(id => id === meuId ? "você" : esc(nomes[id] || "corretor sem perfil")).join(", ")}</p>
+    <button type="button" class="bad" data-eq="sair">Sair da equipe</button>`;
+}
+$("equipebox").onclick = async e => {
+  const a = e.target.closest("[data-eq]")?.dataset.eq; if (!a) return;
+  if (a === "criar") {
+    const { data, error } = await sb.rpc("criar_equipe", { nome: $("eqnome").value });
+    if (error) return msg("Erro ao criar a equipe: " + error.message, true);
+    msg(`Equipe criada! Código para convidar: ${data}`);
+  }
+  if (a === "entrar") {
+    const { data, error } = await sb.rpc("entrar_equipe", { cod: $("eqcodigo").value });
+    if (error) return msg("Não deu para entrar: " + error.message, true);
+    msg(`Você entrou na equipe ${data}. Agora vocês veem os mesmos dados.`);
+  }
+  if (a === "sair") {
+    if (!confirm("Sair da equipe? Você volta a ver só o que você mesmo cadastrou.")) return;
+    const { error } = await sb.rpc("sair_equipe");
+    if (error) return msg("Erro: " + error.message, true);
+    msg("Você saiu da equipe.");
+  }
+  if (a === "convite") {
+    const texto = `Oi! Vamos usar o mesmo CRM de imóveis.\n1. Abra ${new URL(".", location.href).href}\n2. Clique em "Criar conta" e confirme pelo e-mail\n3. Entre, vá em "Meu perfil" > Equipe e digite o código: ${equipe.codigo}`;
+    try { await navigator.clipboard.writeText(texto); e.target.textContent = "Convite copiado ✓"; } catch { prompt("Copie o convite:", texto); }
+    return;
+  }
+  await carregar(); equipeUI();
+};
+
 function preencherPerfil() {
+  equipeUI();
   const f = $("perfilform"); f.reset();
   if (perfil) for (const el of f.elements) if (el.name && perfil[el.name] != null) el.value = perfil[el.name];
   $("pini").textContent = (perfil?.nome || "?").split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
