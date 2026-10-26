@@ -4,9 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRM Imobiliário</title>
+<meta name="theme-color" content="#faf6f0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root{--bg:#f5f6f8;--card:#fff;--tx:#1d2330;--mut:#6b7385;--pri:#1f5eff;--bd:#e1e4ea;--ok:#12805c;--bad:#c62828}
-  @media (prefers-color-scheme:dark){:root{--bg:#12151c;--card:#1b2029;--tx:#e8ebf2;--mut:#9aa3b5;--bd:#2a3140}}
+  :root{--bg:#faf6f0;--card:#fff;--tx:#2b2620;--mut:#75695d;--pri:#2f7a64;--acc:#e9a23b;--navy:#1f4036;--bd:#ece3d6;--ok:#1e7f4f;--bad:#c62828}
   *{box-sizing:border-box}
   body{margin:0;font:15px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--tx)}
   header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:var(--card);border-bottom:1px solid var(--bd)}
@@ -25,9 +28,9 @@
   .mini{display:flex;gap:3px;margin:6px 0 4px;max-width:320px;cursor:pointer}.mini i{flex:1;height:6px;border-radius:3px;background:var(--bd)}
   .mini i.ok{background:var(--ok)}.mini i.at{background:var(--pri)}.mini.perdido i{background:var(--bad);opacity:.35}
   .tag.fechado{color:var(--ok);border-color:var(--ok)}.tag.perdido{color:var(--bad);border-color:var(--bad)}
-  .mut{color:var(--mut)}.hide{display:none}
+  .mut{color:var(--mut)}.hide{display:none!important}
   #msg{min-height:20px;margin:8px 0}
-  a{color:var(--pri)}@media (prefers-color-scheme:dark){a{color:#8fb0ff}}
+  a{color:var(--pri)}
   .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
   .gal p{grid-column:1/-1;margin:0}.gal figure{margin:0}.gal img{width:100%;height:180px;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
   .gal figcaption{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);margin-top:4px}
@@ -56,6 +59,116 @@
   .etapa.perdido{border-left-color:var(--bad)}.etapa.fechado{border-left-color:var(--ok)}
   .etapa p{margin:4px 0 8px}
   .alerta{color:var(--bad)}
+  header.topbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--navy);color:#fff;border:none}
+  .marca{display:flex;align-items:center;gap:10px;color:#fff;text-decoration:none}
+  .marca svg{color:var(--acc);flex:none}.marca b{display:block;font-size:16px;line-height:1.2}.marca small{display:block;font-size:11px;opacity:.7}
+  #menu{display:flex;gap:2px;flex-wrap:wrap;order:3;width:100%}
+  @media (min-width:900px){#menu{order:0;width:auto}}
+  #menu button,#menu a{background:transparent;border:none;color:#cfd8e6;padding:7px 12px;border-radius:8px;font-size:14px;text-decoration:none}
+  #menu button.on{background:rgba(255,255,255,.14);color:#fff}
+  #menu a{color:var(--acc)}
+  .conta{display:flex;align-items:center;gap:8px;font-size:13px}.conta .mut{color:#9fb0c8}
+  .conta button{background:transparent;color:#fff;border-color:rgba(255,255,255,.3);padding:6px 12px}
+  @media (max-width:600px){#quem{display:none}}
+  .hero{border-radius:14px;min-height:250px;padding:28px;color:#fff;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:14px;
+    background:linear-gradient(90deg,rgba(11,37,69,.94),rgba(11,37,69,.3)),url("https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .hero h1{margin:0 0 6px;font-size:30px}.hero p{margin:0 0 16px;opacity:.92;max-width:540px}.hero .bar{margin:0}
+  .btn-acc{background:var(--acc);border-color:var(--acc);color:#1b1300;font-weight:600}
+  .btn-ghost{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.4);color:#fff}
+  .kpis div.click{cursor:pointer;background:var(--card)}.kpis div.click:hover{border-color:var(--pri)}
+  .duas{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:800px){.duas{grid-template-columns:1fr}}
+  .secao-tit{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0 12px}.secao-tit h2,.secao-tit h3{margin:0}
+  .lista-mini .item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--bd);cursor:pointer}
+  .grid-im{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+  .grid-im.mini{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .im{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:box-shadow .15s}
+  .im:hover{box-shadow:0 6px 20px rgba(11,37,69,.15)}
+  .im .capa{position:relative;aspect-ratio:4/3;background:#dbe4f0 center/cover}
+  .im .preco{position:absolute;left:10px;bottom:10px;background:rgba(11,37,69,.9);color:#fff;font-weight:700;padding:4px 10px;border-radius:8px}
+  .im .selo{position:absolute;right:10px;top:10px;background:var(--acc);color:#1b1300;font-size:12px;font-weight:700;padding:3px 8px;border-radius:6px}
+  .im .selo.vendido{background:var(--bad);color:#fff}.im .selo.reservado{background:#7c3aed;color:#fff}
+  .im .corpo{padding:12px;display:flex;flex-direction:column;gap:6px;flex:1}
+  .im h4{margin:0;font-size:16px}
+  .specs{display:flex;gap:12px;font-size:13px;color:var(--mut);flex-wrap:wrap}
+  .im .bar{margin:auto 0 0;padding-top:4px}
+  .fotos-ed{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:6px 0 10px}
+  .fotos-ed figure{margin:0}.fotos-ed img{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:8px;border:1px solid var(--bd)}
+  .fotos-ed figcaption{display:flex;justify-content:space-between;align-items:center;gap:4px;margin-top:4px;font-size:12px}
+  .fotos-ed button{padding:2px 6px;font-size:12px}
+  .chk2{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx);margin:0;cursor:pointer}.chk2 input{width:18px;height:18px;flex:none;min-width:0}
+  .upcard{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin:0;cursor:pointer;background:rgba(11,37,69,.55);color:#fff;border:2px dashed rgba(255,255,255,.75);text-align:center;padding:10px;font-size:15px;font-weight:600}
+  .upcard small{font-weight:400;font-size:12px;opacity:.9}.upcard:hover{background:rgba(11,37,69,.72)}
+  .ilustra{position:absolute;right:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:6px}
+  .slot{border:2px dashed var(--bd);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:290px;color:var(--mut);cursor:pointer;text-align:center;padding:16px}
+  .slot b{font-size:38px;line-height:1;color:var(--pri);font-weight:400}.slot:hover{border-color:var(--pri);color:var(--tx)}
+  .zona{border:2px dashed var(--bd);border-radius:12px;padding:12px;margin:6px 0 4px}
+  .zona.over{border-color:var(--pri);background:rgba(20,83,154,.07)}
+  .hitem{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .hitem button{padding:1px 7px;font-size:12px;flex:none;opacity:.55}.hitem:hover button{opacity:1}
+  .tabv{width:100%;border-collapse:collapse;font-size:14px;background:var(--card);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+  .tabv th,.tabv td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--bd);vertical-align:middle}
+  .tabv th{color:var(--mut);font-weight:500;font-size:12px;text-transform:uppercase;letter-spacing:.03em}
+  .tabv td.n,.tabv th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .tabv tr:last-child td{border-bottom:none}.tabv button{padding:4px 9px;font-size:13px}
+  .rolagem{overflow-x:auto}
+  .pg{font-size:12px;font-weight:600;padding:2px 8px;border-radius:99px;border:1px solid;white-space:nowrap}
+  .pg.recebido{color:var(--ok)}.pg.parcial{color:#b26a00}.pg.pendente{color:var(--mut)}
+  .grafico{display:flex;align-items:flex-end;gap:2px;height:170px;padding:22px 0 0;border-bottom:1px solid var(--bd)}
+  .grafico .col2{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
+  .grafico .b{width:70%;max-width:38px;background:var(--pri);border-radius:4px 4px 0 0}
+  .grafico .col2:hover .b{filter:brightness(1.2)}
+  .grafico .v{font-size:11px;color:var(--tx);white-space:nowrap;margin-bottom:3px}
+  .eixo{display:flex;gap:2px}.eixo span{flex:1;min-width:0;text-align:center;font-size:11px;color:var(--mut);padding-top:4px}
+  .contbar{height:8px;border-radius:4px;background:var(--bd);overflow:hidden;min-width:120px;margin:4px 0 2px}
+  .contbar i{display:block;height:100%;background:var(--pri);border-radius:4px}
+  .cont.perto .contbar i{background:var(--acc)}.cont.atrasado .contbar i{background:var(--bad)}.cont.atrasado small{color:var(--bad)}
+  .match{display:grid;grid-template-columns:84px 1fr auto;gap:12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)}
+  .match:last-child{border-bottom:none}
+  .match .mfoto{width:84px;height:64px;border-radius:10px;background:#efe7db center/cover}
+  .match .minfo small{display:block;margin-top:2px}
+  @media (max-width:700px){.match{grid-template-columns:64px 1fr}.match .mfoto{width:64px;height:52px}.match .bar{grid-column:1/-1}}
+  #novidades{border-left:5px solid var(--acc)}
+  .receber{display:grid;grid-template-columns:1fr auto;gap:4px 14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--bd)}
+  .receber:last-child{border-bottom:none}.receber .cont{grid-column:1/-1}
+  .meta{height:12px;border-radius:6px;background:var(--bd);overflow:hidden;margin:6px 0}.meta i{display:block;height:100%;background:var(--ok);border-radius:6px}
+  .badge{display:inline-block;min-width:18px;padding:0 5px;border-radius:9px;background:var(--bad);color:#fff;font-size:11px;font-weight:700;margin-left:4px;text-align:center}
+  .ag{display:grid;grid-template-columns:76px 1fr auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--bd);border-left:4px solid var(--pri);border-radius:10px;background:var(--card);margin-bottom:8px}
+  .ag.atras{border-left-color:var(--bad)}.ag.feito{opacity:.65;border-left-color:var(--ok)}
+  .ag .hora b{display:block;font-size:18px}.ag .hora small,.ag .info small{display:block;color:var(--mut);font-size:12px}
+  .ag .info a{color:inherit}.ag .bar{margin:0;justify-content:flex-end}
+  .ag .bar button,.ag a.btn{padding:6px 10px;font-size:13px}
+  @media (max-width:760px){.ag{grid-template-columns:62px 1fr}.ag .bar{grid-column:1/-1;justify-content:flex-start}}
+  .grupo{margin:18px 0 8px;font-size:13px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em}
+  .grupo.alerta{color:var(--bad)}
+  .btn-up{display:inline-block;margin:0;cursor:pointer;border:1px dashed var(--pri);color:var(--pri);border-radius:8px;padding:9px 14px;font-size:14px}
+  a.btn{display:inline-block;border:1px solid var(--bd);border-radius:8px;padding:9px 12px;text-decoration:none;color:var(--tx)}
+  dialog{border:1px solid var(--bd);border-radius:12px;background:var(--card);color:var(--tx);max-width:480px;width:calc(100% - 32px);padding:18px}
+  dialog::backdrop{background:rgba(0,0,0,.55)}
+  .login{display:grid;grid-template-columns:1.25fr 1fr;min-height:calc(100vh - 120px);border-radius:14px;overflow:hidden;border:1px solid var(--bd);margin-top:8px;background:var(--card)}
+  .login-hero{color:#fff;display:flex;align-items:flex-end;padding:32px;
+    background:linear-gradient(0deg,rgba(11,37,69,.92),rgba(11,37,69,.15)),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .login-hero h1{font-size:30px;margin:0 0 8px;max-width:520px}.login-hero p{margin:0;opacity:.9;max-width:480px}
+  .login-card{display:flex;flex-direction:column;justify-content:center;padding:32px;max-width:420px;width:100%;margin:0 auto}
+  @media (max-width:760px){.login{grid-template-columns:1fr;min-height:0}.login-hero{min-height:230px}}
+  .cab{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .cab h2{margin:0;font-size:22px}
+  .cards3{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 14px}
+  @media (max-width:980px){.cards3{grid-template-columns:repeat(2,1fr)}}
+  .pct-ok{color:var(--ok)}.pct-atencao{color:#b26a00}.pct-alto{color:var(--bad)}
+  .prop{border:1px solid var(--bd);border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .cards3 > div{border:1px solid var(--bd);border-radius:12px;padding:12px 14px;background:var(--bg);min-width:0}
+  .cards3 span{display:block;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.04em}
+  .cards3 b{display:block;font-size:20px;line-height:1.25;margin-top:2px;overflow-wrap:anywhere}
+  .cards3 small{display:block;color:var(--mut);font-size:13px;margin-top:2px}
+  .cards3 .sit{border-left:4px solid var(--pri)}.cards3 .sit.fechado{border-left-color:var(--ok)}.cards3 .sit.perdido{border-left-color:var(--bad)}
+  @media (max-width:640px){.cards3{grid-template-columns:1fr}}
+  .aviso{position:fixed;right:16px;bottom:16px;z-index:50;max-width:360px;background:var(--card);border:1px solid var(--bd);border-left:5px solid var(--acc);border-radius:12px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.3)}
+  .aviso h4{margin:0 0 4px}.aviso p{margin:0 0 10px;color:var(--mut);font-size:14px}
+  .avatar{flex:0 0 72px;width:72px;height:72px;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:600;overflow:hidden;cursor:pointer;position:relative;margin:0}
+  .avatar img{width:100%;height:100%;object-fit:cover}
+  .avatar small{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.55);font-size:10px;font-weight:400;text-align:center;padding:2px 0}
+  #nav{position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0;margin-bottom:4px}
   .doc{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--bd);font-size:14px}
   .doc .chk{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tx);margin:0;cursor:pointer}
   .doc .chk input{width:18px;height:18px}
@@ -69,6 +182,35 @@
   .kpis div{border:1px solid var(--bd);border-radius:8px;padding:8px 10px}
   .kpis b{display:block;font-size:20px}
   .kpis span{font-size:12px;color:var(--mut)}
+  /* Tema claro e acolhedor (creme, verde-sálvia e dourado) */
+  body{font-family:"Nunito",system-ui,sans-serif}
+  h1,h2,h3,h4,.marca b{font-weight:800;letter-spacing:-.01em}
+  .card{border-radius:14px;box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06)}
+  input,select,textarea{background:#fffdfa}
+  input:focus,select:focus,textarea:focus{outline:3px solid rgba(47,122,100,.18);border-color:var(--pri)}
+  button{border-radius:10px}button.pri{box-shadow:0 2px 10px rgba(47,122,100,.25)}
+  header.topbar{background:#fff;color:var(--tx);border-bottom:1px solid var(--bd);box-shadow:0 2px 14px rgba(60,40,20,.05)}
+  .marca{color:var(--tx)}.marca svg{color:var(--pri)}.marca small{opacity:1;color:var(--mut)}
+  #menu button,#menu a{color:var(--mut);font-weight:600}
+  #menu button:hover{background:var(--bg);color:var(--tx)}
+  #menu button.on{background:#e7f2ed;color:var(--pri)}
+  #menu a{color:#9a5b13}
+  .conta .mut{color:var(--mut)}.conta button{color:var(--tx);border-color:var(--bd);background:#fff}
+  .hero{color:var(--tx);border:1px solid var(--bd);box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06);min-height:270px;
+    background:linear-gradient(90deg,rgba(255,250,243,.97) 0%,rgba(255,250,243,.86) 44%,rgba(255,250,243,.08) 80%),url("https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .hero h1{font-size:32px}.hero p{color:var(--mut);opacity:1}
+  .btn-ghost{background:#fff;border-color:var(--bd);color:var(--tx)}
+  .login{box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06);border-radius:18px}
+  .login-hero{background:linear-gradient(0deg,rgba(31,64,54,.82),rgba(31,64,54,.05) 65%),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1600&q=70&auto=format&fit=crop") center/cover}
+  .im{border-radius:14px;box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06)}.im:hover{box-shadow:0 12px 28px rgba(60,40,20,.13)}
+  .im .capa{background-color:#efe7db}
+  .im .preco{background:rgba(255,255,255,.95);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .upcard{background:rgba(31,64,54,.45)}.upcard:hover{background:rgba(31,64,54,.62)}
+  .kpis div{background:var(--card);border-radius:12px}
+  .etapa,.cards3 > div{background:#fffaf2}
+  .ag,.tabv,.prop{border-radius:12px;background:var(--card)}
+  .slot{background:#fffdfa}
+  .grafico .b{background:var(--pri)}
   @media print{
     :root{--bg:#fff;--card:#fff;--tx:#000;--mut:#555;--bd:#ccc}
     body{background:#fff}
@@ -80,22 +222,42 @@
 </style>
 </head>
 <body>
-<header><strong>CRM Imobiliário</strong><span><span id="quem" class="mut"></span> <button id="sair" class="hide">Sair</button></span></header>
+<header class="topbar">
+  <a class="marca" href="#" id="marca">
+    <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>
+    <span><b id="marcanome">CRM Imobiliário</b><small id="marcasub">Clientes e imóveis</small></span>
+  </a>
+  <nav id="menu" class="hide">
+    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="vendas">Minhas vendas</button><button data-nav="perfil">Meu perfil</button>
+    <a id="lvitrine" href="vitrine.html" target="_blank" rel="noopener">Ver meu site ↗</a>
+  </nav>
+  <span class="conta"><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
+</header>
 <main>
   <div id="msg" class="mut"></div>
 
-  <section id="login" class="card" style="max-width:380px;margin:40px auto">
-    <h2 style="margin-top:0">Entrar</h2>
-    <label>E-mail</label><input id="lemail" type="email" autocomplete="username">
-    <label style="margin-top:10px">Senha</label><input id="lsenha" type="password" autocomplete="current-password">
-    <div class="bar" style="margin-top:12px">
-      <button class="pri" id="entrar">Entrar</button>
-      <button id="criar">Criar conta</button>
+  <section id="login" class="login">
+    <div class="login-hero"><div>
+      <h1>Do primeiro contato à entrega das chaves.</h1>
+      <p>Clientes, funil de vendas, documentos e o seu portfólio de imóveis em um só lugar.</p>
+    </div></div>
+    <div class="login-card">
+      <h2 style="margin-top:0">Entrar</h2>
+      <label>E-mail</label><input id="lemail" type="email" autocomplete="username">
+      <label style="margin-top:10px">Senha</label><input id="lsenha" type="password" autocomplete="current-password">
+      <div class="bar" style="margin-top:12px">
+        <button class="pri" id="entrar">Entrar</button>
+        <button id="criar">Criar conta</button>
+      </div>
     </div>
   </section>
 
   <section id="app" class="hide">
-    <div class="bar">
+    <div class="bar hide" id="nav">
+      <button type="button" id="nvoltar">◀ Voltar</button>
+      <button type="button" id="nhome">🏠 Página principal</button>
+    </div>
+    <div class="bar" id="topo">
       <input id="busca" placeholder="Buscar por nome, telefone ou interesse">
       <select id="fstatus"><option value="">Todas as etapas</option></select>
       <select id="ordem"><option value="">Mais recentes</option><option value="contato">Sem contato há mais tempo</option></select>
@@ -116,7 +278,11 @@
     </section>
 
     <form id="form" class="card hide">
-      <h3 id="ftitulo" style="margin-top:0">Novo cliente</h3>
+      <div class="cab">
+        <label class="avatar hide" id="avatar" title="Trocar foto do cliente"><span id="avini"></span><small>foto</small><input id="favatar" type="file" accept="image/*" hidden></label>
+        <div><h2 id="ftitulo">Novo cliente</h2><div id="fsub" class="mut"></div></div>
+      </div>
+      <div class="cards3 hide" id="fcards"></div>
       <div id="esteira" class="hide"></div>
       <div class="row">
         <div><label>Nome *</label><input name="nome" required></div>
@@ -126,15 +292,27 @@
         <div><label>Data de nascimento</label><input name="data_nascimento" type="date"></div>
         <div><label>Tipo de renda</label><select name="tipo_renda"><option value="">-</option><option value="formal">Formal</option><option value="informal">Informal</option></select></div>
         <div><label>Renda mensal (R$)</label><input name="renda" type="number" step="50" min="0"></div>
+        <div><label>Parcela desejada (R$/mês)<span id="pcthint"></span></label><input name="parcela_desejada" type="number" step="50" min="0"></div>
         <div><label>Possui filhos?</label><select name="tem_filhos"><option value="">-</option><option value="sim">Sim</option><option value="nao">Não</option></select></div>
         <div><label>Etapa</label><select name="status"></select></div>
-        <div><label>Orçamento (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
-        <div><label>Interesse (tipo, bairro...)</label><input name="interesse"></div>
+        <div><label>Orçamento / valor máximo (R$)</label><input name="orcamento" type="number" step="1000" min="0"></div>
+        <div><label>Imóvel de interesse (do portfólio)</label><select name="imovel_id"></select></div>
+        <div><label>Valor do imóvel (R$)</label><input name="valor_imovel" type="number" step="1000" min="0"></div>
+        <div><label>Interesse: tipo e regiões (separe por vírgula)</label><input name="interesse" placeholder="Ex.: casa, Riacho Fundo, Samambaia"></div>
         <div><label>Origem</label><input name="origem" placeholder="indicação, Instagram, placa..."></div>
       </div>
       <label style="margin-top:10px">Observações</label><textarea name="observacoes" rows="3"></textarea>
       <label style="margin-top:10px">Foto da ficha deste cliente <span id="ftemfoto"></span></label><input id="ffoto" type="file" accept="image/*">
       <div class="bar" style="margin-top:10px"><button class="pri" type="submit">Salvar</button><button type="button" id="cancelar">Cancelar</button><button type="button" id="brel" class="hide">📄 Relatório</button></div>
+      <div class="hist hide" id="matchcli">
+        <strong>Imóveis que combinam com este cliente</strong>
+        <div id="matchlista" style="margin-top:4px"></div>
+      </div>
+      <div class="hist hide" id="agcli">
+        <div class="secao-tit" style="margin:0 0 8px"><strong>Agenda deste cliente</strong>
+          <div class="bar" style="margin:0"><button type="button" data-acao="agvisita">📅 Agendar visita</button><button type="button" data-acao="agretorno">📞 Agendar retorno</button></div></div>
+        <div id="agclilista"></div>
+      </div>
       <div class="hist hide" id="hist">
         <strong>Registrar contato</strong> <span id="resumo" class="mut"></span>
         <div class="bar" style="margin:8px 0">
@@ -143,9 +321,17 @@
           <button type="button" class="pri" id="hadd">Registrar</button>
         </div>
         <ul id="hlista" style="padding-left:18px;margin:0"></ul>
+        <div class="bar" style="margin:10px 0 0"><button type="button" class="bad" id="hlimpaetapas">Apagar registros de mudança de etapa</button></div>
+      </div>
+      <div class="hist hide" id="propcli">
+        <div class="secao-tit" style="margin:0 0 8px"><strong>Propostas / simulações do banco</strong>
+          <button type="button" data-acao="novaprop">+ Registrar proposta</button></div>
+        <div id="proplista"></div>
       </div>
       <div class="hist hide" id="docs">
-        <strong>Documentos</strong> <span id="docresumo" class="mut"></span>
+        <div class="secao-tit" style="margin:0"><span><strong>Documentos</strong> <span id="docresumo" class="mut"></span></span>
+          <label class="chk2" style="font-size:13px">Prazo para entregar: <input type="date" id="docprazo" style="width:auto;flex:none;min-width:0;padding:5px 8px"></label></div>
+        <div id="docprazoinfo" style="font-size:13px"></div>
         <div id="doclista" style="margin-top:6px"></div>
         <div class="bar" style="margin:8px 0 0">
           <input id="docnovo" placeholder="Outro documento (ex.: certidão de dependente)">
@@ -164,10 +350,227 @@
     </section>
     <section id="relatorio" class="card rel hide"></section>
 
+    <section id="inicio">
+      <div class="hero">
+        <h1 id="ola">Olá!</h1>
+        <p>Acompanhe seus clientes do primeiro contato à entrega das chaves e divulgue seus imóveis.</p>
+        <div class="bar">
+          <button class="btn-acc" data-acao="novocliente">+ Novo cliente</button>
+          <button class="btn-ghost" data-acao="novoimovel">+ Novo imóvel</button>
+          <button class="btn-ghost" data-acao="share">Compartilhar meu site</button>
+        </div>
+      </div>
+      <div id="avisoperfil"></div>
+      <div class="card hide" id="novidades" style="margin-bottom:12px"></div>
+      <div class="card" style="margin-bottom:12px">
+        <div class="secao-tit"><h3>Agenda de hoje</h3><div class="bar" style="margin:0"><button data-acao="novocomp">+ Agendar</button><button data-acao="agenda">Ver agenda</button></div></div>
+        <div id="aghoje"></div>
+      </div>
+      <div class="kpis" id="kpis"></div>
+      <div class="duas">
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Precisam de contato</h3><button data-acao="contato">Ver todos</button></div>
+          <div id="pend" class="lista-mini"></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Imóveis em destaque</h3><button data-acao="portfolio">Ver portfólio</button></div>
+          <div id="idest" class="grid-im mini"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="agenda" class="hide">
+      <div class="secao-tit"><h2>Agenda</h2>
+        <div class="bar" style="margin:0"><label class="chk2"><input type="checkbox" id="agfeitos"> Mostrar concluídos</label>
+          <button class="pri" data-acao="novocomp">+ Novo compromisso</button></div>
+      </div>
+      <div id="aglista"></div>
+    </section>
+
+    <section id="vendas" class="hide">
+      <div class="secao-tit"><h2>Minhas vendas</h2>
+        <div class="bar" style="margin:0">
+          <select id="vano"></select>
+          <select id="vmes"><option value="">Ano todo</option></select>
+          <select id="vcorretor" class="hide"><option value="">Toda a equipe</option></select>
+          <button id="vimportar">Importar vendas concluídas</button>
+          <button id="vexportar">Exportar planilha</button>
+          <button class="pri" id="vnova">+ Registrar venda</button>
+        </div>
+      </div>
+      <div id="vaviso"></div>
+      <div class="kpis" id="vkpis"></div>
+      <div class="card" id="vreceber" style="margin:12px 0 0"></div>
+      <div class="duas">
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Sua comissão por mês</h3><span class="mut" style="font-size:13px">últimos 12 meses</span></div>
+          <div class="grafico" id="vgraf" role="img" aria-label="Comissão por mês nos últimos 12 meses"></div><div class="eixo" id="veixo"></div>
+        </div>
+        <div class="card" style="margin:0">
+          <div class="secao-tit"><h3>Meta do mês</h3><span class="mut" id="vmesatual" style="font-size:13px"></span></div>
+          <div id="vmeta"></div>
+          <div class="bar" style="margin:10px 0 0">
+            <input id="vmetain" type="number" min="0" step="500" placeholder="Meta de comissão por mês (R$)" style="flex:1">
+            <input id="vpctin" type="number" min="0" step="0.5" placeholder="Comissão padrão %" style="max-width:170px;min-width:0">
+            <button id="vmetasalvar">Salvar</button>
+          </div>
+        </div>
+      </div>
+      <h3 style="margin:18px 0 8px">Vendas</h3>
+      <div class="rolagem"><table class="tabv" id="vtab"></table></div>
+    </section>
+
+    <section id="portfolio" class="hide">
+      <div class="secao-tit"><h2>Portfólio de imóveis</h2>
+        <div class="bar" style="margin:0">
+          <select id="pfiltro"><option value="">Todos</option><option value="disponivel">Disponíveis</option><option value="reservado">Reservados</option><option value="vendido">Vendidos</option></select>
+          <button data-acao="share">Compartilhar portfólio</button>
+          <button class="pri" data-acao="novoimovel">+ Novo imóvel</button>
+        </div>
+      </div>
+      <div id="pgrid" class="grid-im"></div>
+    </section>
+
+    <form id="imovelform" class="card hide">
+      <h2 id="ititulo" style="margin-top:0">Novo imóvel</h2>
+      <div class="row">
+        <div style="grid-column:1/-1"><label>Título do anúncio *</label><input name="titulo" required placeholder="Ex.: Casa 2 quartos com quintal no Riacho Fundo"></div>
+        <div><label>Tipo</label><select name="tipo"><option>Casa</option><option>Apartamento</option><option>Sobrado</option><option>Kitnet / Studio</option><option>Terreno / Lote</option><option>Comercial</option></select></div>
+        <div><label>Finalidade</label><select name="finalidade"><option value="venda">Venda</option><option value="aluguel">Aluguel</option></select></div>
+        <div><label>Preço (R$)</label><input name="preco" type="number" min="0" step="1000"></div>
+        <div><label>Situação</label><select name="status"><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option></select></div>
+        <div><label>Bairro / região</label><input name="bairro"></div>
+        <div><label>Cidade</label><input name="cidade"></div>
+        <div><label>Quartos</label><input name="quartos" type="number" min="0"></div>
+        <div><label>Banheiros</label><input name="banheiros" type="number" min="0"></div>
+        <div><label>Vagas de garagem</label><input name="vagas" type="number" min="0"></div>
+        <div><label>Área (m²)</label><input name="area" type="number" min="0" step="0.5"></div>
+      </div>
+      <label style="margin-top:10px">Descrição</label>
+      <textarea name="descricao" rows="5" placeholder="Diferenciais, condições de pagamento, o que tem perto..."></textarea>
+      <div class="bar" style="margin:12px 0;gap:18px">
+        <label class="chk2"><input type="checkbox" name="mcmv"> Aceita Minha Casa Minha Vida</label>
+        <label class="chk2"><input type="checkbox" name="publicado" checked> Mostrar no site</label>
+        <label class="chk2"><input type="checkbox" name="destaque"> Destaque</label>
+      </div>
+      <label>Fotos (a primeira é a capa)</label>
+      <div class="zona" id="izona">
+        <div id="ifotos" class="fotos-ed"></div>
+        <label class="btn-up">📷 Adicionar fotos<input id="ifotosin" type="file" accept="image/*" multiple hidden></label>
+        <span class="mut" style="font-size:13px"> ou arraste as fotos para cá</span>
+      </div>
+      <div class="bar" style="margin-top:16px">
+        <button class="pri" type="submit">Salvar imóvel</button>
+        <button type="button" id="icancelar">Cancelar</button>
+        <button type="button" id="ishare" class="hide">Compartilhar</button>
+        <button type="button" class="bad hide" id="iexcluir">Excluir imóvel</button>
+      </div>
+    </form>
+
+    <form id="perfilform" class="card hide">
+      <div class="cab">
+        <label class="avatar" id="pavatar" title="Trocar foto"><span id="pini">?</span><small>foto</small><input id="pfoto" type="file" accept="image/*" hidden></label>
+        <div><h2>Meu perfil de corretor</h2><div class="mut">Esses dados aparecem no seu site de imóveis.</div></div>
+      </div>
+      <div class="row">
+        <div><label>Nome *</label><input name="nome" required></div>
+        <div><label>CRECI</label><input name="creci"></div>
+        <div><label>WhatsApp (com DDD)</label><input name="whatsapp" inputmode="tel" placeholder="61999999999"></div>
+        <div><label>Cidade / região de atuação</label><input name="cidade"></div>
+      </div>
+      <label style="margin-top:10px">Sobre você</label>
+      <textarea name="bio" rows="4" placeholder="Ex.: Especialista em Minha Casa Minha Vida no DF. Cuido de tudo, da simulação à entrega das chaves."></textarea>
+      <div class="bar" style="margin-top:12px"><button class="pri" type="submit">Salvar perfil</button><button type="button" id="pver">Ver meu site ↗</button></div>
+      <div class="hist" id="equipebox"></div>
+    </form>
+
     <div id="lista"></div>
     <div id="funil" class="kanban hide"></div>
   </section>
 </main>
+<dialog id="share"><div id="sharebox"></div></dialog>
+<dialog id="agdlg">
+  <form id="agform">
+    <h3 id="agtit" style="margin-top:0">Novo compromisso</h3>
+    <div class="row">
+      <div><label>Tipo</label><select name="tipo"></select></div>
+      <div><label>Cliente</label><select name="cliente_id"></select></div>
+      <div><label>Data</label><input name="data" type="date" required></div>
+      <div><label>Hora</label><input name="hora" type="time" required></div>
+      <div><label>Me avisar (com som)</label><select name="lembrete_min"><option value="0">Na hora</option><option value="15">15 min antes</option><option value="30" selected>30 min antes</option><option value="60">1 hora antes</option><option value="120">2 horas antes</option><option value="1440">1 dia antes</option></select></div>
+      <div><label>Duração</label><select name="duracao"><option value="30">30 min</option><option value="60" selected>1 hora</option><option value="90">1h30</option><option value="120">2 horas</option></select></div>
+      <div><label>Imóvel (opcional)</label><select name="imovel_id"></select></div>
+    </div>
+    <label style="margin-top:10px">Local</label><input name="local" placeholder="Endereço ou ponto de encontro">
+    <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2"></textarea>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar</button><button type="button" id="agcancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="vdlg">
+  <form id="vform">
+    <h3 id="vtit" style="margin-top:0">Registrar venda</h3>
+    <div class="row">
+      <div><label>Cliente</label><select name="cliente_id"></select></div>
+      <div><label>Imóvel do portfólio</label><select name="imovel_id"></select></div>
+      <div style="grid-column:1/-1"><label>Descrição do imóvel (se não estiver no portfólio)</label><input name="imovel_desc" placeholder="Ex.: Apartamento 2 quartos – Residencial Flores, Samambaia"></div>
+      <div><label>Data da venda</label><input name="data_venda" type="date" required></div>
+      <div><label>Valor da venda (R$)</label><input name="valor_venda" type="number" min="0" step="1000" required></div>
+      <div><label>Comissão (%)</label><input name="comissao_pct" type="number" min="0" max="100" step="0.1" required></div>
+      <div><label>Sua parte da comissão (%)</label><input name="divisao_pct" type="number" min="0" max="100" step="1" required title="Se divide com imobiliária ou parceiro, coloque a sua porcentagem"></div>
+      <div><label>Forma de pagamento</label><select name="forma_pagamento"><option>Financiamento – Minha Casa Minha Vida</option><option>Financiamento bancário</option><option>À vista</option><option>Consórcio</option><option>Permuta</option><option>Outro</option></select></div>
+      <div><label>Recebimento da comissão</label><select name="pagamento_status"><option value="pendente">A receber</option><option value="parcial">Recebida em parte</option><option value="recebido">Recebida</option></select></div>
+      <div><label>Valor já recebido (R$)</label><input name="valor_recebido" type="number" min="0" step="50"></div>
+      <div><label>Data do recebimento</label><input name="data_recebimento" type="date"></div>
+    </div>
+    <div class="etapa" style="margin:12px 0 0" id="vcalc"></div>
+    <label class="chk2" style="margin-top:10px"><input type="checkbox" name="marcar_vendido" checked> Marcar o imóvel do portfólio como vendido</label>
+    <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2" placeholder="Ex.: construtora paga a comissão em 2 parcelas"></textarea>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar venda</button><button type="button" id="vcancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="prdlg" style="max-width:620px">
+  <form id="prform">
+    <h3 id="prtit" style="margin-top:0">Proposta do banco</h3>
+    <div class="row">
+      <div><label>Data da simulação</label><input name="data" type="date" required></div>
+      <div><label>Banco</label><input name="banco" required></div>
+      <div><label>Modalidade</label><select name="modalidade"><option value="">—</option><option>MCMV Faixa 1</option><option>MCMV Faixa 2</option><option>MCMV Faixa 3</option><option>MCMV Faixa 4</option><option>SBPE</option><option>Pró-Cotista</option><option>Outra</option></select></div>
+      <div><label>Situação</label><select name="status"><option value="simulada">Simulada</option><option value="em_analise">Em análise</option><option value="aprovada">Aprovada</option><option value="reprovada">Reprovada</option></select></div>
+      <div><label>Valor do imóvel (R$)</label><input name="valor_imovel" type="number" min="0" step="1000"></div>
+      <div><label>Entrada (R$)</label><input name="entrada" type="number" min="0" step="100"></div>
+      <div><label>FGTS (R$)</label><input name="fgts" type="number" min="0" step="100"></div>
+      <div><label>Subsídio (R$)</label><input name="subsidio" type="number" min="0" step="100"></div>
+      <div><label>Valor financiado (R$)</label><input name="valor_financiado" type="number" min="0" step="100"></div>
+      <div><label>Prazo (meses)</label><input name="prazo_meses" type="number" min="1" step="1"></div>
+      <div><label>Juros (% ao ano)</label><input name="taxa_juros" type="number" min="0" step="0.01"></div>
+      <div><label>Sistema</label><select name="sistema"><option>PRICE</option><option>SAC</option></select></div>
+      <div><label>1ª parcela informada pelo banco (R$)</label><input name="parcela" type="number" min="0" step="0.01"></div>
+      <div><label>Renda considerada (R$)</label><input name="renda_considerada" type="number" min="0" step="50"></div>
+    </div>
+    <div class="etapa" style="margin:12px 0 0" id="prcalc"></div>
+    <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2" placeholder="Ex.: aprovado com renda composta; falta certidão do cônjuge"></textarea>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar proposta</button><button type="button" id="prcancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="lmdlg">
+  <h3 style="margin-top:0">Mensagem para o cliente</h3>
+  <p class="mut" style="margin:0 0 8px;font-size:14px" id="lmpara"></p>
+  <textarea id="lmtexto" rows="11" style="font-size:14px"></textarea>
+  <div class="bar" style="margin:12px 0 0">
+    <button type="button" class="pri" id="lmzap">Enviar no WhatsApp</button>
+    <button type="button" id="lmcopiar">Copiar mensagem</button>
+    <button type="button" id="lmfechar">Fechar</button>
+  </div>
+  <p class="mut" style="font-size:12px;margin:8px 0 0">Você pode editar o texto antes de enviar ou copiar.</p>
+</dialog>
+<div class="aviso hide" id="aviso"></div>
+<dialog id="okdlg">
+  <form id="okform">
+    <h3 style="margin-top:0">Como foi?</h3>
+    <textarea name="resultado" rows="3" placeholder="Ex.: gostou do imóvel, vai juntar os documentos"></textarea>
+    <div class="bar" style="margin:12px 0 0"><button class="pri" type="submit">✓ Concluir</button><button type="button" id="okcancel">Cancelar</button></div>
+  </form>
+</dialog>
 
 <script src="config.js"></script>
 <script id="main" type="text/plain">
@@ -217,6 +620,8 @@ if (cfg.SUPABASE_URL.startsWith("COLE")) {
   throw new Error("config.js não preenchido");
 }
 const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+// Id do usuário logado, lido da sessão guardada no navegador (sem ir ao servidor).
+const uid = async () => (await sb.auth.getSession()).data.session?.user.id;
 
 let usuario = null, clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
 let resumo = {}; // por cliente: { n: nº de contatos, ultimo: data, tipo: tipo do último }
@@ -255,9 +660,10 @@ async function sessao() {
   $("login").classList.toggle("hide", logado);
   $("app").classList.toggle("hide", !logado);
   $("sair").classList.toggle("hide", !logado);
+  $("menu").classList.toggle("hide", !logado);
   $("quem").textContent = logado ? session.user.email : "";
   usuario = session?.user.id ?? null;
-  if (logado) carregar();
+  if (logado) { tela(base); carregar(); }
 }
 
 async function carregar() {
@@ -270,6 +676,32 @@ async function carregar() {
     const r = resumo[h.cliente_id] ||= { n: 0, ultimo: h.criado_em, tipo: h.tipo };
     r.n++;
   }
+  const u = await uid(); meuId = u;
+  const eq = await sb.rpc("equipe_de", { u });
+  faltaV11 = !!eq.error;
+  equipeIds = eq.data?.length ? eq.data.map(x => typeof x === "string" ? x : Object.values(x)[0]) : [u];
+  const [pfs, eqs] = await Promise.all([
+    sb.from("perfil").select("user_id,nome").in("user_id", equipeIds),
+    faltaV11 ? { data: null } : sb.from("equipes").select("*").maybeSingle()
+  ]);
+  nomes = Object.fromEntries((pfs.data || []).map(x => [x.user_id, x.nome]));
+  equipe = eqs.data || null;
+  const [im, pf] = await Promise.all([
+    sb.from("imoveis").select("*").in("user_id", equipeIds).order("destaque", { ascending: false }).order("criado_em", { ascending: false }),
+    sb.from("perfil").select("*").eq("user_id", u).maybeSingle()
+  ]);
+  faltaV6 = !!(im.error || pf.error);
+  imoveis = im.data || []; perfil = pf.data || null;
+  faltaV9 = !!(await sb.from("clientes").select("prazo_docs").limit(1)).error;
+  const pr = await sb.from("propostas").select("*").order("data", { ascending: false }).order("criado_em", { ascending: false });
+  faltaV10 = !!pr.error; propostas = pr.data || [];
+  const vd = await sb.from("vendas").select("*").order("data_venda", { ascending: false });
+  faltaV8 = !!vd.error; vendas = vd.data || [];
+  const ap = await sb.from("interacoes").select("cliente_id,texto").like("texto", "Apresentou o imóvel:%");
+  apresentados = new Set((ap.data || []).map(x => x.cliente_id + "|" + x.texto.replace("Apresentou o imóvel: ", "")));
+  const ag = await sb.from("compromissos").select("*").order("quando");
+  faltaV7 = !!ag.error; agenda = ag.data || [];
+  marca(); badgeAgenda();
   desenhar();
 }
 
@@ -289,9 +721,14 @@ const dinheiro = v => "R$ " + Number(v).toLocaleString("pt-BR");
 const opcoes = atual => Object.entries(STATUS).map(([k, v]) => `<option value="${k}" ${k === atual ? "selected" : ""}>${v}</option>`).join("");
 
 function desenhar() {
-  $("lista").classList.toggle("hide", visao !== "lista");
-  $("funil").classList.toggle("hide", visao !== "funil");
+  $("lista").classList.toggle("hide", telaAtual !== "clientes" || visao !== "lista");
+  $("funil").classList.toggle("hide", telaAtual !== "clientes" || visao !== "funil");
   $("fstatus").classList.toggle("hide", visao === "funil");
+  if (telaAtual === "inicio") return desenharInicio();
+  if (telaAtual === "portfolio") return desenharPortfolio();
+  if (telaAtual === "agenda") return desenharAgenda();
+  if (telaAtual === "vendas") return desenharVendas();
+  if (telaAtual === "cliente") { propostasCliente(); matchCliente(); return agendaCliente(); }
   const itens = filtrados();
   if (visao === "funil") {
     $("funil").innerHTML = Object.entries(STATUS).map(([k, v]) => {
@@ -317,7 +754,8 @@ function desenhar() {
         <span class="mut">${esc(c.telefone)} ${c.interesse ? "· " + esc(c.interesse) : ""}
         ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
         ${c.renda ? "· Renda " + dinheiro(c.renda) : ""}</span><br>
-        <small>${ultimoContato(c)}</small>
+        ${interesse(c) ? `<small>${interesse(c)}</small><br>` : ""}
+        <small>${ultimoContato(c)}</small>${resp(c) ? `<small class="mut"> · cadastrado por ${resp(c)}</small>` : ""}
       </div>
       <div class="bar" style="margin:0">
         ${c.telefone ? `<button data-w="${c.id}">WhatsApp</button>` : ""}
@@ -351,14 +789,17 @@ $("lista").onclick = $("funil").onclick = async e => {
   }
 };
 
-const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v5.sql no SQL Editor do Supabase." : m;
+const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v5.sql no SQL Editor do Supabase."
+  : /imovel_id|valor_imovel|meta_mensal|comissao_padrao/.test(m) ? "Falta um passo: rode o schema_v8.sql no SQL Editor do Supabase." : m;
 async function mover(id, status) {
   const { error } = await sb.from("clientes").update({ status, atualizado_em: new Date().toISOString() }).eq("id", id);
   if (error) return msg("Erro ao mover: " + erroEtapa(error.message), true);
   msg("Movido para " + STATUS[status] + ".");
   await registrar(id, "Etapa", STATUS[status]);
   await carregar();
-  if (editId === id) { $("form").status.value = status; historico(); }
+  const c = clientes.find(x => x.id === id);
+  if (editId === id && c) { $("form").status.value = status; $("fsub").innerHTML = subtitulo(c); cardsCliente(c); historico(); }
+  oferecerVenda(c);
 }
 
 // Esteira do cliente aberto: etapas concluídas, atual (com dica e dias parado) e botões para andar.
@@ -417,7 +858,9 @@ async function registrar(clienteId, tipo, texto) {
 async function historico() {
   const { data, error } = await sb.from("interacoes").select("*").eq("cliente_id", editId).order("criado_em", { ascending: false });
   $("hlista").innerHTML = error ? `<li class="mut">Histórico indisponível (rode o schema_v3.sql no Supabase).</li>` :
-    (data.length ? data.map(h => `<li><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
+    (data.length ? data.map(h => `<li class="hitem"><span><span class="mut">${new Date(h.criado_em).toLocaleString("pt-BR")} · ${esc(h.tipo)}</span><br>${esc(h.texto)}</span>
+      <button type="button" class="bad" data-hdel="${h.id}" title="Excluir este registro">✕</button></li>`).join("") : '<li class="mut">Nenhum contato registrado.</li>');
+  $("hlimpaetapas").classList.toggle("hide", !(data || []).some(h => h.tipo === "Etapa"));
   const c = clientes.find(x => x.id === editId);
   if (!c) return;
   esteira(c, data || []);
@@ -425,6 +868,20 @@ async function historico() {
   $("resumo").textContent = `· na base há ${diasDesde(c.criado_em)} dias · ` +
     (r ? `${r.n} contato${r.n > 1 ? "s" : ""}, último ${haDias(diasDesde(r.ultimo))}` : "nenhum contato ainda");
 }
+// Excluir registros do histórico (um por um, ou todos os de mudança de etapa).
+$("hlista").onclick = async e => {
+  const b = e.target.closest("[data-hdel]");
+  if (!b || !confirm("Excluir este registro do histórico?")) return;
+  const { error } = await sb.from("interacoes").delete().eq("id", b.dataset.hdel);
+  if (error) return msg("Erro ao excluir: " + error.message, true);
+  msg("Registro excluído."); await carregar(); historico();
+};
+$("hlimpaetapas").onclick = async () => {
+  if (!editId || !confirm("Apagar todos os registros de mudança de etapa deste cliente? Os contatos e anotações continuam. As datas da esteira deixam de aparecer.")) return;
+  const { error } = await sb.from("interacoes").delete().eq("cliente_id", editId).eq("tipo", "Etapa");
+  if (error) return msg("Erro ao apagar: " + error.message, true);
+  msg("Registros de etapa apagados."); await carregar(); historico();
+};
 $("hadd").onclick = async () => {
   const tipo = $("htipo").value, t = $("htexto").value.trim() || (tipo === "Anotação" ? "" : tipo);
   if (!t || !editId) return;
@@ -453,6 +910,7 @@ async function documentos() {
   docs = data;
   const tipos = [...DOCS, ...data.map(d => d.tipo).filter(t => !DOCS.includes(t))];
   $("docresumo").textContent = `· ${data.filter(d => d.entregue).length} de ${tipos.length} entregues`;
+  infoPrazo(tipos.filter(t => !data.find(d => d.tipo === t)?.entregue));
   $("doclista").innerHTML = tipos.map(t => { const d = data.find(x => x.tipo === t) || {}; return `
     <div class="doc">
       <label class="chk"><input type="checkbox" data-ok="${esc(t)}" ${d.entregue ? "checked" : ""}> ${esc(t)}</label>
@@ -475,9 +933,8 @@ $("doclista").onchange = async e => {
   }
   if (el.dataset.up != null && el.files[0]) {
     const f = el.files[0], tipo = el.dataset.up, antigo = docs.find(d => d.tipo === tipo)?.arquivo;
-    const { data: { user } } = await sb.auth.getUser();
     const ext = f.type.startsWith("image/") ? "jpg" : (f.name.split(".").pop() || "pdf").toLowerCase();
-    const path = `${user.id}/docs/${editId}/${Date.now()}.${ext}`;
+    const path = `${await uid()}/docs/${editId}/${Date.now()}.${ext}`;
     msg("Enviando " + tipo + "...");
     try { await enviarArquivo(f, path); } catch (err) { return msg("Erro ao enviar o arquivo: " + err.message, true); }
     if (antigo) await sb.storage.from("fichas").remove([antigo]);
@@ -501,7 +958,7 @@ $("docadd").onclick = async () => {
 };
 
 // Relatório do cliente: todos os dados, tempo em cada etapa, documentos e contatos. Pode imprimir/salvar em PDF.
-async function relatorio(c) {
+async function relatorio(c, empilhar = true) {
   const [{ data: hist }, { data: dcs }] = await Promise.all([
     sb.from("interacoes").select("*").eq("cliente_id", c.id).order("criado_em", { ascending: true }),
     sb.from("documentos").select("*").eq("cliente_id", c.id)
@@ -519,7 +976,7 @@ async function relatorio(c) {
     <div class="bar noprint" style="justify-content:flex-end">
       <button type="button" onclick="print()">🖨️ Imprimir / salvar PDF</button>
       <button type="button" data-abrir="${c.id}">Abrir cliente</button>
-      <button type="button" onclick="this.closest('section').classList.add('hide')">Fechar</button>
+
     </div>
     <h2 style="margin:0">${esc(c.nome)}</h2>
     <div class="mut">Relatório gerado em ${dataBR(new Date(), true)} · Etapa atual: <strong>${STATUS[c.status]}</strong></div>
@@ -535,8 +992,11 @@ async function relatorio(c) {
       ${linha("Telefone / WhatsApp", esc(c.telefone))}${linha("E-mail", esc(c.email))}${linha("CPF", esc(c.cpf))}
       ${linha("Data de nascimento", c.data_nascimento ? dataBR(c.data_nascimento + "T12:00") + ` (${idade} anos)` : "")}
       ${linha("Tipo de renda", esc(c.tipo_renda))}${linha("Renda mensal", c.renda ? dinheiro(c.renda) : "")}
+      ${linha("Parcela desejada", c.parcela_desejada ? din(c.parcela_desejada) + (pctRenda(c.parcela_desejada, c.renda) != null ? " (" + pctTxt(pctRenda(c.parcela_desejada, c.renda)) + ")" : "") : "")}
+      ${(p => p ? linha("Última proposta", `${dataCurta(p.data)} · ${esc(p.banco)} · ${STATUS_PROP[p.status]}${p.parcela ? " · parcela " + din(p.parcela) : ""}${pctRenda(p.parcela, p.renda_considerada || c.renda) != null ? " (" + pctTxt(pctRenda(p.parcela, p.renda_considerada || c.renda)) + ")" : ""}`) : "")(ultimaProposta(c.id))}
       ${linha("Possui filhos", c.tem_filhos == null ? "" : c.tem_filhos ? "Sim" : "Não")}
-      ${linha("Orçamento", c.orcamento ? dinheiro(c.orcamento) : "")}${linha("Interesse", esc(c.interesse))}
+      ${linha("Orçamento", c.orcamento ? dinheiro(c.orcamento) : "")}
+      ${linha("Imóvel de interesse", esc(imoveis.find(i => i.id === c.imovel_id)?.titulo))}${linha("Valor do imóvel", c.valor_imovel ? dinheiro(c.valor_imovel) : "")}${linha("Interesse", esc(c.interesse))}
       ${linha("Origem", esc(c.origem))}${linha("Observações", esc(c.observacoes).replace(/\n/g, "<br>"))}
       ${linha("Cadastrado em", dataBR(c.criado_em, true))}
     </table>
@@ -550,33 +1010,109 @@ async function relatorio(c) {
     <table><tr><th>Data</th><th>Tipo</th><th>O que aconteceu</th></tr>
       ${h.length ? [...h].reverse().map(x => `<tr><td>${dataBR(x.criado_em, true)}</td><td>${esc(x.tipo)}</td><td>${esc(x.texto)}</td></tr>`).join("") : '<tr><td colspan="3" class="mut">Nenhum registro.</td></tr>'}
     </table>`;
-  $("form").classList.add("hide"); $("relatorio").classList.remove("hide");
-  $("relatorio").scrollIntoView({ behavior: "smooth" });
+  if (empilhar) ir({ t: "relatorio", id: c.id }); else tela("relatorio");
 }
-$("relatorio").onclick = e => { const b = e.target.closest("[data-abrir]"); if (b) { $("relatorio").classList.add("hide"); abrir(clientes.find(c => c.id === b.dataset.abrir)); } };
+$("relatorio").onclick = e => { const b = e.target.closest("[data-abrir]"); if (b) abrir(clientes.find(c => c.id === b.dataset.abrir)); };
 $("brel").onclick = () => relatorio(clientes.find(c => c.id === editId));
 $("ordem").onchange = desenhar;
 
-function abrir(c) {
+// Telas do menu (início, clientes, portfólio, perfil) e telas internas (cliente, relatório, imóvel).
+// As internas entram no histórico do navegador, então o botão voltar do celular também funciona.
+let telaAtual = "inicio", nivel = 0, base = "inicio";
+const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", portfolio: "portfolio", vendas: "vendas", imovel: "imovelform", perfil: "perfilform" };
+const RAIZ = ["inicio", "clientes", "agenda", "portfolio", "vendas", "perfil"];
+function tela(t) {
+  telaAtual = t;
+  $("topo").classList.toggle("hide", t !== "clientes");
+  $("nav").classList.toggle("hide", RAIZ.includes(t));
+  for (const [k, id] of Object.entries(SECOES)) $(id).classList.toggle("hide", k !== t);
+  if (t !== "clientes") { $("fichas").classList.add("hide"); $("leitor").classList.add("hide"); }
+  const item = { cliente: "clientes", relatorio: "clientes", imovel: "portfolio" }[t] || t;
+  for (const b of document.querySelectorAll("#menu [data-nav]")) b.classList.toggle("on", b.dataset.nav === item);
+  if (t === "perfil") preencherPerfil();
+  desenhar();
+  scrollTo(0, 0);
+}
+function ir(estado) { nivel++; history.pushState({ ...estado, nivel }, ""); tela(estado.t); }
+function irRaiz(t) { base = t; nivel > 0 ? history.go(-nivel) : tela(t); }
+const voltar = () => nivel > 0 ? history.back() : tela(base);
+addEventListener("popstate", e => {
+  const s = e.state; nivel = s?.nivel || 0;
+  const c = s && clientes.find(x => x.id === s.id);
+  if (s?.t === "cliente") abrir(c || null, false);
+  else if (s?.t === "relatorio" && c) relatorio(c, false);
+  else if (s?.t === "imovel") abrirImovel(imoveis.find(x => x.id === s.id) || null, false);
+  else tela(base);
+});
+$("nvoltar").onclick = voltar;
+$("nhome").onclick = () => irRaiz("inicio");
+for (const b of document.querySelectorAll("#menu [data-nav]")) b.onclick = () => irRaiz(b.dataset.nav);
+$("marca").onclick = e => { e.preventDefault(); if ($("menu").classList.contains("hide")) return; irRaiz("inicio"); };
+history.replaceState(null, "");
+
+// Foto do cliente: fica em <usuário>/perfil/<cliente>.jpg no bucket privado "fichas".
+const caminhoAvatar = async id => `${clientes.find(c => c.id === id)?.user_id || await uid()}/perfil/${id}.jpg`;
+async function avatar(c) {
+  const ini = c.nome.split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+  $("avini").textContent = ini;
+  $("avatar").querySelector("img")?.remove();
+  const { data } = await sb.storage.from("fichas").createSignedUrl(await caminhoAvatar(c.id), 3600);
+  if (data?.signedUrl && editId === c.id) {
+    const img = new Image(); img.alt = c.nome;
+    img.onload = () => { $("avini").textContent = ""; $("avatar").prepend(img); };
+    img.src = data.signedUrl;
+  }
+}
+$("favatar").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f || !editId) return;
+  const path = await caminhoAvatar(editId);
+  msg("Enviando foto...");
+  await sb.storage.from("fichas").remove([path]);
+  const { error } = await sb.storage.from("fichas").upload(path, await reduzir(f, 600), { contentType: "image/jpeg" });
+  if (error) return msg("Erro ao enviar a foto: " + error.message, true);
+  msg("Foto atualizada."); avatar(clientes.find(c => c.id === editId));
+};
+
+const interesse = c => {
+  const i = imoveis.find(x => x.id === c.imovel_id), v = c.valor_imovel || i?.preco;
+  return i || v ? `🏘 ${i ? esc(i.titulo) : "Imóvel"}${v ? " · " + dinheiro(v) : ""}` : "";
+};
+const subtitulo = c => `${c.telefone ? esc(c.telefone) + "<br>" : ""}${ultimoContato(c)}`;
+function abrir(c, empilhar = true) {
   editId = c?.id ?? null;
-  $("ftitulo").textContent = c ? "Editar cliente" : "Novo cliente";
+  $("ftitulo").textContent = c ? c.nome : "Novo cliente";
+  $("fsub").innerHTML = c ? subtitulo(c) : "";
+  $("avatar").classList.toggle("hide", !c);
+  $("fcards").classList.toggle("hide", !c);
+  if (c) cardsCliente(c);
+  if (c) avatar(c);
   const f = $("form"); f.reset();
+  f.imovel_id.innerHTML = '<option value="">—</option>' + imoveis.filter(i => i.status !== "vendido" || i.id === c?.imovel_id)
+    .map(i => `<option value="${i.id}">${esc(i.titulo)}${i.preco ? " – " + dinheiro(i.preco) : ""}</option>`).join("");
   $("ftemfoto").textContent = c?.ficha_url ? "(já tem foto; escolha outra para trocar)" : "";
   if (c) for (const el of f.elements) if (el.name && c[el.name] != null) el.value = el.name === "tem_filhos" ? (c.tem_filhos ? "sim" : "nao") : c[el.name];
-  for (const id of ["hist", "docs", "brel"]) $(id).classList.toggle("hide", !c);
+  for (const id of ["hist", "docs", "brel", "agcli", "propcli", "matchcli"]) $(id).classList.toggle("hide", !c);
   $("esteira").classList.add("hide"); $("resumo").textContent = "";
-  if (c) { historico(); documentos(); }
-  f.classList.remove("hide"); f.nome.focus(); f.scrollIntoView({ behavior: "smooth" });
+  if (c) { historico(); documentos(); propostasCliente(); matchCliente(); }
+  dicaParcela();
+  if (empilhar) ir({ t: "cliente", id: editId }); else tela("cliente");
+  if (!c) f.nome.focus();
 }
 $("novo").onclick = () => abrir(null);
-$("cancelar").onclick = () => $("form").classList.add("hide");
+$("form").imovel_id.onchange = e => { const i = imoveis.find(x => x.id === e.target.value); if (i?.preco) $("form").valor_imovel.value = i.preco; };
+$("cancelar").onclick = voltar;
 
 $("form").onsubmit = async e => {
   e.preventDefault();
   const d = Object.fromEntries(new FormData(e.target));
   d.orcamento = d.orcamento === "" ? null : Number(d.orcamento);
   d.renda = d.renda === "" ? null : Number(d.renda);
+  d.parcela_desejada = d.parcela_desejada === "" ? null : Number(d.parcela_desejada);
+  if (faltaV10) delete d.parcela_desejada; // coluna ainda não criada no banco
   d.tem_filhos = d.tem_filhos === "" ? null : d.tem_filhos === "sim";
+  d.imovel_id = d.imovel_id || null;
+  d.valor_imovel = d.valor_imovel === "" ? null : Number(d.valor_imovel);
+  if (faltaV8) { delete d.imovel_id; delete d.valor_imovel; } // colunas ainda não criadas no banco
   for (const k of ["data_nascimento", "tipo_renda"]) if (d[k] === "") d[k] = null;
   d.atualizado_em = new Date().toISOString();
   const foto = $("ffoto").files[0];
@@ -589,8 +1125,12 @@ $("form").onsubmit = async e => {
     ? await sb.from("clientes").update(d).eq("id", editId)
     : await sb.from("clientes").insert(d);
   if (error) return msg("Erro ao salvar: " + erroEtapa(error.message), true);
-  if (editId && clientes.find(c => c.id === editId)?.status !== d.status) await registrar(editId, "Etapa", STATUS[d.status]);
-  msg("Salvo."); e.target.classList.add("hide"); carregar();
+  const mudou = editId && clientes.find(c => c.id === editId)?.status !== d.status;
+  if (mudou) await registrar(editId, "Etapa", STATUS[d.status]);
+  msg("Salvo.");
+  await carregar();
+  editId ? abrir(clientes.find(c => c.id === editId), false) : voltar();
+  if (mudou) oferecerVenda(clientes.find(c => c.id === editId));
 };
 
 // ---- Importar fichas por foto ----
@@ -668,20 +1208,21 @@ async function reduzir(file, max = 1600) {
   return new Promise(r => cv.toBlob(r, "image/jpeg", 0.85));
 }
 async function enviarFoto(file, pasta) {
-  const { data: { user } } = await sb.auth.getUser();
-  const path = `${user.id}/${pasta}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+  const path = `${await uid()}/${pasta}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
   const { error } = await sb.storage.from("fichas").upload(path, await reduzir(file), { contentType: "image/jpeg" });
   if (error) throw error;
   return path;
 }
 async function galeria() {
-  const { data: { user } } = await sb.auth.getUser();
-  const pasta = `${user.id}/lotes`;
-  const { data, error } = await sb.storage.from("fichas").list(pasta, { sortBy: { column: "created_at", order: "desc" } });
-  if (error) return msg("Erro ao listar as fotos: " + error.message, true);
-  const fotos = data.filter(f => f.id);
+  const fotos = [];
+  for (const id of equipeIds) {
+    const { data, error } = await sb.storage.from("fichas").list(`${id}/lotes`, { sortBy: { column: "created_at", order: "desc" } });
+    if (error) return msg("Erro ao listar as fotos: " + error.message, true);
+    fotos.push(...data.filter(f => f.id).map(f => ({ ...f, caminho: `${id}/lotes/${f.name}` })));
+  }
+  fotos.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   if (!fotos.length) return $("galeria").innerHTML = '<p class="mut">Nenhuma foto enviada ainda.</p>';
-  const { data: urls, error: e2 } = await sb.storage.from("fichas").createSignedUrls(fotos.map(f => `${pasta}/${f.name}`), 3600);
+  const { data: urls, error: e2 } = await sb.storage.from("fichas").createSignedUrls(fotos.map(f => f.caminho), 3600);
   if (e2) return msg("Erro ao abrir as fotos: " + e2.message, true);
   $("galeria").innerHTML = urls.map((u, i) => `
     <figure>
@@ -706,6 +1247,1005 @@ $("galeria").onclick = async e => {
   const { error } = await sb.storage.from("fichas").remove([b.dataset.x]);
   error ? msg(error.message, true) : galeria();
 };
+
+// ---------- Início, portfólio de imóveis, perfil do corretor e compartilhamento ----------
+let imoveis = [], perfil = null, faltaV6 = false, imovelId = null, fotosEdit = [], fotosRemover = [];
+const urlFoto = p => sb.storage.from("imoveis").getPublicUrl(p).data.publicUrl;
+// Fotos ilustrativas (Unsplash) para imóveis ainda sem fotos próprias. No site aparecem marcadas como "Imagem ilustrativa".
+const ILUSTRA = ["photo-1570129477492-45c003edd2be", "photo-1576941089067-2de3c901e126", "photo-1523217582562-09d0def993a6",
+  "photo-1600047509807-ba8f99d2cdde", "photo-1605276374104-dee2a0ed3cd6", "photo-1512917774080-9991f1c4c750"]
+  .map(id => `https://images.unsplash.com/${id}?w=900&q=70&auto=format&fit=crop`);
+const ilustra = id => ILUSTRA[[...String(id)].reduce((h, c) => h + c.charCodeAt(0), 0) % ILUSTRA.length];
+const SITUACAO = { disponivel: "Disponível", reservado: "Reservado", vendido: "Vendido" };
+const precoTxt = i => i.preco ? dinheiro(i.preco) + (i.finalidade === "aluguel" ? "/mês" : "") : "Consulte";
+const specs = i => [
+  i.quartos != null && `🛏 ${i.quartos} quarto${i.quartos == 1 ? "" : "s"}`, i.banheiros != null && `🚿 ${i.banheiros} banh.`,
+  i.vagas != null && `🚗 ${i.vagas} vaga${i.vagas == 1 ? "" : "s"}`, i.area && `📐 ${i.area} m²`
+].filter(Boolean).map(s => `<span>${s}</span>`).join("");
+function cartao(i, acoes = true) {
+  return `<div class="im" data-im="${i.id}">
+    <div class="capa" style="background-image:url('${i.fotos?.[0] ? urlFoto(i.fotos[0]) : ilustra(i.id)}')">
+      ${i.fotos?.length ? "" : acoes ? `<label class="upcard"><input type="file" accept="image/*" multiple hidden data-upim="${i.id}">📷 Adicionar fotos do imóvel<small>Enquanto isso, o site mostra uma imagem ilustrativa</small></label>` : '<span class="ilustra">Imagem ilustrativa</span>'}
+      <span class="preco">${precoTxt(i)}</span>
+      ${i.status !== "disponivel" ? `<span class="selo ${i.status}">${SITUACAO[i.status]}</span>` : i.destaque ? '<span class="selo">Destaque</span>' : ""}
+    </div>
+    <div class="corpo">
+      <h4>${esc(i.titulo)}</h4>
+      <div class="mut" style="font-size:13px">${esc([i.bairro, i.cidade].filter(Boolean).join(", "))}${i.mcmv ? " · Aceita MCMV" : ""}${i.publicado ? "" : " · <b>oculto no site</b>"}</div>
+      <div class="specs">${specs(i)}</div>
+      ${acoes ? `<div class="bar"><button data-ie="${i.id}">Editar</button><button data-is="${i.id}">Compartilhar</button></div>` : ""}
+    </div>
+  </div>`;
+}
+async function linkSite(imovel) {
+  const u = new URL("vitrine.html", location.href); u.search = ""; u.hash = "";
+  u.searchParams.set("c", await uid());
+  if (imovel) u.searchParams.set("i", imovel);
+  return u.href;
+}
+async function marca() {
+  $("marcanome").textContent = perfil?.nome || "CRM Imobiliário";
+  $("marcasub").textContent = perfil?.nome ? "Corretor de imóveis" + (perfil.creci ? " · CRECI " + perfil.creci : "") : "Clientes e imóveis";
+  $("lvitrine").href = await linkSite();
+}
+
+function desenharInicio() {
+  desenharNovidades();
+  const ativos = clientes.filter(c => !["fechado", "perdido"].includes(c.status));
+  const t = c => resumo[c.id] ? new Date(resumo[c.id].ultimo).getTime() : 0;
+  const pend = ativos.filter(c => !resumo[c.id] || diasDesde(resumo[c.id].ultimo) > 7).sort((a, b) => t(a) - t(b));
+  const fin = clientes.filter(c => ["documentacao", "negociacao", "vistoria", "aprovado", "subsidio", "contrato"].includes(c.status)).length;
+  $("ola").textContent = `Olá${perfil?.nome ? ", " + perfil.nome.split(" ")[0] : ""}!`;
+  $("kpis").innerHTML = [
+    [agenda.filter(a => !a.feito && new Date(a.quando) < diaSeguinte(0)).length, "compromissos hoje / atrasados", "agenda"],
+    [ativos.length, "clientes ativos", "clientes"],
+    [pend.length, "sem contato há 7+ dias", "contato"],
+    [fin, "em documentação / financiamento", "clientes"],
+    [clientes.filter(c => c.status === "fechado").length, "vendas concluídas", "clientes"],
+    [imoveis.filter(i => i.status === "disponivel").length, "imóveis disponíveis", "portfolio"],
+    ...(vendas.some(v => v.pagamento_status !== "recebido") ? [[din(vendas.reduce((t, v) => t + aReceber(v), 0)), "comissões a receber", "vendas"]] : [])
+  ].map(([n, txt, a]) => `<div class="click" data-acao="${a}"><b>${n}</b><span>${txt}</span></div>`).join("");
+  $("pend").innerHTML = pend.length ? pend.slice(0, 6).map(c => `
+    <div class="item" data-e="${c.id}"><span><strong>${esc(c.nome)}</strong><br><small>${ultimoContato(c)}</small></span><span class="tag">${STATUS[c.status]}</span></div>`).join("")
+    : '<p class="mut">Todos os clientes estão em dia. 👏</p>';
+  const hoje = agenda.filter(a => !a.feito && new Date(a.quando) < diaSeguinte(0));
+  $("aghoje").innerHTML = faltaV7 ? '<p class="mut">Rode o schema_v7.sql no Supabase para ativar a agenda.</p>'
+    : hoje.length ? hoje.map(a => itemAgenda(a)).join("") : '<p class="mut">Nada agendado para hoje.</p>';
+  const dest = imoveis.filter(i => i.publicado && i.status !== "vendido").slice(0, 2);
+  $("idest").innerHTML = faltaV6 ? '<p class="mut">Rode o schema_v6.sql no Supabase para ativar o portfólio.</p>'
+    : dest.length ? dest.map(i => cartao(i, false)).join("") : '<p class="mut">Nenhum imóvel ainda. Cadastre o primeiro!</p>';
+  $("avisoperfil").innerHTML = !faltaV6 && !perfil?.nome ? `<div class="etapa"><strong>Complete seu perfil de corretor</strong>
+    <p>Seu nome, CRECI e WhatsApp aparecem no site de imóveis para os clientes falarem com você.</p>
+    <button class="pri" data-acao="perfil">Completar perfil</button></div>` : "";
+}
+$("inicio").addEventListener("click", e => {
+  const c = e.target.closest("[data-e]"), i = e.target.closest("[data-im]");
+  if (c) abrir(clientes.find(x => x.id === c.dataset.e));
+  if (i) abrirImovel(imoveis.find(x => x.id === i.dataset.im));
+});
+
+function desenharPortfolio() {
+  if (faltaV6) return $("pgrid").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v6.sql</b> no SQL Editor do Supabase para ativar o portfólio e o site.</div>';
+  const f = $("pfiltro").value, itens = imoveis.filter(i => !f || i.status === f);
+  // Espaços tracejados para cadastrar novos imóveis (3 quando o portfólio está vazio).
+  const vagas = Array.from({ length: imoveis.length ? 1 : 3 }, () => `
+    <div class="slot" data-acao="novoimovel"><b>+</b><strong>Espaço para um novo imóvel</strong><small>Cadastre e suba as fotos</small></div>`).join("");
+  $("pgrid").innerHTML = itens.map(i => cartao(i)).join("") + vagas;
+}
+$("pfiltro").onchange = desenhar;
+$("pgrid").onclick = e => {
+  const b = e.target.closest("button"), card = e.target.closest("[data-im]");
+  if (!card || e.target.closest(".upcard")) return;
+  const i = imoveis.find(x => x.id === card.dataset.im);
+  b?.dataset.is ? compartilharImovel(i) : abrirImovel(i);
+};
+
+// Atalhos (botões com data-acao) usados no início e no portfólio.
+document.addEventListener("click", e => {
+  const a = e.target.closest("[data-acao]")?.dataset.acao; if (!a) return;
+  if (a === "novocliente") abrir(null);
+  if (a === "novoimovel") abrirImovel(null);
+  if (a === "share") compartilharSite();
+  if (a === "contato") { $("ordem").value = "contato"; irRaiz("clientes"); }
+  if (["clientes", "agenda", "portfolio", "vendas", "perfil"].includes(a)) irRaiz(a);
+  if (a === "novocomp") abrirComp({});
+  if (a === "agvisita") abrirComp({ tipo: "visita", cliente_id: editId });
+  if (a === "agretorno") abrirComp({ tipo: "retorno", cliente_id: editId });
+  if (a === "novaprop") abrirProposta();
+});
+
+// ---------- Agenda: visitas, retornos e outros compromissos ----------
+let agenda = [], faltaV7 = false, compId = null, concluindo = null;
+const TIPOS_AG = { visita: "🏠 Visita", retorno: "📞 Retorno", assinatura: "✍️ Assinatura", reuniao: "🤝 Reunião", outro: "📌 Compromisso" };
+const NOME_AG = { visita: "Visita", retorno: "Retorno", assinatura: "Assinatura", reuniao: "Reunião", outro: "Compromisso" };
+const CONTATO_AG = { visita: "Visita", retorno: "Ligação", assinatura: "Presencial", reuniao: "Presencial", outro: "Anotação" };
+for (const [k, v] of Object.entries(TIPOS_AG)) $("agform").tipo.add(new Option(v, k));
+const diaSeguinte = n => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + n + 1); return d; }; // início do dia (hoje + n + 1)
+const hora = d => new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+const diaTxt = d => {
+  const x = new Date(d);
+  if (x >= diaSeguinte(-1) && x < diaSeguinte(0)) return "hoje";
+  if (x >= diaSeguinte(0) && x < diaSeguinte(1)) return "amanhã";
+  return x.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
+};
+function badgeAgenda() {
+  const n = agenda.filter(a => !a.feito && new Date(a.quando) < diaSeguinte(0)).length;
+  $("agbadge").textContent = n; $("agbadge").classList.toggle("hide", !n);
+  verificarAvisos();
+}
+function linkGoogle(a, c, i) {
+  const f = d => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+  const ini = new Date(a.quando), fim = new Date(ini.getTime() + (a.duracao || 60) * 6e4);
+  const u = new URL("https://calendar.google.com/calendar/render");
+  u.searchParams.set("action", "TEMPLATE");
+  u.searchParams.set("text", NOME_AG[a.tipo] + (c ? " – " + c.nome : ""));
+  u.searchParams.set("dates", `${f(ini)}/${f(fim)}`);
+  u.searchParams.set("details", [c?.telefone && "Tel: " + c.telefone, i && "Imóvel: " + i.titulo, a.obs].filter(Boolean).join("\n"));
+  if (a.local) u.searchParams.set("location", a.local);
+  return u.href;
+}
+function itemAgenda(a, comCliente = true) {
+  const c = clientes.find(x => x.id === a.cliente_id), i = imoveis.find(x => x.id === a.imovel_id);
+  const atras = !a.feito && new Date(a.quando) < new Date();
+  return `<div class="ag ${atras ? "atras" : ""} ${a.feito ? "feito" : ""}">
+    <div class="hora"><b>${hora(a.quando)}</b><small>${diaTxt(a.quando)}</small></div>
+    <div class="info"><strong>${TIPOS_AG[a.tipo]}${c && comCliente ? ` · <a href="#" data-e="${c.id}">${esc(c.nome)}</a>` : ""}</strong>
+      ${i ? `<small>🏘 ${esc(i.titulo)}</small>` : ""}${a.local ? `<small>📍 ${esc(a.local)}</small>` : ""}
+      ${a.obs ? `<small>${esc(a.obs)}</small>` : ""}${a.resultado ? `<small>✓ ${esc(a.resultado)}</small>` : ""}
+      ${atras ? '<small class="alerta">Atrasado</small>' : ""}</div>
+    <div class="bar">${a.feito ? '<span class="tag fechado">Concluído</span>' : `
+      <button type="button" class="pri" data-agok="${a.id}">✓ Concluir</button>
+      ${c ? `<button type="button" data-aglembra="${a.id}">Mensagem ao cliente</button>` : ""}
+      <button type="button" data-agedit="${a.id}">Reagendar</button>
+      <a class="btn" target="_blank" rel="noopener" href="${esc(linkGoogle(a, c, i))}" title="Salvar no Google Agenda para receber aviso no celular">Google Agenda</a>`}
+      <button type="button" class="bad" data-agdel="${a.id}" title="Excluir">✕</button></div>
+  </div>`;
+}
+function desenharAgenda() {
+  if (faltaV7) return $("aglista").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v7.sql</b> no SQL Editor do Supabase para ativar a agenda.</div>';
+  const agora = new Date(), feitos = $("agfeitos").checked;
+  const abertos = agenda.filter(a => !a.feito), q = a => new Date(a.quando);
+  const grupos = [
+    ["Atrasados", abertos.filter(a => q(a) < agora), "alerta"],
+    ["Hoje", abertos.filter(a => q(a) >= agora && q(a) < diaSeguinte(0))],
+    ["Amanhã", abertos.filter(a => q(a) >= diaSeguinte(0) && q(a) < diaSeguinte(1))],
+    ["Próximos 7 dias", abertos.filter(a => q(a) >= diaSeguinte(1) && q(a) < diaSeguinte(7))],
+    ["Mais adiante", abertos.filter(a => q(a) >= diaSeguinte(7))],
+    ["Concluídos", feitos ? agenda.filter(a => a.feito).reverse() : []]
+  ].filter(([, itens]) => itens.length);
+  $("aglista").innerHTML = grupos.length ? grupos.map(([t, itens, cls]) => `<div class="grupo ${cls || ""}">${t} (${itens.length})</div>` + itens.map(a => itemAgenda(a)).join("")).join("")
+    : '<div class="card mut">Nenhum compromisso marcado. Use "+ Novo compromisso" ou os botões "Agendar" na página de cada cliente.</div>';
+}
+function agendaCliente() {
+  if (!editId) return;
+  const itens = agenda.filter(a => a.cliente_id === editId && (!a.feito || diasDesde(a.quando) < 30));
+  $("agclilista").innerHTML = faltaV7 ? '<p class="mut">Rode o schema_v7.sql no Supabase para ativar a agenda.</p>'
+    : itens.length ? itens.map(a => itemAgenda(a, false)).join("") : '<p class="mut" style="margin:0">Nada agendado com este cliente.</p>';
+}
+$("agfeitos").onchange = desenhar;
+
+function abrirComp(a) {
+  if (faltaV7) return msg("Rode o schema_v7.sql no SQL Editor do Supabase para ativar a agenda.", true);
+  compId = a.id || null;
+  const f = $("agform"); f.reset();
+  f.cliente_id.innerHTML = '<option value="">— sem cliente —</option>' + clientes.filter(c => c.status !== "perdido" || c.id === a.cliente_id)
+    .map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+  f.imovel_id.innerHTML = '<option value="">—</option>' + imoveis.filter(i => i.status !== "vendido" || i.id === a.imovel_id)
+    .map(i => `<option value="${i.id}">${esc(i.titulo)}</option>`).join("");
+  // Padrão: próxima hora cheia de hoje.
+  const d = a.quando ? new Date(a.quando) : new Date(Date.now() + 36e5);
+  if (!a.quando) d.setMinutes(0, 0, 0);
+  const p = n => String(n).padStart(2, "0");
+  f.data.value = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  f.hora.value = `${p(d.getHours())}:${p(d.getMinutes())}`;
+  for (const k of ["tipo", "cliente_id", "imovel_id", "duracao", "local", "obs", "lembrete_min"]) if (a[k] != null) f[k].value = a[k];
+  // Ao escolher o cliente, já sugere o imóvel de interesse dele.
+  f.cliente_id.onchange = () => { const c = clientes.find(x => x.id === f.cliente_id.value); if (c?.imovel_id && !f.imovel_id.value) f.imovel_id.value = c.imovel_id; };
+  if (!a.imovel_id) f.cliente_id.onchange();
+  $("agtit").textContent = compId ? "Reagendar" : "Novo compromisso";
+  $("agdlg").showModal();
+}
+$("agcancel").onclick = () => $("agdlg").close();
+$("agform").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, d = Object.fromEntries(new FormData(f));
+  const r = {
+    tipo: d.tipo, cliente_id: d.cliente_id || null, imovel_id: d.imovel_id || null, duracao: Number(d.duracao),
+    quando: new Date(`${d.data}T${d.hora}`).toISOString(), local: d.local.trim() || null, obs: d.obs.trim() || null,
+    lembrete_min: Number(d.lembrete_min)
+  };
+  if (faltaV9) delete r.lembrete_min; // coluna ainda não criada no banco
+  const { data: salvo, error } = compId ? await sb.from("compromissos").update(r).eq("id", compId).select().single()
+    : await sb.from("compromissos").insert(r).select().single();
+  if (error) return msg("Erro ao salvar o compromisso: " + error.message, true);
+  pedirPermissaoAviso();
+  $("agdlg").close();
+  const c = clientes.find(x => x.id === r.cliente_id);
+  const quando = `${NOME_AG[r.tipo]} ${diaTxt(r.quando)} às ${hora(r.quando)}`;
+  if (c) await registrar(c.id, "Anotação", (compId ? "Reagendado: " : "Agendado: ") + quando);
+  msg((compId ? "Reagendado: " : "Agendado: ") + quando + ".");
+  // Agendar visita de quem está no primeiro contato já move o cliente na esteira.
+  if (c && r.tipo === "visita" && c.status === "lead") await mover(c.id, "visita");
+  else await carregar();
+  // Já oferece a mensagem de confirmação para o cliente (editável, WhatsApp ou copiar).
+  if (c) mensagemCliente(salvo);
+};
+
+$("app").addEventListener("click", async e => {
+  const b = e.target.closest("[data-agok],[data-aglembra],[data-agedit],[data-agdel],.ag [data-e]");
+  if (!b) return;
+  e.preventDefault();
+  const id = b.dataset.agok || b.dataset.aglembra || b.dataset.agedit || b.dataset.agdel;
+  const a = agenda.find(x => x.id === id);
+  if (b.dataset.e && !b.closest("#inicio")) return abrir(clientes.find(x => x.id === b.dataset.e));
+  if (b.dataset.agok) { concluindo = a; $("okform").reset(); $("okdlg").showModal(); }
+  if (b.dataset.agedit) abrirComp(a);
+  if (b.dataset.agdel && confirm("Excluir este compromisso?")) {
+    const { error } = await sb.from("compromissos").delete().eq("id", a.id);
+    error ? msg(error.message, true) : carregar();
+  }
+  if (b.dataset.aglembra) mensagemCliente(a);
+});
+
+
+// ---------- Parcela desejada e propostas/simulações do banco ----------
+let propostas = [], faltaV10 = false, propId = null;
+const STATUS_PROP = { simulada: "Simulada", em_analise: "Em análise", aprovada: "Aprovada", reprovada: "Reprovada" };
+const ultimaProposta = id => propostas.find(p => p.cliente_id === id); // já vem ordenada da mais recente para a mais antiga
+// Quanto a parcela consome da renda. Referência do Minha Casa Minha Vida: até 30% da renda bruta familiar.
+const pctRenda = (parcela, renda) => parcela && renda ? parcela / renda * 100 : null;
+const corPct = p => p == null ? "mut" : p <= 30 ? "pct-ok" : p <= 35 ? "pct-atencao" : "pct-alto";
+const pctTxt = p => p == null ? "" : `${p.toLocaleString("pt-BR", { maximumFractionDigits: 1 })}% da renda`;
+
+function cardParcela(c) {
+  const p = ultimaProposta(c.id), rendaP = p?.renda_considerada || c.renda;
+  if (p?.parcela) {
+    const pc = pctRenda(p.parcela, rendaP), pd = pctRenda(c.parcela_desejada, c.renda);
+    return `<div><span>Parcela (proposta ${esc(p.banco)})</span><b>${din(p.parcela)}<small style="display:inline">/mês</small></b>
+      <small class="${corPct(pc)}"><strong>${pctTxt(pc) || "informe a renda"}</strong>${pc > 30 ? " · acima de 30%" : ""}</small>
+      ${c.parcela_desejada ? `<small>Desejada: ${din(c.parcela_desejada)}${pd != null ? ` (${pctTxt(pd)})` : ""}</small>` : ""}</div>`;
+  }
+  if (c.parcela_desejada) {
+    const pd = pctRenda(c.parcela_desejada, c.renda);
+    return `<div><span>Parcela desejada</span><b>${din(c.parcela_desejada)}<small style="display:inline">/mês</small></b>
+      <small class="${corPct(pd)}"><strong>${pctTxt(pd) || "informe a renda para calcular"}</strong>${pd > 30 ? " · acima de 30%" : ""}</small></div>`;
+  }
+  return `<div><span>Parcela</span><b>—</b><small>Informe a parcela desejada ou registre a proposta do banco</small></div>`;
+}
+
+function propostasCliente() {
+  if (!editId) return;
+  if (faltaV10) return $("proplista").innerHTML = '<p class="mut" style="margin:0">Rode o schema_v10.sql no SQL Editor do Supabase para registrar propostas.</p>';
+  const c = clientes.find(x => x.id === editId), lista = propostas.filter(p => p.cliente_id === editId);
+  $("proplista").innerHTML = lista.length ? lista.map(p => {
+    const pc = pctRenda(p.parcela, p.renda_considerada || c?.renda);
+    const partes = [["Imóvel", p.valor_imovel], ["Entrada", p.entrada], ["FGTS", p.fgts], ["Subsídio", p.subsidio]].filter(([, v]) => v);
+    return `<div class="prop">
+      <div class="secao-tit" style="margin:0 0 4px"><strong>${dataCurta(p.data)} · ${esc(p.banco)}${p.modalidade ? " · " + esc(p.modalidade) : ""}</strong>
+        <span class="tag ${p.status === "aprovada" ? "fechado" : p.status === "reprovada" ? "perdido" : ""}">${STATUS_PROP[p.status]}</span></div>
+      <div><b style="font-size:18px">${p.parcela ? din(p.parcela) + "/mês" : "Parcela não informada"}</b>
+        ${pc != null ? ` <span class="${corPct(pc)}"><strong>${pctTxt(pc)}</strong></span>` : ""}</div>
+      <small class="mut">${[p.valor_financiado && "Financiado " + dinheiro(p.valor_financiado), p.prazo_meses && p.prazo_meses + " meses",
+        p.taxa_juros && p.taxa_juros.toLocaleString("pt-BR") + "% a.a.", p.sistema].filter(Boolean).join(" · ")}</small>
+      ${partes.length ? `<small class="mut" style="display:block">${partes.map(([t, v]) => `${t} ${dinheiro(v)}`).join(" · ")}</small>` : ""}
+      ${p.obs ? `<small style="display:block">${esc(p.obs)}</small>` : ""}
+      <div class="bar" style="margin:6px 0 0"><button type="button" data-propedit="${p.id}">Editar</button><button type="button" class="bad" data-propdel="${p.id}">✕</button></div>
+    </div>`;
+  }).join("") : '<p class="mut" style="margin:0">Nenhuma proposta registrada. Quando o banco devolver a simulação, clique em "+ Registrar proposta".</p>';
+}
+$("proplista").onclick = async e => {
+  const b = e.target.closest("[data-propedit],[data-propdel]"); if (!b) return;
+  const p = propostas.find(x => x.id === (b.dataset.propedit || b.dataset.propdel));
+  if (b.dataset.propedit) abrirProposta(p);
+  if (b.dataset.propdel && confirm("Excluir esta proposta?")) {
+    const { error } = await sb.from("propostas").delete().eq("id", p.id);
+    error ? msg(error.message, true) : (msg("Proposta excluída."), await carregar(), cardsCliente(clientes.find(c => c.id === editId)));
+  }
+};
+
+function abrirProposta(p = {}) {
+  if (faltaV10) return msg("Rode o schema_v10.sql no SQL Editor do Supabase para registrar propostas.", true);
+  const c = clientes.find(x => x.id === (p.cliente_id || editId)); if (!c) return;
+  propId = p.id || null;
+  const f = $("prform"); f.reset();
+  const i = imoveis.find(x => x.id === c.imovel_id);
+  const val = { data: isoLocal(new Date()), banco: "Caixa", prazo_meses: 420, sistema: "PRICE",
+    valor_imovel: c.valor_imovel || i?.preco, renda_considerada: c.renda, ...p };
+  for (const el of f.elements) if (el.name && val[el.name] != null) el.value = val[el.name];
+  f.valor_financiado.dataset.manual = p.valor_financiado ? "1" : "";
+  $("prtit").textContent = (propId ? "Editar proposta – " : "Proposta do banco – ") + c.nome;
+  calcProposta(); $("prdlg").showModal();
+}
+// Financiado = imóvel − entrada − FGTS − subsídio (até a pessoa digitar outro valor).
+function calcProposta() {
+  const f = $("prform"), n = k => Number(f[k].value) || 0;
+  if (!f.valor_financiado.dataset.manual && n("valor_imovel")) f.valor_financiado.value = Math.max(0, n("valor_imovel") - n("entrada") - n("fgts") - n("subsidio")) || "";
+  const fin = n("valor_financiado"), meses = n("prazo_meses"), taxa = n("taxa_juros"), parcela = n("parcela"), renda = n("renda_considerada");
+  let est = null;
+  if (fin && meses && taxa) {
+    const i = Math.pow(1 + taxa / 100, 1 / 12) - 1;
+    est = f.sistema.value === "SAC" ? fin / meses + fin * i : fin * i / (1 - Math.pow(1 + i, -meses));
+  }
+  const pc = pctRenda(parcela, renda), pe = pctRenda(est, renda);
+  $("prcalc").innerHTML = [
+    parcela ? `Parcela informada: <strong>${din(parcela)}</strong> → <strong class="${corPct(pc)}">${pctTxt(pc) || "informe a renda"}</strong>` : "",
+    est ? `Estimativa pelo sistema ${f.sistema.value}: ${din(est)}${pe != null ? ` (${pctTxt(pe)})` : ""} <small class="mut">sem seguros e taxas; use a parcela que o banco informar</small>`
+      + (!parcela ? ` <button type="button" id="prusar" style="padding:3px 8px;font-size:12px">Usar estimativa</button>` : "") : "",
+    '<small class="mut">Referência do Minha Casa Minha Vida: a parcela pode comprometer até 30% da renda bruta familiar.</small>'
+  ].filter(Boolean).join("<br>");
+  if ($("prusar")) $("prusar").onclick = () => { f.parcela.value = est.toFixed(2); calcProposta(); };
+}
+$("prform").addEventListener("input", e => { if (e.target.name === "valor_financiado") e.target.dataset.manual = e.target.value ? "1" : ""; calcProposta(); });
+$("prcancel").onclick = () => $("prdlg").close();
+$("prform").onsubmit = async e => {
+  e.preventDefault();
+  const d = Object.fromEntries(new FormData(e.target)), cid = propId ? propostas.find(p => p.id === propId).cliente_id : editId;
+  for (const k of ["valor_imovel", "entrada", "fgts", "subsidio", "valor_financiado", "prazo_meses", "taxa_juros", "parcela", "renda_considerada"])
+    d[k] = d[k] === "" ? null : Number(d[k]);
+  d.obs = d.obs.trim() || null; d.modalidade = d.modalidade || null;
+  const { error } = propId ? await sb.from("propostas").update(d).eq("id", propId) : await sb.from("propostas").insert({ ...d, cliente_id: cid });
+  if (error) return msg("Erro ao salvar a proposta: " + error.message, true);
+  $("prdlg").close();
+  if (!propId) await registrar(cid, "Anotação", `Proposta ${d.banco}${d.parcela ? ": parcela " + din(d.parcela) : ""}${pctRenda(d.parcela, d.renda_considerada) != null ? " (" + pctTxt(pctRenda(d.parcela, d.renda_considerada)) + ")" : ""}`);
+  msg("Proposta salva.");
+  await carregar();
+  const c = clientes.find(x => x.id === cid);
+  if (c && editId === cid) { cardsCliente(c); historico(); }
+};
+
+// Dica ao lado do campo: quanto a parcela desejada consome da renda.
+function dicaParcela() {
+  const f = $("form"), p = pctRenda(Number(f.parcela_desejada.value), Number(f.renda.value));
+  $("pcthint").innerHTML = p == null ? "" : ` · <span class="${corPct(p)}">${pctTxt(p)}</span>`;
+}
+$("form").parcela_desejada.addEventListener("input", dicaParcela);
+$("form").renda.addEventListener("input", dicaParcela);
+
+
+// ---------- Imóveis que combinam com o cliente (orçamento e região/tipo do campo Interesse) ----------
+let apresentados = new Set();
+const descartados = new Set((() => { try { return JSON.parse(localStorage.getItem("descartados") || "[]"); } catch { return []; } })());
+const guardarDescartados = () => { try { localStorage.setItem("descartados", JSON.stringify([...descartados].slice(-500))); } catch {} };
+const norm = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+// "casa, Riacho Fundo / Samambaia" -> ["casa", "riacho fundo", "samambaia"]
+const desejos = c => norm(c.interesse).split(/[,;/]|\s+e\s+|\s+ou\s+/).map(t => t.trim()).filter(t => t.length >= 3);
+function combina(c, i) {
+  if (i.status !== "disponivel" || ["fechado", "perdido"].includes(c.status)) return null;
+  const orc = Number(c.orcamento) || 0, preco = Number(i.preco) || 0;
+  if (orc && preco && preco > orc * 1.1) return null; // fora do bolso (tolerância de 10%)
+  const okValor = !!(orc && preco);
+  const alvo = norm([i.bairro, i.cidade, i.titulo, i.tipo, i.descricao].join(" "));
+  const quer = desejos(c), regioes = quer.filter(t => alvo.includes(t));
+  if (quer.length && !regioes.length) return null; // escreveu tipo/região e nada bate
+  if (!okValor && !regioes.length) return null;
+  return { okValor, regioes, pontos: (okValor ? 1 : 0) + regioes.length * 2 };
+}
+const chaveMatch = (c, i) => `${c.id}|${i.id}`;
+const jaApresentado = (c, i) => apresentados.has(`${c.id}|${i.titulo}`);
+// Imóveis cadastrados nos últimos 30 dias que combinam com clientes e ainda não foram enviados nem dispensados.
+function novidades() {
+  const lista = [];
+  for (const i of imoveis.filter(x => diasDesde(x.criado_em) <= 30))
+    for (const c of clientes) {
+      const m = combina(c, i);
+      if (m && !jaApresentado(c, i) && !descartados.has(chaveMatch(c, i))) lista.push({ c, i, m });
+    }
+  return lista.sort((a, b) => b.m.pontos - a.m.pontos || new Date(b.i.criado_em) - new Date(a.i.criado_em));
+}
+function itemMatch({ c, i, m }, comCliente = true) {
+  const porque = [m.okValor && `💰 dentro do orçamento (${dinheiro(c.orcamento)})`, m.regioes.length && `📍 ${m.regioes.join(", ")}`].filter(Boolean).join(" · ");
+  return `<div class="match">
+    <div class="mfoto" style="background-image:url('${i.fotos?.[0] ? urlFoto(i.fotos[0]) : ilustra(i.id)}')"></div>
+    <div class="minfo">
+      <strong>${esc(i.titulo)}</strong> <span class="mut">· ${precoTxt(i)}</span>
+      <small class="mut">${esc([i.bairro, i.cidade].filter(Boolean).join(", "))}${i.quartos != null ? ` · ${i.quartos} quarto${i.quartos == 1 ? "" : "s"}` : ""}</small>
+      ${comCliente ? `<small>Combina com <a href="#" data-mcli="${c.id}"><strong>${esc(c.nome)}</strong></a> · ${porque}</small>` : `<small>${porque}</small>`}
+      ${jaApresentado(c, i) ? '<small style="color:var(--ok)">✓ Já enviado ao cliente</small>' : ""}
+    </div>
+    <div class="bar" style="margin:0">
+      ${c.telefone ? `<button type="button" class="pri" data-mzap="${chaveMatch(c, i)}">Enviar no WhatsApp</button>` : `<button type="button" data-mcli="${c.id}">Abrir cliente</button>`}
+      ${comCliente ? `<button type="button" data-mdis="${chaveMatch(c, i)}" title="Não mostrar mais este par">Dispensar</button>` : ""}
+    </div>
+  </div>`;
+}
+function desenharNovidades() {
+  const lista = novidades();
+  $("novidades").classList.toggle("hide", !lista.length);
+  if (!lista.length) return;
+  $("novidades").innerHTML = `<div class="secao-tit"><h3>🔔 Imóveis novos para seus clientes</h3>
+      <span class="mut">${lista.length} oportunidade${lista.length > 1 ? "s" : ""} de contato</span></div>`
+    + lista.slice(0, 8).map(x => itemMatch(x)).join("")
+    + (lista.length > 8 ? `<p class="mut" style="margin:8px 0 0">E mais ${lista.length - 8}. Envie ou dispense os de cima para ver os próximos.</p>` : "");
+}
+function matchCliente() {
+  const c = clientes.find(x => x.id === editId); if (!c) return;
+  const lista = imoveis.map(i => ({ c, i, m: combina(c, i) })).filter(x => x.m).sort((a, b) => b.m.pontos - a.m.pontos);
+  $("matchlista").innerHTML = lista.length ? lista.map(x => itemMatch(x, false)).join("")
+    : `<p class="mut" style="margin:0">${c.orcamento || c.interesse ? "Nenhum imóvel disponível combina agora. Assim que entrar um, ele aparece aqui e na página inicial."
+      : "Preencha o Orçamento e o Interesse (tipo e regiões, separados por vírgula) para o CRM avisar quando entrar um imóvel com a cara deste cliente."}</p>`;
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-mzap],[data-mdis],[data-mcli]"); if (!b) return;
+  e.preventDefault();
+  if (b.dataset.mcli) return abrir(clientes.find(c => c.id === b.dataset.mcli));
+  const [cid, iid] = (b.dataset.mzap || b.dataset.mdis).split("|");
+  const c = clientes.find(x => x.id === cid), i = imoveis.find(x => x.id === iid);
+  if (b.dataset.mdis) { descartados.add(`${cid}|${iid}`); guardarDescartados(); return desenhar(); }
+  let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+  const w = open("", "_blank"); // abre já, para o navegador não bloquear
+  const texto = [`Olá, ${c.nome.split(" ")[0]}! Tudo bem? 😊`, "Chegou um imóvel com a sua cara:", "",
+    `🏡 ${i.titulo} – ${precoTxt(i)}`, [i.bairro, i.cidade].some(Boolean) && `📍 ${[i.bairro, i.cidade].filter(Boolean).join(", ")}`,
+    [i.quartos != null && `${i.quartos} quarto${i.quartos == 1 ? "" : "s"}`, i.vagas != null && `${i.vagas} vaga${i.vagas == 1 ? "" : "s"}`, i.area && `${i.area} m²`].filter(Boolean).join(" · "),
+    i.mcmv && "✅ Aceita Minha Casa Minha Vida", "", `Veja as fotos: ${await linkSite(i.id)}`, "", "Quer agendar uma visita?"].filter(x => x !== false && x != null).join("\n").replace(/\n{3,}/g, "\n\n");
+  w.location = `https://wa.me/${n}?text=${encodeURIComponent(texto)}`;
+  await registrar(c.id, "WhatsApp", "Apresentou o imóvel: " + i.titulo);
+  await carregar();
+  if (editId === c.id) historico();
+});
+
+// ---------- Cards do cliente, prazo dos documentos, mensagem de lembrete e aviso com som ----------
+let faltaV9 = false, lembrando = null;
+function cardsCliente(c) {
+  const i = imoveis.find(x => x.id === c.imovel_id), v = c.valor_imovel || i?.preco, n = FLUXO.indexOf(c.status);
+  $("fcards").innerHTML = `
+    <div><span>Imóvel de interesse</span><b>${i ? esc(i.titulo) : "Não definido"}</b>
+      <small>${i ? esc([i.bairro, i.cidade].filter(Boolean).join(", ")) || "&nbsp;" : "Escolha no campo “Imóvel de interesse” abaixo"}</small></div>
+    <div><span>Valor do imóvel</span><b>${v ? dinheiro(v) : "—"}</b><small>${c.renda ? "Renda do cliente: " + dinheiro(c.renda) : "&nbsp;"}</small></div>
+    ${cardParcela(c)}
+    <div class="sit ${c.status}"><span>Situação atual</span><b>${STATUS[c.status]}</b>
+      <small>${c.status === "perdido" ? "Fora da esteira" : `Etapa ${n + 1} de ${FLUXO.length}`}</small></div>`;
+}
+
+// Prazo para o cliente entregar os documentos (mostrado no bloco Documentos e na mensagem de lembrete).
+function infoPrazo(pend) {
+  const c = clientes.find(x => x.id === editId);
+  $("docprazo").value = c?.prazo_docs || "";
+  $("docprazo").disabled = faltaV9;
+  $("docprazo").title = faltaV9 ? "Rode o schema_v9.sql no Supabase para usar o prazo" : "";
+  if (!c) return;
+  if (!pend.length) return $("docprazoinfo").innerHTML = '<span style="color:var(--ok)">✓ Todos os documentos entregues.</span>';
+  if (!c.prazo_docs) return $("docprazoinfo").innerHTML = "";
+  const dias = Math.ceil((new Date(c.prazo_docs + "T23:59") - new Date()) / 864e5);
+  const quando = dias < 0 ? `venceu há ${-dias} dia${dias < -1 ? "s" : ""}` : dias === 0 ? "vence hoje" : `faltam ${dias} dia${dias > 1 ? "s" : ""}`;
+  $("docprazoinfo").innerHTML = `<span class="${dias <= 3 ? "alerta" : "mut"}">⏰ ${pend.length} documento${pend.length > 1 ? "s" : ""} pendente${pend.length > 1 ? "s" : ""} · prazo ${dataCurta(c.prazo_docs)} (${quando})</span>`;
+}
+$("docprazo").onchange = async e => {
+  if (!editId) return;
+  if (faltaV9) return msg("Rode o schema_v9.sql no SQL Editor do Supabase para usar o prazo.", true);
+  const { error } = await sb.from("clientes").update({ prazo_docs: e.target.value || null }).eq("id", editId);
+  if (error) return msg("Erro ao salvar o prazo: " + error.message, true);
+  msg("Prazo dos documentos salvo."); await carregar(); documentos();
+};
+
+// Mensagem de confirmação para o cliente: texto editável, enviar pelo WhatsApp ou copiar e colar.
+async function mensagemCliente(a) {
+  const c = clientes.find(x => x.id === a?.cliente_id); if (!c) return;
+  const i = imoveis.find(x => x.id === (a.imovel_id || c.imovel_id)), v = c.valor_imovel || i?.preco;
+  const { data: dcs } = await sb.from("documentos").select("tipo,entregue").eq("cliente_id", c.id);
+  const tipos = [...DOCS, ...(dcs || []).map(d => d.tipo).filter(t => !DOCS.includes(t))];
+  const pend = tipos.filter(t => !(dcs || []).find(d => d.tipo === t)?.entregue);
+  const oque = { visita: "nossa visita", retorno: "nosso retorno", assinatura: "a assinatura do contrato", reuniao: "nossa reunião", outro: "nosso compromisso" }[a.tipo];
+  const dia = new Date(a.quando).toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit" });
+  const linhas = [
+    `Olá, ${c.nome.split(" ")[0]}! Tudo bem? 😊`, "",
+    `Passando para confirmar ${oque}:`,
+    `📅 ${dia} (${diaTxt(a.quando)}) às ${hora(a.quando)}`
+  ];
+  if (a.local) linhas.push(`📍 ${a.local}`);
+  if (i) linhas.push(`🏡 Imóvel: ${i.titulo}${v ? " – " + dinheiro(v) : ""}`);
+  else if (v) linhas.push(`🏡 Valor do imóvel: ${dinheiro(v)}`);
+  // Documentos pendentes entram quando já existe checklist, prazo ou o cliente está na etapa de documentação.
+  if (pend.length && (c.prazo_docs || (dcs || []).length || c.status === "documentacao")) {
+    linhas.push("", "📄 Documentos que ainda faltam:", ...pend.map(t => `• ${t}`));
+    if (c.prazo_docs) linhas.push(`⏰ Prazo para entrega: ${dataCurta(c.prazo_docs)}`);
+    linhas.push("Se puder, já traga ou me envie esses documentos. 🙏");
+  }
+  linhas.push("", "Posso confirmar? Qualquer dúvida, estou à disposição.");
+  if (perfil?.nome) linhas.push(perfil.nome + (perfil.creci ? " – CRECI " + perfil.creci : ""));
+  lembrando = { a, c };
+  $("lmtexto").value = linhas.join("\n");
+  $("lmpara").textContent = `Para ${c.nome}${c.telefone ? " · " + c.telefone : " (sem telefone cadastrado: use Copiar)"}`;
+  $("lmzap").disabled = !c.telefone;
+  $("lmcopiar").textContent = "Copiar mensagem";
+  $("lmdlg").showModal();
+}
+$("lmfechar").onclick = () => $("lmdlg").close();
+$("lmzap").onclick = async () => {
+  const { a, c } = lembrando;
+  let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+  open(`https://wa.me/${n}?text=${encodeURIComponent($("lmtexto").value)}`, "_blank");
+  $("lmdlg").close();
+  await registrar(c.id, "WhatsApp", `Lembrete enviado: ${NOME_AG[a.tipo].toLowerCase()} ${diaTxt(a.quando)} às ${hora(a.quando)}`);
+  carregar();
+};
+$("lmcopiar").onclick = async () => {
+  try { await navigator.clipboard.writeText($("lmtexto").value); }
+  catch { $("lmtexto").select(); document.execCommand("copy"); }
+  $("lmcopiar").textContent = "Copiado ✓";
+  const { a, c } = lembrando;
+  registrar(c.id, "Anotação", `Mensagem de lembrete copiada: ${NOME_AG[a.tipo].toLowerCase()} ${diaTxt(a.quando)} às ${hora(a.quando)}`);
+};
+
+// Aviso com som antes de cada compromisso (funciona enquanto o CRM estiver aberto no navegador).
+const avisados = new Set((() => { try { return JSON.parse(localStorage.getItem("avisados") || "[]"); } catch { return []; } })());
+const guardarAvisados = () => { try { localStorage.setItem("avisados", JSON.stringify([...avisados].slice(-300))); } catch {} };
+function bip() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    for (const t of [0, 0.35, 0.7]) {
+      const o = ctx.createOscillator(), g = ctx.createGain(), t0 = ctx.currentTime + t;
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.3, t0 + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.25);
+      o.connect(g).connect(ctx.destination); o.start(t0); o.stop(t0 + 0.3);
+    }
+  } catch {}
+}
+function pedirPermissaoAviso() { try { if (Notification.permission === "default") Notification.requestPermission(); } catch {} }
+function verificarAvisos() {
+  const agora = Date.now();
+  for (const a of agenda) {
+    if (a.feito || avisados.has(a.id)) continue;
+    const t = new Date(a.quando).getTime(), antes = (a.lembrete_min ?? 30) * 6e4;
+    if (agora >= t - antes && agora < t + 30 * 6e4) { avisados.add(a.id); guardarAvisados(); return mostrarAviso(a); }
+  }
+}
+function mostrarAviso(a) {
+  const c = clientes.find(x => x.id === a.cliente_id);
+  const titulo = `${NOME_AG[a.tipo]} ${diaTxt(a.quando)} às ${hora(a.quando)}`, corpo = [c?.nome, a.local].filter(Boolean).join(" · ");
+  bip();
+  try { if (Notification.permission === "granted") new Notification("🔔 " + titulo, { body: corpo }); } catch {}
+  $("aviso").innerHTML = `<h4>🔔 ${esc(titulo)}</h4><p>${esc(corpo) || "Compromisso na agenda"}</p>
+    <div class="bar" style="margin:0">${c ? `<button class="pri" data-avlm="${a.id}">Mensagem ao cliente</button><button data-avcli="${c.id}">Abrir cliente</button>` : ""}<button>OK</button></div>`;
+  $("aviso").classList.remove("hide");
+}
+$("aviso").onclick = e => {
+  const b = e.target.closest("button"); if (!b) return;
+  if (b.dataset.avlm) mensagemCliente(agenda.find(x => x.id === b.dataset.avlm));
+  if (b.dataset.avcli) abrir(clientes.find(x => x.id === b.dataset.avcli));
+  $("aviso").classList.add("hide");
+};
+setInterval(verificarAvisos, 30000);
+
+$("okcancel").onclick = () => $("okdlg").close();
+$("okform").onsubmit = async e => {
+  e.preventDefault();
+  const a = concluindo, resultado = e.target.resultado.value.trim() || null;
+  const { error } = await sb.from("compromissos").update({ feito: true, resultado }).eq("id", a.id);
+  if (error) return msg("Erro ao concluir: " + error.message, true);
+  $("okdlg").close();
+  const c = clientes.find(x => x.id === a.cliente_id);
+  if (c) await registrar(c.id, CONTATO_AG[a.tipo], `${NOME_AG[a.tipo]} concluído${resultado ? ": " + resultado : ""}`);
+  msg("Concluído: " + NOME_AG[a.tipo] + ".");
+  // Visita feita move o cliente para "Visita realizada".
+  if (c && a.tipo === "visita" && ["lead", "visita"].includes(c.status)) await mover(c.id, "visita_feita");
+  else await carregar();
+};
+
+// ---------- Minhas vendas: vendas concluídas, comissões e meta ----------
+let vendas = [], faltaV8 = false, vendaId = null;
+const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
+const PG = { pendente: "A receber", parcial: "Recebida em parte", recebido: "Recebida" };
+const comTotal = v => Number(v.valor_venda || 0) * Number(v.comissao_pct || 0) / 100;
+const minha = v => comTotal(v) * Number(v.divisao_pct ?? 100) / 100;
+const recebido = v => v.pagamento_status === "recebido" ? minha(v) : Number(v.valor_recebido || 0);
+const aReceber = v => Math.max(0, minha(v) - recebido(v));
+// Prazo para receber a comissão: 30 dias a partir da data da venda.
+const PRAZO_COMISSAO = 30;
+const previsao = v => { const d = new Date(v.data_venda + "T12:00"); d.setDate(d.getDate() + PRAZO_COMISSAO); return d; };
+function contador(v) {
+  if (v.pagamento_status === "recebido") return '<span class="pg recebido">Recebida ✓</span>';
+  const prev = previsao(v), passados = Math.floor((Date.now() - new Date(v.data_venda + "T12:00")) / 864e5);
+  const faltam = Math.ceil((prev - Date.now()) / 864e5), pct = Math.min(100, Math.max(0, passados / PRAZO_COMISSAO * 100));
+  const txt = faltam < 0 ? `Atrasada há ${-faltam} dia${faltam < -1 ? "s" : ""}` : faltam === 0 ? "Vence hoje" : `Faltam ${faltam} dia${faltam > 1 ? "s" : ""}`;
+  return `<div class="cont ${faltam < 0 ? "atrasado" : faltam <= 5 ? "perto" : ""}" title="Dia ${Math.min(passados, PRAZO_COMISSAO)} de ${PRAZO_COMISSAO}">
+    <div class="contbar"><i style="width:${pct}%"></i></div><small>${txt} · previsão ${prev.toLocaleDateString("pt-BR")}</small></div>`;
+}
+function desenharReceber() {
+  const pend = vendas.filter(v => v.pagamento_status !== "recebido" && aReceber(v) > 0 && (!$("vcorretor").value || v.user_id === $("vcorretor").value))
+    .sort((a, b) => previsao(a) - previsao(b));
+  const total = pend.reduce((t, v) => t + aReceber(v), 0), atras = pend.filter(v => previsao(v) < new Date()).length;
+  $("vreceber").innerHTML = `<div class="secao-tit" style="margin-bottom:4px"><h3>Comissões a receber</h3>
+      <span><strong>${din(total)}</strong>${atras ? ` <span class="alerta">· ${atras} atrasada${atras > 1 ? "s" : ""}</span>` : ""}</span></div>`
+    + (pend.length ? pend.map(v => `<div class="receber">
+        <span><strong>${esc(nomeVenda(v))}</strong> <small class="mut">· ${esc(imovelVenda(v))} · venda em ${dataCurta(v.data_venda)}</small></span>
+        <strong>${din(aReceber(v))}</strong>${contador(v)}</div>`).join("")
+      : '<p class="mut" style="margin:0">Nenhuma comissão pendente. 🎉</p>');
+}
+const pctPadrao = () => perfil?.comissao_padrao ?? 5;
+const isoLocal = d => new Date(d).toLocaleDateString("sv"); // aaaa-mm-dd no fuso do aparelho
+const dataCurta = d => d ? new Date(d + "T12:00").toLocaleDateString("pt-BR") : "";
+const din = v => "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const nomeVenda = v => clientes.find(c => c.id === v.cliente_id)?.nome || v.cliente_nome || "—";
+const imovelVenda = v => imoveis.find(i => i.id === v.imovel_id)?.titulo || v.imovel_desc || "—";
+for (let m = 1; m <= 12; m++) $("vmes").add(new Option(new Date(2000, m - 1, 1).toLocaleDateString("pt-BR", { month: "long" }), m));
+
+function vendasFiltradas() {
+  const ano = $("vano").value, mes = $("vmes").value;
+  const quem = $("vcorretor").value;
+  return vendas.filter(v => (ano === "todos" || v.data_venda.startsWith(ano)) && (!mes || +v.data_venda.slice(5, 7) === +mes) && (!quem || v.user_id === quem));
+}
+function desenharVendas() {
+  if (faltaV8) {
+    $("vaviso").innerHTML = '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v8.sql</b> no SQL Editor do Supabase para ativar Minhas vendas.</div>';
+    for (const id of ["vkpis", "vreceber", "vgraf", "veixo", "vmeta", "vtab"]) $(id).innerHTML = "";
+    return;
+  }
+  const atual = $("vano").value || String(new Date().getFullYear());
+  const anos = [...new Set([new Date().getFullYear(), ...vendas.map(v => +v.data_venda.slice(0, 4))])].sort((a, b) => b - a);
+  $("vano").innerHTML = anos.map(a => `<option ${String(a) === atual ? "selected" : ""}>${a}</option>`).join("")
+    + `<option value="todos" ${atual === "todos" ? "selected" : ""}>Todos os anos</option>`;
+
+  const quem = $("vcorretor").value;
+  $("vcorretor").innerHTML = '<option value="">Toda a equipe</option>' + equipeIds.map(id => `<option value="${id}" ${id === quem ? "selected" : ""}>${id === meuId ? "Minhas vendas" : esc(nomes[id] || "Corretor da equipe")}</option>`).join("");
+  $("vcorretor").classList.toggle("hide", equipeIds.length < 2);
+  const lista = vendasFiltradas(), soma = f => lista.reduce((t, v) => t + f(v), 0);
+  const vgv = soma(v => Number(v.valor_venda)), com = soma(minha);
+  const ciclos = lista.map(v => { const c = clientes.find(x => x.id === v.cliente_id); return c ? (new Date(v.data_venda + "T12:00") - new Date(c.criado_em)) / 864e5 : null; })
+    .filter(x => x != null && x >= 0);
+  const sem = clientes.filter(c => c.status === "fechado" && !vendas.some(v => v.cliente_id === c.id));
+  $("vaviso").innerHTML = sem.length ? `<div class="etapa"><strong>${sem.length} cliente${sem.length > 1 ? "s" : ""} em "Chaves entregues" sem venda registrada.</strong>
+    <p>Clique em "Importar vendas concluídas" para trazer ${sem.length > 1 ? "todos" : "ele"} de uma vez.</p></div>` : "";
+  desenharReceber();
+  $("vkpis").innerHTML = [
+    [lista.length, "vendas no período"],
+    [dinheiro(vgv), "volume vendido (VGV)"],
+    [din(com), "sua comissão"],
+    [din(soma(recebido)), "comissão recebida"],
+    [din(soma(aReceber)), "comissão a receber"],
+    [lista.length ? dinheiro(Math.round(vgv / lista.length)) : "—", "valor médio por venda"],
+    [ciclos.length ? Math.round(ciclos.reduce((a, b) => a + b, 0) / ciclos.length) + " dias" : "—", "do cadastro até a venda (média)"]
+  ].map(([n, t]) => `<div><b>${n}</b><span>${t}</span></div>`).join("");
+
+  // Gráfico: sua comissão nos últimos 12 meses (não depende do filtro).
+  const hoje = new Date(), meses = [];
+  for (let k = 11; k >= 0; k--) {
+    const d = new Date(hoje.getFullYear(), hoje.getMonth() - k, 1);
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`, doMes = vendas.filter(v => v.data_venda.startsWith(chave));
+    meses.push({ chave, rot: MESES[d.getMonth()] + (d.getMonth() === 0 || k === 11 ? "/" + String(d.getFullYear()).slice(2) : ""),
+      nome: d.toLocaleDateString("pt-BR", { month: "long", year: "numeric" }), total: doMes.reduce((t, v) => t + minha(v), 0), n: doMes.length });
+  }
+  const max = Math.max(...meses.map(m => m.total));
+  const rotulo = m => m.total > 0 && (m.total === max || m === meses[11]); // só o maior mês e o mês atual levam valor
+  $("vgraf").innerHTML = max ? meses.map(m => `
+    <div class="col2" title="${m.nome}: ${din(m.total)} em ${m.n} venda${m.n === 1 ? "" : "s"}">
+      ${rotulo(m) ? `<span class="v">${dinheiro(Math.round(m.total))}</span>` : ""}
+      <div class="b" style="height:${m.total ? Math.max(2, m.total / max * 82) : 0}%"></div>
+    </div>`).join("") : '<p class="mut" style="margin:auto">Nenhuma venda nos últimos 12 meses.</p>';
+  $("veixo").innerHTML = max ? meses.map(m => `<span>${m.rot}</span>`).join("") : "";
+
+  // Meta do mês atual.
+  const mesAtual = meses[11], meta = Number(perfil?.meta_mensal) || 0;
+  $("vmesatual").textContent = mesAtual.nome;
+  $("vmeta").innerHTML = `<div style="font-size:26px;font-weight:700">${din(mesAtual.total)}${meta ? ` <span class="mut" style="font-size:14px;font-weight:400">de ${din(meta)}</span>` : ""}</div>`
+    + (meta ? `<div class="meta"><i style="width:${Math.min(100, mesAtual.total / meta * 100)}%"></i></div>
+      <div class="mut">${mesAtual.total >= meta ? "Meta batida! 🎉" : "Faltam " + din(meta - mesAtual.total) + " para a meta"}</div>`
+      : '<p class="mut" style="margin:6px 0 0">Defina abaixo uma meta mensal de comissão para acompanhar o progresso.</p>');
+  if (document.activeElement !== $("vmetain")) $("vmetain").value = perfil?.meta_mensal ?? "";
+  if (document.activeElement !== $("vpctin")) $("vpctin").value = perfil?.comissao_padrao ?? "";
+
+  $("vtab").innerHTML = `<thead><tr><th>Data</th><th>Cliente</th><th>Imóvel</th><th>Pagamento</th><th class="n">Valor da venda</th><th class="n">Comissão</th><th class="n">Sua comissão</th><th>Recebimento</th><th></th></tr></thead><tbody>`
+    + (lista.length ? lista.map(v => `<tr>
+      <td>${dataCurta(v.data_venda)}${resp(v) ? `<br><small class="mut">${resp(v)}</small>` : ""}</td>
+      <td>${v.cliente_id && clientes.some(c => c.id === v.cliente_id) ? `<a href="#" data-vcli="${v.cliente_id}">${esc(nomeVenda(v))}</a>` : esc(nomeVenda(v))}</td>
+      <td>${esc(imovelVenda(v))}</td>
+      <td><small>${esc(v.forma_pagamento || "")}</small></td>
+      <td class="n">${dinheiro(v.valor_venda)}</td>
+      <td class="n">${Number(v.comissao_pct).toLocaleString("pt-BR")}%${Number(v.divisao_pct) !== 100 ? ` <small class="mut">(sua parte ${Number(v.divisao_pct)}%)</small>` : ""}</td>
+      <td class="n"><strong>${din(minha(v))}</strong></td>
+      <td>${v.pagamento_status === "parcial" ? '<span class="pg parcial">Recebida em parte</span>' : ""}${contador(v)}${v.pagamento_status !== "recebido" && aReceber(v) ? `<small class="mut">falta ${din(aReceber(v))}</small>` : ""}</td>
+      <td style="white-space:nowrap"><button data-vedit="${v.id}">Editar</button> <button class="bad" data-vdel="${v.id}" title="Excluir">✕</button></td>
+    </tr>`).join("") + `<tr><td colspan="4"><strong>Total (${lista.length})</strong></td><td class="n"><strong>${dinheiro(vgv)}</strong></td><td></td><td class="n"><strong>${din(com)}</strong></td><td colspan="2"><small class="mut">a receber ${din(soma(aReceber))}</small></td></tr>`
+      : '<tr><td colspan="9" class="mut">Nenhuma venda neste período. Use "+ Registrar venda" ou "Importar vendas concluídas".</td></tr>')
+    + "</tbody>";
+}
+$("vano").onchange = $("vmes").onchange = $("vcorretor").onchange = desenhar;
+$("vtab").onclick = async e => {
+  const b = e.target.closest("[data-vedit],[data-vdel],[data-vcli]"); if (!b) return;
+  e.preventDefault();
+  if (b.dataset.vcli) return abrir(clientes.find(c => c.id === b.dataset.vcli));
+  const v = vendas.find(x => x.id === (b.dataset.vedit || b.dataset.vdel));
+  if (b.dataset.vedit) abrirVenda(v);
+  if (b.dataset.vdel && confirm("Excluir esta venda?")) {
+    const { error } = await sb.from("vendas").delete().eq("id", v.id);
+    error ? msg(error.message, true) : (msg("Venda excluída."), carregar());
+  }
+};
+
+function abrirVenda(v = {}) {
+  if (faltaV8) return msg("Rode o schema_v8.sql no SQL Editor do Supabase para ativar Minhas vendas.", true);
+  vendaId = v.id || null;
+  const f = $("vform"); f.reset();
+  f.cliente_id.innerHTML = '<option value="">—</option>' + clientes.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("");
+  f.imovel_id.innerHTML = '<option value="">— não está no portfólio —</option>' + imoveis.filter(i => i.status !== "vendido" || i.id === v.imovel_id)
+    .map(i => `<option value="${i.id}">${esc(i.titulo)}${i.preco ? " – " + dinheiro(i.preco) : ""}</option>`).join("");
+  const val = { data_venda: isoLocal(new Date()), comissao_pct: pctPadrao(), divisao_pct: 100, ...v };
+  for (const el of f.elements) if (el.name && val[el.name] != null && el.type !== "checkbox") el.value = val[el.name];
+  $("vtit").textContent = vendaId ? "Editar venda" : "Registrar venda";
+  calcVenda(); $("vdlg").showModal();
+}
+function calcVenda() {
+  const f = $("vform"), v = { valor_venda: +f.valor_venda.value || 0, comissao_pct: +f.comissao_pct.value || 0, divisao_pct: +f.divisao_pct.value || 0 };
+  $("vcalc").innerHTML = `Comissão total: <strong>${din(comTotal(v))}</strong> · Sua parte (${v.divisao_pct}%): <strong>${din(minha(v))}</strong>`;
+}
+$("vform").addEventListener("input", calcVenda);
+$("vform").cliente_id.onchange = e => {
+  const c = clientes.find(x => x.id === e.target.value), f = $("vform"); if (!c) return;
+  if (c.imovel_id && !f.imovel_id.value) f.imovel_id.value = c.imovel_id;
+  if (!+f.valor_venda.value) f.valor_venda.value = c.valor_imovel || imoveis.find(i => i.id === c.imovel_id)?.preco || "";
+  calcVenda();
+};
+$("vform").imovel_id.onchange = e => { const i = imoveis.find(x => x.id === e.target.value); if (i?.preco) $("vform").valor_venda.value = i.preco; calcVenda(); };
+$("vcancel").onclick = () => $("vdlg").close();
+$("vform").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, d = Object.fromEntries(new FormData(f));
+  const c = clientes.find(x => x.id === d.cliente_id), i = imoveis.find(x => x.id === d.imovel_id);
+  const r = {
+    cliente_id: d.cliente_id || null, cliente_nome: c?.nome || null, imovel_id: d.imovel_id || null, imovel_desc: d.imovel_desc.trim() || i?.titulo || null,
+    data_venda: d.data_venda, valor_venda: +d.valor_venda, comissao_pct: +d.comissao_pct, divisao_pct: +d.divisao_pct, forma_pagamento: d.forma_pagamento,
+    pagamento_status: d.pagamento_status, valor_recebido: +d.valor_recebido || 0, data_recebimento: d.data_recebimento || null, obs: d.obs.trim() || null
+  };
+  if (r.pagamento_status === "recebido" && !r.valor_recebido) r.valor_recebido = Math.round(minha(r) * 100) / 100;
+  const { error } = vendaId ? await sb.from("vendas").update(r).eq("id", vendaId) : await sb.from("vendas").insert(r);
+  if (error) return msg("Erro ao salvar a venda: " + error.message, true);
+  $("vdlg").close();
+  if (i && f.marcar_vendido.checked && i.status !== "vendido") await sb.from("imoveis").update({ status: "vendido" }).eq("id", i.id);
+  if (c && !vendaId) await registrar(c.id, "Anotação", `Venda registrada: ${dinheiro(r.valor_venda)} · sua comissão ${din(minha(r))}`);
+  msg("Venda salva."); await carregar();
+};
+$("vnova").onclick = () => abrirVenda();
+
+// Ao chegar em "Chaves entregues", oferece registrar a venda (uma vez por cliente).
+function oferecerVenda(c) {
+  if (!c || c.status !== "fechado" || faltaV8 || vendas.some(v => v.cliente_id === c.id)) return;
+  if (confirm(`${c.nome} chegou em "Chaves entregues". Registrar a venda e a comissão agora?`))
+    abrirVenda({ cliente_id: c.id, imovel_id: c.imovel_id, valor_venda: c.valor_imovel || imoveis.find(i => i.id === c.imovel_id)?.preco || "" });
+}
+
+// Importa de uma vez os clientes em "Chaves entregues" que ainda não têm venda registrada.
+$("vimportar").onclick = async () => {
+  if (faltaV8) return msg("Rode o schema_v8.sql no SQL Editor do Supabase para ativar Minhas vendas.", true);
+  const pend = clientes.filter(c => c.status === "fechado" && !vendas.some(v => v.cliente_id === c.id));
+  if (!pend.length) return msg('Nada novo para importar: todos os clientes em "Chaves entregues" já têm venda registrada.');
+  if (!confirm(`Importar ${pend.length} venda${pend.length > 1 ? "s" : ""} de clientes em "Chaves entregues"?\nUsa o valor do imóvel de interesse e a comissão padrão de ${pctPadrao()}%. Depois confira cada uma.`)) return;
+  const { data: et } = await sb.from("interacoes").select("cliente_id,criado_em").eq("tipo", "Etapa").eq("texto", STATUS.fechado)
+    .in("cliente_id", pend.map(c => c.id)).order("criado_em", { ascending: false });
+  const linhas = pend.map(c => {
+    const i = imoveis.find(x => x.id === c.imovel_id), quando = et?.find(x => x.cliente_id === c.id)?.criado_em || c.atualizado_em;
+    return { cliente_id: c.id, cliente_nome: c.nome, imovel_id: c.imovel_id || null, imovel_desc: i?.titulo || c.interesse || null,
+      data_venda: isoLocal(quando), valor_venda: c.valor_imovel || i?.preco || c.orcamento || 0, comissao_pct: pctPadrao(), divisao_pct: 100,
+      obs: "Importada do CRM: confira os valores" };
+  });
+  const { error } = await sb.from("vendas").insert(linhas);
+  if (error) return msg("Erro ao importar: " + error.message, true);
+  msg(`${linhas.length} venda${linhas.length > 1 ? "s importadas" : " importada"}. Confira os valores na tabela.`); await carregar();
+};
+
+// Planilha (CSV) das vendas do período, abre no Excel / Google Planilhas.
+$("vexportar").onclick = () => {
+  const num = n => Number(n || 0).toFixed(2).replace(".", ",");
+  const cab = ["Data", "Cliente", "Imóvel", "Forma de pagamento", "Valor da venda", "Comissão %", "Comissão total", "Sua parte %", "Sua comissão", "Recebimento", "Valor recebido", "Data do recebimento", "Observações"];
+  const linhas = vendasFiltradas().map(v => [dataCurta(v.data_venda), nomeVenda(v), imovelVenda(v), v.forma_pagamento || "", num(v.valor_venda), num(v.comissao_pct),
+    num(comTotal(v)), num(v.divisao_pct), num(minha(v)), PG[v.pagamento_status], num(recebido(v)), dataCurta(v.data_recebimento), v.obs || ""]);
+  if (!linhas.length) return msg("Nenhuma venda no período escolhido para exportar.");
+  const csv = "﻿" + [cab, ...linhas].map(l => l.map(x => `"${String(x).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `vendas-${$("vano").value}${$("vmes").value ? "-" + String($("vmes").value).padStart(2, "0") : ""}.csv`;
+  a.click();
+};
+
+// Meta mensal e comissão padrão ficam no perfil do corretor.
+$("vmetasalvar").onclick = async () => {
+  const meta = $("vmetain").value === "" ? null : +$("vmetain").value, pct = $("vpctin").value === "" ? null : +$("vpctin").value;
+  const { error } = await sb.from("perfil").upsert({ user_id: await uid(), meta_mensal: meta, comissao_padrao: pct });
+  if (error) return msg("Erro ao salvar: " + erroEtapa(error.message), true);
+  msg("Meta e comissão padrão salvas."); await carregar();
+};
+
+// Envio rápido de fotos direto do cartão do imóvel (sem abrir o cadastro).
+$("pgrid").onchange = async e => {
+  const id = e.target.dataset.upim; if (!id) return;
+  const arq = [...e.target.files]; e.target.value = "";
+  const i = imoveis.find(x => x.id === id), u = await uid(), fotos = [...(i.fotos || [])];
+  for (const [n, f] of arq.entries()) {
+    msg(`Enviando foto ${n + 1} de ${arq.length}...`);
+    const path = `${u}/${id}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+    const { error } = await sb.storage.from("imoveis").upload(path, await reduzir(f, 1600), { contentType: "image/jpeg" });
+    if (error) return msg("Erro ao enviar a foto: " + error.message, true);
+    fotos.push(path);
+  }
+  const { error } = await sb.from("imoveis").update({ fotos, atualizado_em: new Date().toISOString() }).eq("id", id);
+  if (error) return msg("Erro ao salvar as fotos: " + error.message, true);
+  msg(arq.length > 1 ? "Fotos enviadas." : "Foto enviada."); carregar();
+};
+
+function abrirImovel(i, empilhar = true) {
+  if (faltaV6) return msg("Rode o schema_v6.sql no SQL Editor do Supabase para ativar o portfólio.", true);
+  imovelId = i?.id ?? null;
+  const f = $("imovelform"); f.reset();
+  $("ititulo").textContent = i ? i.titulo : "Novo imóvel";
+  if (i) for (const el of f.elements) if (el.name && i[el.name] != null) el.type === "checkbox" ? (el.checked = !!i[el.name]) : (el.value = i[el.name]);
+  fotosEdit = (i?.fotos || []).map(path => ({ path })); fotosRemover = [];
+  desenharFotos();
+  for (const id of ["ishare", "iexcluir"]) $(id).classList.toggle("hide", !i);
+  if (empilhar) ir({ t: "imovel", id: imovelId }); else tela("imovel");
+}
+function desenharFotos() {
+  $("ifotos").innerHTML = fotosEdit.map((f, n) => `<figure><img src="${f.path ? urlFoto(f.path) : f.url}" alt="">
+    <figcaption>${n === 0 ? "<b>Capa</b>" : `<button type="button" data-capa="${n}">Tornar capa</button>`}<button type="button" class="bad" data-tira="${n}">Remover</button></figcaption></figure>`).join("")
+    || '<p class="mut" style="grid-column:1/-1;margin:0">Nenhuma foto ainda. Até você subir as fotos, o site mostra uma imagem ilustrativa.</p>';
+}
+const addFotos = files => { for (const file of files) if (file.type.startsWith("image/")) fotosEdit.push({ file, url: URL.createObjectURL(file) }); desenharFotos(); };
+$("ifotosin").onchange = e => { addFotos(e.target.files); e.target.value = ""; };
+$("izona").ondragover = e => { e.preventDefault(); $("izona").classList.add("over"); };
+$("izona").ondragleave = () => $("izona").classList.remove("over");
+$("izona").ondrop = e => { e.preventDefault(); $("izona").classList.remove("over"); addFotos(e.dataTransfer.files); };
+$("ifotos").onclick = e => {
+  const { capa, tira } = e.target.dataset;
+  if (capa != null) fotosEdit.unshift(...fotosEdit.splice(+capa, 1));
+  if (tira != null) { const [f] = fotosEdit.splice(+tira, 1); if (f.path) fotosRemover.push(f.path); }
+  desenharFotos();
+};
+$("imovelform").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, d = Object.fromEntries(new FormData(f)), novo = !imovelId;
+  for (const k of ["preco", "quartos", "banheiros", "vagas", "area"]) d[k] = d[k] === "" ? null : Number(d[k]);
+  for (const k of ["mcmv", "publicado", "destaque"]) d[k] = f[k].checked;
+  d.atualizado_em = new Date().toISOString();
+  msg("Salvando imóvel...");
+  if (novo) {
+    const { data, error } = await sb.from("imoveis").insert(d).select("id").single();
+    if (error) return msg("Erro ao salvar: " + error.message, true);
+    imovelId = data.id; // se uma foto falhar, salvar de novo não duplica o imóvel
+  } else {
+    const { error } = await sb.from("imoveis").update(d).eq("id", imovelId);
+    if (error) return msg("Erro ao salvar: " + error.message, true);
+  }
+  const u = await uid(), fotos = [];
+  for (const [n, fo] of fotosEdit.entries()) {
+    if (!fo.path) {
+      msg(`Enviando foto ${n + 1} de ${fotosEdit.length}...`);
+      const path = `${u}/${imovelId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.jpg`;
+      const { error } = await sb.storage.from("imoveis").upload(path, await reduzir(fo.file, 1600), { contentType: "image/jpeg" });
+      if (error) return msg("Erro ao enviar a foto: " + error.message, true);
+      fo.path = path;
+    }
+    fotos.push(fo.path);
+  }
+  if (fotosRemover.length) await sb.storage.from("imoveis").remove(fotosRemover);
+  await sb.from("imoveis").update({ fotos }).eq("id", imovelId);
+  msg("Imóvel salvo.");
+  await carregar();
+  novo ? voltar() : abrirImovel(imoveis.find(i => i.id === imovelId), false);
+};
+$("icancelar").onclick = voltar;
+$("ishare").onclick = () => compartilharImovel(imoveis.find(x => x.id === imovelId));
+$("iexcluir").onclick = async () => {
+  const i = imoveis.find(x => x.id === imovelId);
+  if (!i || !confirm("Excluir este imóvel e as fotos dele?")) return;
+  if (i.fotos.length) await sb.storage.from("imoveis").remove(i.fotos);
+  const { error } = await sb.from("imoveis").delete().eq("id", i.id);
+  if (error) return msg(error.message, true);
+  msg("Imóvel excluído."); await carregar(); voltar();
+};
+
+// ---------- Equipe: corretores que compartilham clientes, agenda, portfólio e vendas ----------
+let equipeIds = [], nomes = {}, equipe = null, meuId = null, faltaV11 = false;
+// Quem cadastrou o registro (só aparece quando há mais de uma pessoa na equipe).
+const resp = r => equipeIds.length > 1 && r?.user_id ? (r.user_id === meuId ? "você" : esc((nomes[r.user_id] || "equipe").split(" ")[0])) : "";
+function equipeUI() {
+  const box = $("equipebox");
+  if (faltaV11) return box.innerHTML = '<strong>Equipe</strong><p class="mut">Para trabalhar com outro corretor vendo os mesmos dados, rode o <b>schema_v11.sql</b> no SQL Editor do Supabase.</p>';
+  if (!equipe) return box.innerHTML = `<strong>Equipe</strong>
+    <p class="mut" style="margin:4px 0 10px">Junte-se a outro corretor para os dois verem e editarem os mesmos clientes, agenda, portfólio e vendas. Cada um continua com o próprio login.</p>
+    <div class="bar"><input id="eqnome" placeholder="Nome da equipe (ex.: Jardel & Gleice Imóveis)"><button type="button" class="pri" data-eq="criar">Criar equipe</button></div>
+    <div class="bar" style="margin:0"><input id="eqcodigo" placeholder="Recebeu um código? Digite aqui (ex.: A1B2C3D4E5F6)" style="text-transform:uppercase"><button type="button" data-eq="entrar">Entrar na equipe</button></div>`;
+  box.innerHTML = `<strong>Equipe: ${esc(equipe.nome)}</strong>
+    <p style="margin:6px 0">Código para convidar: <b style="font-size:20px;letter-spacing:.12em">${esc(equipe.codigo)}</b>
+      <button type="button" data-eq="convite" style="margin-left:6px">Copiar convite</button></p>
+    <p class="mut" style="margin:0 0 6px">Membros: ${equipeIds.map(id => id === meuId ? "você" : esc(nomes[id] || "corretor sem perfil")).join(", ")}</p>
+    <button type="button" class="bad" data-eq="sair">Sair da equipe</button>`;
+}
+$("equipebox").onclick = async e => {
+  const a = e.target.closest("[data-eq]")?.dataset.eq; if (!a) return;
+  if (a === "criar") {
+    const { data, error } = await sb.rpc("criar_equipe", { nome: $("eqnome").value });
+    if (error) return msg("Erro ao criar a equipe: " + error.message, true);
+    msg(`Equipe criada! Código para convidar: ${data}`);
+  }
+  if (a === "entrar") {
+    const { data, error } = await sb.rpc("entrar_equipe", { cod: $("eqcodigo").value });
+    if (error) return msg("Não deu para entrar: " + error.message, true);
+    msg(`Você entrou na equipe ${data}. Agora vocês veem os mesmos dados.`);
+  }
+  if (a === "sair") {
+    if (!confirm("Sair da equipe? Você volta a ver só o que você mesmo cadastrou.")) return;
+    const { error } = await sb.rpc("sair_equipe");
+    if (error) return msg("Erro: " + error.message, true);
+    msg("Você saiu da equipe.");
+  }
+  if (a === "convite") {
+    const texto = `Oi! Vamos usar o mesmo CRM de imóveis.\n1. Abra ${new URL(".", location.href).href}\n2. Clique em "Criar conta" e confirme pelo e-mail\n3. Entre, vá em "Meu perfil" > Equipe e digite o código: ${equipe.codigo}`;
+    try { await navigator.clipboard.writeText(texto); e.target.textContent = "Convite copiado ✓"; } catch { prompt("Copie o convite:", texto); }
+    return;
+  }
+  await carregar(); equipeUI();
+};
+
+function preencherPerfil() {
+  equipeUI();
+  const f = $("perfilform"); f.reset();
+  if (perfil) for (const el of f.elements) if (el.name && perfil[el.name] != null) el.value = perfil[el.name];
+  $("pini").textContent = (perfil?.nome || "?").split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+  $("pavatar").querySelector("img")?.remove();
+  if (perfil?.foto) {
+    const img = new Image(); img.alt = "";
+    img.onload = () => { $("pini").textContent = ""; $("pavatar").prepend(img); };
+    img.src = urlFoto(perfil.foto);
+  }
+}
+$("perfilform").onsubmit = async e => {
+  e.preventDefault();
+  if (faltaV6) return msg("Rode o schema_v6.sql no SQL Editor do Supabase primeiro.", true);
+  const d = Object.fromEntries(new FormData(e.target));
+  const { error } = await sb.from("perfil").upsert({ user_id: await uid(), ...d, atualizado_em: new Date().toISOString() });
+  if (error) return msg("Erro ao salvar o perfil: " + error.message, true);
+  msg("Perfil salvo."); await carregar(); preencherPerfil();
+};
+$("pfoto").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  if (faltaV6) return msg("Rode o schema_v6.sql no SQL Editor do Supabase primeiro.", true);
+  const path = `${await uid()}/perfil-${Date.now()}.jpg`;
+  msg("Enviando foto...");
+  const { error } = await sb.storage.from("imoveis").upload(path, await reduzir(f, 600), { contentType: "image/jpeg" });
+  if (error) return msg("Erro ao enviar a foto: " + error.message, true);
+  if (perfil?.foto) await sb.storage.from("imoveis").remove([perfil.foto]);
+  const { error: e2 } = await sb.from("perfil").upsert({ user_id: await uid(), foto: path, atualizado_em: new Date().toISOString() });
+  if (e2) return msg("Erro ao salvar a foto: " + e2.message, true);
+  msg("Foto atualizada."); await carregar(); preencherPerfil();
+};
+$("pver").onclick = async () => open(await linkSite(), "_blank");
+
+// Compartilhar o site inteiro ou um imóvel: WhatsApp, Facebook, copiar link, menu do celular ou direto para um cliente.
+let compartilhando = null;
+function compartilhar(titulo, texto, url, registro) {
+  compartilhando = { titulo, texto, url, registro };
+  const comTel = clientes.filter(c => c.telefone && c.status !== "perdido");
+  $("sharebox").innerHTML = `
+    <h3 style="margin-top:0">${esc(titulo)}</h3>
+    <label>Link</label><input readonly value="${esc(url)}" onfocus="this.select()">
+    <div class="bar" style="margin-top:10px">
+      ${navigator.share ? '<button type="button" class="pri" data-s="nativo">📤 Compartilhar…</button>' : ""}
+      <a class="btn" target="_blank" rel="noopener" href="https://wa.me/?text=${encodeURIComponent(texto + "\n" + url)}">WhatsApp</a>
+      <a class="btn" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}">Facebook</a>
+      <button type="button" data-s="copiar">Copiar link</button>
+    </div>
+    ${comTel.length ? `<label>Enviar para um cliente pelo WhatsApp</label>
+      <div class="bar"><select id="sharecli" style="flex:1">${comTel.map(c => `<option value="${c.id}">${esc(c.nome)}</option>`).join("")}</select><button type="button" data-s="cliente">Enviar</button></div>` : ""}
+    <p class="mut" style="font-size:13px">Instagram: copie o link e coloque na bio ou num story com a figurinha "Link".</p>
+    <div class="bar" style="justify-content:flex-end;margin:0"><button type="button" data-s="fechar">Fechar</button></div>`;
+  $("share").showModal();
+}
+$("sharebox").onclick = async e => {
+  const b = e.target.closest("[data-s]"); if (!b) return;
+  const { titulo, texto, url, registro } = compartilhando;
+  if (b.dataset.s === "fechar") $("share").close();
+  if (b.dataset.s === "nativo") navigator.share({ title: titulo, text: texto, url }).catch(() => {});
+  if (b.dataset.s === "copiar") { await navigator.clipboard.writeText(url).catch(() => {}); b.textContent = "Link copiado ✓"; }
+  if (b.dataset.s === "cliente") {
+    const c = clientes.find(x => x.id === $("sharecli").value); if (!c) return;
+    let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+    open(`https://wa.me/${n}?text=${encodeURIComponent(`Olá ${c.nome.split(" ")[0]}! ${texto}\n${url}`)}`, "_blank");
+    await registrar(c.id, "WhatsApp", "Enviou " + registro); carregar();
+  }
+};
+const compartilharSite = async () => compartilhar("Compartilhar meu site de imóveis",
+  `Confira os imóveis disponíveis${perfil?.nome ? " com " + perfil.nome : ""}:`, await linkSite(), "o link do site de imóveis");
+const compartilharImovel = async i => compartilhar(i.titulo,
+  `🏡 ${i.titulo} – ${precoTxt(i)}${i.bairro || i.cidade ? "\n📍 " + [i.bairro, i.cidade].filter(Boolean).join(", ") : ""}\nVeja fotos e detalhes:`,
+  await linkSite(i.id), "o imóvel: " + i.titulo);
 
 const cred = () => ({ email: $("lemail").value.trim(), password: $("lsenha").value });
 const traduz = m =>

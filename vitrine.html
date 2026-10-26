@@ -1,0 +1,397 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Imóveis à venda</title>
+<meta name="description" content="Casas e apartamentos à venda, com atendimento do primeiro contato à entrega das chaves. Aceitamos Minha Casa Minha Vida.">
+<meta property="og:title" content="Imóveis à venda – encontre o seu">
+<meta property="og:description" content="Veja fotos, valores e fale direto com o corretor pelo WhatsApp.">
+<meta property="og:image" content="https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1200&q=70&auto=format&fit=crop">
+<meta property="og:type" content="website">
+<meta name="theme-color" content="#faf6f0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#faf6f0;--card:#fff;--tx:#2b2620;--mut:#75695d;--pri:#2f7a64;--acc:#e9a23b;--navy:#1f4036;--bd:#ece3d6;--ok:#1e7f4f;--bad:#c62828;--zap:#1fa855}
+  *{box-sizing:border-box}
+  body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--tx)}
+  a{color:inherit}
+  .wrap{max-width:1160px;margin:0 auto;padding:0 16px}
+  header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:20}
+  header .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:10px;padding-bottom:10px}
+  .marca{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+  .marca svg{color:var(--acc);flex:none}.marca b{display:block;font-size:17px;line-height:1.2}.marca small{display:block;font-size:12px;opacity:.75}
+  .zap{display:inline-flex;align-items:center;gap:8px;background:var(--zap);color:#fff;text-decoration:none;font-weight:600;border-radius:999px;padding:9px 16px;border:none;cursor:pointer;font-size:15px}
+  .zap svg{width:18px;height:18px}
+  .hero{color:#fff;padding:72px 0 56px;
+    background:linear-gradient(90deg,rgba(11,37,69,.92),rgba(11,37,69,.35)),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1800&q=70&auto=format&fit=crop") center/cover}
+  .hero h1{font-size:clamp(28px,5vw,44px);line-height:1.15;margin:0 0 10px;max-width:640px}
+  .hero p{font-size:18px;opacity:.92;margin:0 0 26px;max-width:560px}
+  .busca{background:var(--card);color:var(--tx);border-radius:14px;padding:14px;display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr auto;gap:10px;align-items:end;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+  .busca label{display:block;font-size:12px;color:var(--mut);margin-bottom:3px}
+  .busca input,.busca select{width:100%;font:inherit;font-size:15px;color:inherit;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:9px 10px}
+  .busca .chk{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--tx);white-space:nowrap;padding-bottom:9px}
+  .busca .chk input{width:18px;height:18px}
+  @media (max-width:860px){.busca{grid-template-columns:1fr 1fr}.busca .q{grid-column:1/-1}}
+  .faixa{display:flex;gap:28px;flex-wrap:wrap;margin-top:22px;font-size:14px;opacity:.95}
+  .faixa span::before{content:"✓ ";color:var(--acc);font-weight:700}
+  section{padding:40px 0;scroll-margin-top:60px}
+  .tit{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  .tit h2{margin:0;font-size:26px}.tit span{color:var(--mut)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:18px}
+  .im{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;transition:transform .15s,box-shadow .15s}
+  .im:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(11,37,69,.18)}
+  .capa{position:relative;aspect-ratio:4/3;background:#dbe4f0 center/cover}
+  .preco{position:absolute;left:12px;bottom:12px;background:rgba(11,37,69,.92);color:#fff;font-weight:700;font-size:17px;padding:5px 12px;border-radius:8px}
+  .selo{position:absolute;left:12px;top:12px;background:var(--acc);color:#1b1300;font-size:12px;font-weight:700;padding:3px 9px;border-radius:6px}
+  .selo.vendido{background:var(--bad);color:#fff}.selo.reservado{background:#7c3aed;color:#fff}
+  .ilustra{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.55);color:#fff;font-size:11px;padding:2px 8px;border-radius:6px}
+  .gal .ilustra{right:auto;left:12px;bottom:12px;top:auto}
+  .em-breve .capa::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(11,37,69,.55),transparent 60%)}
+  .passos{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+  .passo{background:var(--card);border:1px solid var(--bd);border-radius:14px;overflow:hidden}
+  .passo .img{aspect-ratio:16/9;background:#dbe4f0 center/cover}
+  .passo div{padding:14px 16px}.passo h3{margin:0 0 4px;font-size:18px}.passo p{margin:0;color:var(--mut);font-size:15px}
+  .passo .n{display:inline-flex;width:26px;height:26px;border-radius:50%;background:var(--acc);color:#1b1300;font-weight:800;align-items:center;justify-content:center;margin-right:6px;font-size:14px}
+  .mcmv{position:absolute;right:12px;top:12px;background:#fff;color:var(--navy);font-size:11px;font-weight:700;padding:3px 8px;border-radius:6px}
+  .corpo{padding:14px;display:flex;flex-direction:column;gap:6px}
+  .corpo h3{margin:0;font-size:17px}
+  .local{color:var(--mut);font-size:14px}
+  .specs{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--mut);border-top:1px solid var(--bd);padding-top:8px;margin-top:4px}
+  .vazio{background:var(--card);border:1px dashed var(--bd);border-radius:14px;padding:30px;text-align:center;color:var(--mut)}
+  .banner{background:var(--navy);color:#fff;border-radius:16px;padding:28px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+  .banner h3{margin:0 0 6px;font-size:22px}.banner p{margin:0;opacity:.85;max-width:620px}
+  .sobre{display:grid;grid-template-columns:auto 1fr;gap:24px;align-items:center;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:24px}
+  .foto{width:120px;height:120px;border-radius:50%;background:var(--pri) center/cover;color:#fff;display:flex;align-items:center;justify-content:center;font-size:40px;font-weight:700}
+  .sobre h3{margin:0;font-size:22px}.sobre p{margin:8px 0 14px;white-space:pre-line}
+  @media (max-width:600px){.sobre{grid-template-columns:1fr;text-align:center}.foto{margin:0 auto}}
+  footer{background:var(--navy);color:#cfd8e6;font-size:14px;padding:22px 0;margin-top:20px}
+  footer .wrap{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  dialog{border:none;border-radius:16px;padding:0;width:min(960px,calc(100% - 24px));max-height:calc(100vh - 24px);background:var(--card);color:var(--tx)}
+  dialog::backdrop{background:rgba(5,12,24,.75)}
+  .gal{position:relative;background:#000}
+  .gal img{display:block;width:100%;max-height:60vh;object-fit:contain;background:#000}
+  .gal button{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.85);border:none;border-radius:50%;width:42px;height:42px;font-size:22px;cursor:pointer;color:#000}
+  .gal .ant{left:10px}.gal .prox{right:10px}
+  .gal .fechar{top:12px;right:12px;transform:none;font-size:18px}
+  .gal .cont{position:absolute;bottom:10px;right:12px;background:rgba(0,0,0,.6);color:#fff;font-size:13px;padding:2px 8px;border-radius:6px}
+  .thumbs{display:flex;gap:6px;overflow-x:auto;padding:8px;background:#0b0f16}
+  .thumbs img{width:76px;height:56px;object-fit:cover;border-radius:6px;opacity:.55;cursor:pointer;flex:none;border:2px solid transparent}
+  .thumbs img.on{opacity:1;border-color:var(--acc)}
+  .det{padding:20px;display:grid;grid-template-columns:1fr 280px;gap:24px}
+  .det h2{margin:0 0 4px;font-size:24px}
+  .det .valor{font-size:28px;font-weight:800;color:var(--pri);margin:6px 0}
+  .det .desc{white-space:pre-line}
+  .ficha{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0}
+  .ficha div{border:1px solid var(--bd);border-radius:10px;padding:8px 10px;font-size:14px}.ficha b{display:block;font-size:18px}
+  .lado{display:flex;flex-direction:column;gap:10px}
+  .lado .zap{justify-content:center}
+  .lado button.out{background:transparent;border:1px solid var(--bd);border-radius:999px;padding:9px 16px;font:inherit;font-size:15px;color:var(--tx);cursor:pointer}
+  @media (max-width:760px){.det{grid-template-columns:1fr}}
+  #msg{padding:60px 16px;text-align:center;color:var(--mut)}
+  .hide{display:none!important}
+  /* Tema claro e acolhedor (creme, verde-sálvia e dourado) */
+  body{font-family:"Nunito",system-ui,sans-serif}
+  h1,h2,h3,.marca b{font-weight:800;letter-spacing:-.01em}
+  header{background:rgba(255,255,255,.94);backdrop-filter:blur(8px);color:var(--tx);border-bottom:1px solid var(--bd)}
+  .marca{color:var(--tx)}.marca svg{color:var(--pri)}.marca small{opacity:1;color:var(--mut)}
+  .hero{color:var(--tx);background:linear-gradient(90deg,rgba(255,250,243,.97) 0%,rgba(255,250,243,.86) 44%,rgba(255,250,243,.08) 80%),url("https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=1800&q=70&auto=format&fit=crop") center/cover}
+  .hero p{color:var(--mut);opacity:1}
+  .busca{border:1px solid var(--bd);box-shadow:0 14px 34px rgba(60,40,20,.12)}
+  .busca input,.busca select{background:#fffdfa}
+  .faixa{color:var(--tx);gap:8px}.faixa span{background:rgba(255,255,255,.92);padding:4px 12px;border-radius:99px;box-shadow:0 1px 4px rgba(0,0,0,.08)}.faixa span::before{color:var(--pri)}
+  .im,.passo,.sobre{border-radius:16px;box-shadow:0 1px 2px rgba(60,40,20,.04),0 6px 20px rgba(60,40,20,.06)}
+  .im:hover{box-shadow:0 16px 34px rgba(60,40,20,.15)}
+  .capa,.passo .img{background-color:#efe7db}
+  .preco{background:rgba(255,255,255,.95);color:var(--tx);box-shadow:0 2px 8px rgba(0,0,0,.12)}
+  .em-breve .capa::after{background:linear-gradient(0deg,rgba(31,64,54,.3),transparent 60%)}
+  .banner{background:linear-gradient(135deg,#2f7a64,#3f9479);box-shadow:0 12px 30px rgba(47,122,100,.25)}
+  .banner .zap{background:#fff;color:var(--pri)}
+  .foto{background-color:var(--pri)}
+  footer{background:#f1ebe2;color:var(--mut)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="marca" href="#" id="topo">
+      <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/></svg>
+      <span><b id="nome">Imóveis</b><small id="creci">Corretor de imóveis</small></span>
+    </a>
+    <a class="zap hide" id="zaptopo" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.3 14.2c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.5-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1.1c.2-.3.4-.2.7-.1l1.9.9c.3.1.5.2.5.3.1.2.1.8-.2 1.3Z"/></svg><span>Fale comigo</span></a>
+  </div>
+</header>
+
+<div id="msg">Carregando imóveis...</div>
+
+<div id="site" class="hide">
+  <div class="hero">
+    <div class="wrap">
+      <h1>Encontre o imóvel ideal para você e sua família</h1>
+      <p id="sub">Casas e apartamentos com atendimento completo, da simulação do financiamento à entrega das chaves.</p>
+      <form class="busca" id="busca" onsubmit="event.preventDefault();document.getElementById('lista').scrollIntoView({behavior:'smooth'})">
+        <div class="q"><label>Bairro, cidade ou palavra-chave</label><input id="fq" placeholder="Ex.: Riacho Fundo, 2 quartos..."></div>
+        <div><label>Tipo</label><select id="ftipo"><option value="">Todos</option></select></div>
+        <div><label>Valor até</label><select id="fpreco"><option value="">Qualquer</option><option>200000</option><option>250000</option><option>300000</option><option>400000</option><option>500000</option><option>750000</option><option>1000000</option></select></div>
+        <div><label>Quartos</label><select id="fquartos"><option value="">Qualquer</option><option value="1">1+</option><option value="2">2+</option><option value="3">3+</option><option value="4">4+</option></select></div>
+        <label class="chk"><input type="checkbox" id="fmcmv"> Minha Casa Minha Vida</label>
+      </form>
+      <div class="faixa"><span>Simulação gratuita</span><span>Uso do FGTS</span><span>Subsídio do Minha Casa Minha Vida</span><span>Acompanhamento até as chaves</span></div>
+    </div>
+  </div>
+
+  <section id="lista">
+    <div class="wrap">
+      <div class="tit"><h2>Imóveis disponíveis</h2><span id="qtd"></span></div>
+      <div class="grid" id="grid"></div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="tit"><h2>Do sonho à chave na mão</h2><span>Cuido de cada etapa com você</span></div>
+      <div class="passos">
+        <div class="passo"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1554995207-c18c203602cb?w=900&q=70&auto=format&fit=crop')"></div>
+          <div><h3><span class="n">1</span>Escolha e visita</h3><p>Encontramos juntos o imóvel que cabe no seu bolso e agendamos a visita.</p></div></div>
+        <div class="passo"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1556911220-bff31c812dba?w=900&q=70&auto=format&fit=crop')"></div>
+          <div><h3><span class="n">2</span>Simulação e documentos</h3><p>Simulação com FGTS e subsídio do Minha Casa Minha Vida. Eu organizo toda a papelada.</p></div></div>
+        <div class="passo"><div class="img" style="background-image:url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=900&q=70&auto=format&fit=crop')"></div>
+          <div><h3><span class="n">3</span>Chaves na mão</h3><p>Acompanho a análise do banco, a assinatura do contrato e a entrega das chaves.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="banner">
+        <div><h3>Quer saber quanto você consegue financiar?</h3>
+          <p>Faça uma simulação gratuita com seu FGTS e o subsídio do Minha Casa Minha Vida. Sem compromisso.</p></div>
+        <a class="zap" id="zapsim" target="_blank" rel="noopener">Quero simular</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="sobre" style="padding-top:0">
+    <div class="wrap">
+      <div class="sobre">
+        <div class="foto" id="sfoto"></div>
+        <div><h3 id="snome"></h3><div class="local" id="screci"></div><p id="sbio"></p>
+          <a class="zap" id="zapsobre" target="_blank" rel="noopener">Conversar no WhatsApp</a></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer><div class="wrap"><span id="rodape">Imóveis</span><span>Fotos e valores sujeitos a alteração.</span></div></footer>
+
+<dialog id="det">
+  <div class="gal">
+    <img id="gimg" alt="">
+    <button class="ant" id="gant" aria-label="Foto anterior">‹</button>
+    <button class="prox" id="gprox" aria-label="Próxima foto">›</button>
+    <button class="fechar" id="gfechar" aria-label="Fechar">✕</button>
+    <span class="cont" id="gcont"></span>
+    <span class="ilustra hide" id="gilustra">Imagem ilustrativa · fotos do imóvel em breve</span>
+  </div>
+  <div class="thumbs" id="gthumbs"></div>
+  <div class="det">
+    <div>
+      <h2 id="dtit"></h2>
+      <div class="local" id="dlocal"></div>
+      <div class="valor" id="dvalor"></div>
+      <div class="ficha" id="dficha"></div>
+      <div class="desc" id="ddesc"></div>
+    </div>
+    <div class="lado">
+      <a class="zap" id="dzap" target="_blank" rel="noopener">Tenho interesse</a>
+      <button class="out" id="dshare">Compartilhar este imóvel</button>
+      <button class="out" id="dfechar">Ver outros imóveis</button>
+    </div>
+  </div>
+</dialog>
+
+<script src="config.js"></script>
+<script id="main" type="text/plain">
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dinheiro = v => "R$ " + Number(v).toLocaleString("pt-BR");
+const SITUACAO = { reservado: "Reservado", vendido: "Vendido" };
+// Fotos ilustrativas (Unsplash) para imóveis que ainda não têm fotos próprias. Sempre marcadas como "Imagem ilustrativa".
+const ILUSTRA = ["photo-1570129477492-45c003edd2be", "photo-1576941089067-2de3c901e126", "photo-1523217582562-09d0def993a6",
+  "photo-1600047509807-ba8f99d2cdde", "photo-1605276374104-dee2a0ed3cd6", "photo-1512917774080-9991f1c4c750"]
+  .map(id => `https://images.unsplash.com/${id}?w=1200&q=70&auto=format&fit=crop`);
+const ilustra = id => ILUSTRA[[...String(id)].reduce((h, c) => h + c.charCodeAt(0), 0) % ILUSTRA.length];
+const params = new URLSearchParams(location.search), corretor = params.get("c");
+const falha = t => { $("msg").textContent = t; $("msg").classList.remove("hide"); $("site").classList.add("hide"); };
+
+let imoveis = [], perfil = null, sb;
+const foto = p => sb.storage.from("imoveis").getPublicUrl(p).data.publicUrl;
+const zapLink = texto => perfil?.whatsapp ? `https://wa.me/${numero(perfil.whatsapp)}?text=${encodeURIComponent(texto)}` : null;
+function numero(t) { let n = String(t).replace(/\D/g, ""); if (n.length <= 11) n = "55" + n; return n; }
+const precoTxt = i => i.preco ? dinheiro(i.preco) + (i.finalidade === "aluguel" ? "/mês" : "") : "Consulte";
+const linkImovel = i => { const u = new URL(location.href); u.search = ""; u.hash = ""; u.searchParams.set("c", corretor); u.searchParams.set("i", i.id); return u.href; };
+
+async function iniciar() {
+  sb = supabase.createClient(CRM_CONFIG.SUPABASE_URL, CRM_CONFIG.SUPABASE_ANON_KEY);
+  // Mostra o portfólio de toda a equipe do corretor (ou só dele, se não tiver equipe).
+  const eq = await sb.rpc("equipe_de", { u: corretor });
+  const equipe = eq.data?.length ? eq.data.map(x => typeof x === "string" ? x : Object.values(x)[0]) : [corretor];
+  const [pf, im] = await Promise.all([
+    sb.from("perfil").select("*").eq("user_id", corretor).maybeSingle(),
+    sb.from("imoveis").select("*").in("user_id", equipe).eq("publicado", true)
+      .order("destaque", { ascending: false }).order("criado_em", { ascending: false })
+  ]);
+  if (im.error) return falha("Este site ainda está sendo configurado. Volte em breve!");
+  perfil = pf.data; imoveis = im.data;
+  // Vendidos vão para o fim da lista (servem de prova social).
+  imoveis.sort((a, b) => (a.status === "vendido") - (b.status === "vendido"));
+  montarCorretor();
+  for (const t of [...new Set(imoveis.map(i => i.tipo).filter(Boolean))]) $("ftipo").add(new Option(t, t));
+  for (const o of $("fpreco").options) if (o.value) o.textContent = "até " + dinheiro(o.value);
+  $("msg").classList.add("hide"); $("site").classList.remove("hide");
+  desenhar();
+  const abrirId = params.get("i"), alvo = imoveis.find(i => i.id === abrirId);
+  if (alvo) abrir(alvo);
+}
+
+function montarCorretor() {
+  const nome = perfil?.nome || "Imóveis";
+  document.title = `${nome} – Imóveis à venda`;
+  $("nome").textContent = nome;
+  $("creci").textContent = perfil?.creci ? "CRECI " + perfil.creci : "Corretor de imóveis";
+  $("rodape").textContent = `© ${new Date().getFullYear()} ${nome}${perfil?.creci ? " · CRECI " + perfil.creci : ""}`;
+  if (perfil?.cidade) $("sub").textContent = `Casas e apartamentos em ${perfil.cidade}, com atendimento completo da simulação à entrega das chaves.`;
+  const geral = zapLink("Olá! Vi seu site de imóveis e gostaria de mais informações.");
+  for (const id of ["zaptopo", "zapsobre"]) { $(id).classList.toggle("hide", !geral); if (geral) $(id).href = geral; }
+  const sim = zapLink("Olá! Vi seu site e gostaria de fazer uma simulação de financiamento.");
+  $("zapsim").classList.toggle("hide", !sim); if (sim) $("zapsim").href = sim;
+  if (!perfil?.nome) return $("sobre").classList.add("hide");
+  $("snome").textContent = perfil.nome;
+  $("screci").textContent = [perfil.creci && "CRECI " + perfil.creci, perfil.cidade].filter(Boolean).join(" · ");
+  $("sbio").textContent = perfil.bio || "Corretor de imóveis. Fale comigo para encontrar o imóvel certo e cuidar de toda a documentação do financiamento.";
+  if (perfil.foto) $("sfoto").style.backgroundImage = `url("${foto(perfil.foto)}")`;
+  else $("sfoto").textContent = perfil.nome.split(" ").filter(Boolean).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function filtrados() {
+  const q = $("fq").value.trim().toLowerCase(), tipo = $("ftipo").value, max = Number($("fpreco").value) || Infinity;
+  const quartos = Number($("fquartos").value) || 0, mcmv = $("fmcmv").checked;
+  return imoveis.filter(i => (!tipo || i.tipo === tipo) && (!i.preco || i.preco <= max) && (i.quartos ?? 0) >= quartos && (!mcmv || i.mcmv) &&
+    (!q || [i.titulo, i.bairro, i.cidade, i.tipo, i.descricao].join(" ").toLowerCase().includes(q)));
+}
+function specs(i) {
+  return [i.quartos != null && `🛏 ${i.quartos} quarto${i.quartos == 1 ? "" : "s"}`, i.banheiros != null && `🚿 ${i.banheiros}`,
+    i.vagas != null && `🚗 ${i.vagas}`, i.area && `📐 ${i.area} m²`].filter(Boolean).map(s => `<span>${s}</span>`).join("");
+}
+function desenhar() {
+  const itens = filtrados(), disp = itens.filter(i => i.status !== "vendido").length;
+  $("qtd").textContent = `${disp} disponíve${disp === 1 ? "l" : "is"}`;
+  $("grid").innerHTML = itens.length ? itens.map(i => `
+    <article class="im" data-id="${i.id}">
+      <div class="capa" style="background-image:url('${i.fotos?.[0] ? foto(i.fotos[0]) : ilustra(i.id)}')">
+        ${i.fotos?.length ? "" : '<span class="ilustra">Imagem ilustrativa</span>'}
+        <span class="preco">${precoTxt(i)}</span>
+        ${SITUACAO[i.status] ? `<span class="selo ${i.status}">${SITUACAO[i.status]}</span>` : i.destaque ? '<span class="selo">Destaque</span>' : ""}
+        ${i.mcmv ? '<span class="mcmv">Minha Casa Minha Vida</span>' : ""}
+      </div>
+      <div class="corpo">
+        <h3>${esc(i.titulo)}</h3>
+        <div class="local">📍 ${esc([i.bairro, i.cidade].filter(Boolean).join(", ") || "Consulte a localização")}</div>
+        <div class="specs">${specs(i) || "<span>Veja os detalhes</span>"}</div>
+      </div>
+    </article>`).join("")
+    : imoveis.length ? '<div class="vazio" style="grid-column:1/-1">Nenhum imóvel com esses filtros. Tente ampliar a busca.</div>'
+    : ["Casas com quintal", "Apartamentos", "Minha Casa Minha Vida"].map((t, k) => `
+      <article class="im em-breve" data-breve="${esc(t)}">
+        <div class="capa" style="background-image:url('${ILUSTRA[k]}')"><span class="selo">Em breve</span><span class="ilustra">Imagem ilustrativa</span></div>
+        <div class="corpo"><h3>${t}</h3><div class="local">Novas opções chegando. Quer ser avisado primeiro?</div>
+          <div class="specs"><span>💬 Toque para falar comigo</span></div></div>
+      </article>`).join("");
+}
+for (const id of ["fq", "ftipo", "fpreco", "fquartos", "fmcmv"]) $(id).addEventListener("input", desenhar);
+$("grid").onclick = e => {
+  const a = e.target.closest("[data-id]"), b = e.target.closest("[data-breve]");
+  if (a) abrir(imoveis.find(i => i.id === a.dataset.id));
+  const z = b && zapLink(`Olá! Vi seu site e quero ser avisado quando chegarem opções de: ${b.dataset.breve}.`);
+  if (z) open(z, "_blank");
+};
+$("topo").onclick = e => { e.preventDefault(); scrollTo({ top: 0, behavior: "smooth" }); };
+
+// Detalhe do imóvel com galeria de fotos.
+let atual = null, n = 0;
+function abrir(i) {
+  atual = i; n = 0;
+  const fotos = i.fotos?.length ? i.fotos.map(foto) : [ilustra(i.id)];
+  $("gilustra").classList.toggle("hide", !!i.fotos?.length);
+  $("gthumbs").innerHTML = fotos.length > 1 ? fotos.map((f, k) => `<img src="${f}" data-k="${k}" alt="">`).join("") : "";
+  $("gthumbs").classList.toggle("hide", fotos.length < 2);
+  for (const id of ["gant", "gprox", "gcont"]) $(id).classList.toggle("hide", fotos.length < 2);
+  atual._fotos = fotos; mostrar(0);
+  $("dtit").textContent = i.titulo;
+  $("dlocal").textContent = "📍 " + ([i.bairro, i.cidade].filter(Boolean).join(", ") || "Consulte a localização") + (i.tipo ? " · " + i.tipo : "");
+  $("dvalor").textContent = precoTxt(i) + (SITUACAO[i.status] ? ` · ${SITUACAO[i.status]}` : "");
+  $("dficha").innerHTML = [[i.quartos, "quartos"], [i.banheiros, "banheiros"], [i.vagas, "vagas"], [i.area && i.area + " m²", "área"]]
+    .filter(([v]) => v != null && v !== "").map(([v, t]) => `<div><b>${esc(v)}</b>${t}</div>`).join("")
+    + (i.mcmv ? '<div style="grid-column:1/-1"><b>✓ Aceita Minha Casa Minha Vida</b>Use FGTS e subsídio do programa</div>' : "");
+  $("ddesc").textContent = i.descricao || "";
+  const z = zapLink(`Olá! Vi o imóvel "${i.titulo}" (${precoTxt(i)}) no seu site e tenho interesse.\n${linkImovel(i)}`);
+  $("dzap").classList.toggle("hide", !z); if (z) $("dzap").href = z;
+  history.replaceState(null, "", linkImovel(i));
+  $("det").showModal(); $("det").scrollTop = 0;
+}
+function mostrar(k) {
+  const f = atual._fotos; n = (k + f.length) % f.length;
+  $("gimg").src = f[n]; $("gcont").textContent = `${n + 1} / ${f.length}`;
+  for (const t of $("gthumbs").children) t.classList.toggle("on", +t.dataset.k === n);
+}
+$("gant").onclick = () => mostrar(n - 1);
+$("gprox").onclick = () => mostrar(n + 1);
+$("gthumbs").onclick = e => { if (e.target.dataset.k) mostrar(+e.target.dataset.k); };
+let toque = 0;
+$("gimg").addEventListener("touchstart", e => toque = e.touches[0].clientX, { passive: true });
+$("gimg").addEventListener("touchend", e => { const d = e.changedTouches[0].clientX - toque; if (Math.abs(d) > 40) mostrar(n + (d < 0 ? 1 : -1)); });
+document.addEventListener("keydown", e => { if ($("det").open && e.key === "ArrowRight") mostrar(n + 1); if ($("det").open && e.key === "ArrowLeft") mostrar(n - 1); });
+const fechar = () => $("det").close();
+$("gfechar").onclick = $("dfechar").onclick = fechar;
+$("det").addEventListener("close", () => { const u = new URL(location.href); u.searchParams.delete("i"); history.replaceState(null, "", u.href); });
+$("det").addEventListener("click", e => { if (e.target === $("det")) fechar(); });
+$("dshare").onclick = async () => {
+  const url = linkImovel(atual), texto = `🏡 ${atual.titulo} – ${precoTxt(atual)}`;
+  if (navigator.share) return navigator.share({ title: atual.titulo, text: texto, url }).catch(() => {});
+  await navigator.clipboard.writeText(url).catch(() => {});
+  $("dshare").textContent = "Link copiado ✓";
+  setTimeout(() => $("dshare").textContent = "Compartilhar este imóvel", 2500);
+};
+
+if (typeof supabase === "undefined") falha("Não foi possível carregar a página. Verifique a internet e tente de novo.");
+else if (!corretor) falha("Link incompleto. Peça ao corretor o link do site de imóveis.");
+else iniciar();
+</script>
+<script>
+// Carrega a biblioteca do Supabase tentando várias fontes, depois inicia a página.
+(function () {
+  const fontes = [
+    "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/supabase-js/2.45.4/umd/supabase.min.js",
+    "https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"
+  ];
+  function iniciar() {
+    const el = document.createElement("script");
+    el.textContent = document.getElementById("main").textContent;
+    document.body.appendChild(el);
+  }
+  function tentar(i) {
+    if (i >= fontes.length) return iniciar();
+    const s = document.createElement("script");
+    s.src = fontes[i];
+    s.onload = iniciar;
+    s.onerror = () => tentar(i + 1);
+    document.head.appendChild(s);
+  }
+  tentar(0);
+})();
+</script>
+</body>
+</html>
