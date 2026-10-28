@@ -273,6 +273,7 @@
       <select id="ordem"><option value="">Mais recentes</option><option value="contato">Sem contato há mais tempo</option></select>
       <button id="vlista">Lista</button><button id="vfunil">Funil</button>
       <button id="bfotos">📷 Fotos das fichas</button>
+      <button id="bleitor">🤖 Ler fichas com IA</button>
       <button class="pri" id="novo">+ Novo cliente</button>
     </div>
 
@@ -349,6 +350,14 @@
       </div>
     </form>
 
+    <section id="leitor" class="card hide">
+      <h3 style="margin-top:0">Importar fichas por foto</h3>
+      <p class="mut">Tire ou escolha fotos das fichas manuscritas. O CRM lê a letra e mostra os dados para você conferir e corrigir antes de salvar. Nada é gravado até você clicar em "Salvar clientes".</p>
+      <input type="file" id="lfotos" accept="image/*" multiple>
+      <p id="lstatus" class="mut"></p>
+      <div style="overflow-x:auto"><table id="ltab" style="border-collapse:collapse;width:100%;font-size:13px"></table></div>
+      <div class="bar" style="margin-top:10px"><button class="pri hide" id="lsalvar">Salvar clientes</button><button id="lfechar">Fechar</button></div>
+    </section>
     <section id="relatorio" class="card rel hide"></section>
 
     <section id="inicio">
@@ -719,7 +728,7 @@ const sb = supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
 // Id do usuário logado, lido da sessão guardada no navegador (sem ir ao servidor).
 const uid = async () => (await sb.auth.getSession()).data.session?.user.id;
 
-let clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
+let usuario = null, clientes = [], editId = null, visao = localStorage.getItem("visao") || "lista";
 let resumo = {}; // por cliente: { n: nº de contatos, ultimo: data, tipo: tipo do último }
 const diasDesde = d => Math.floor((Date.now() - new Date(d)) / 864e5);
 const haDias = n => n === 0 ? "hoje" : n === 1 ? "ontem" : `há ${n} dias`;
@@ -759,6 +768,7 @@ async function sessao() {
   $("sair").classList.toggle("hide", !logado);
   $("menu").classList.toggle("hide", !logado);
   $("quem").textContent = logado ? session.user.email : "";
+  usuario = session?.user.id ?? null;
   if (logado) { tela(base); carregar(); }
 }
 
@@ -1147,7 +1157,7 @@ function tela(t) {
   $("topo").classList.toggle("hide", t !== "clientes");
   $("nav").classList.toggle("hide", RAIZ.includes(t));
   for (const [k, id] of Object.entries(SECOES)) $(id).classList.toggle("hide", k !== t);
-  if (t !== "clientes") $("fichas").classList.add("hide");
+  if (t !== "clientes") { $("fichas").classList.add("hide"); $("leitor").classList.add("hide"); }
   const item = { cliente: "clientes", relatorio: "clientes", imovel: "portfolio" }[t] || t;
   for (const b of document.querySelectorAll("#menu [data-nav]")) b.classList.toggle("on", b.dataset.nav === item);
   if (t === "perfil") preencherPerfil();
@@ -1252,6 +1262,69 @@ $("form").onsubmit = async e => {
   await carregar();
   editId ? abrir(clientes.find(c => c.id === editId), false) : voltar();
   if (mudou) oferecerVenda(clientes.find(c => c.id === editId));
+};
+
+// ---- Importar fichas por foto ----
+let achados = [];
+const CAMPOS = [["nome","Nome"],["telefone","Telefone"],["cpf","CPF"],["data_nascimento","Nascimento (AAAA-MM-DD)"],["tipo_renda","Renda (formal/informal)"],["renda","Renda R$"],["tem_filhos","Filhos (sim/nao)"],["status","Status"],["observacoes","Observações"],["conferir","Conferir"]];
+
+const base64 = blob => new Promise(ok => { const r = new FileReader(); r.onload = () => ok(r.result.split(",")[1]); r.readAsDataURL(blob); });
+
+async function lerFoto(file, n) {
+  const blob = await reduzir(file);
+  const caminho = `${usuario}/${Date.now()}-${n}.jpg`;
+  const up = await sb.storage.from("fichas").upload(caminho, blob, { contentType: "image/jpeg" });
+  const { data, error } = await sb.functions.invoke("ler-ficha", { body: { imagem: await base64(blob) } });
+  if (error) {
+    let det = error.message;
+    try { det = (await error.context.json()).error || det; } catch {}
+    throw new Error(det);
+  }
+  return (data.pessoas || []).map(p => ({ ...p, _ficha: up.error ? null : caminho }));
+}
+
+function desenharAchados() {
+  $("ltab").innerHTML = "<tr>" + CAMPOS.map(([, t]) => `<th style="text-align:left;padding:4px">${t}</th>`).join("") + "<th></th></tr>" +
+    achados.map((p, i) => "<tr>" + CAMPOS.map(([k]) => `<td style="padding:2px"><input data-i="${i}" data-k="${k}" value="${esc(p[k] ?? "")}" style="min-width:${k === "nome" || k === "observacoes" || k === "conferir" ? 160 : 100}px"></td>`).join("") +
+      `<td><button data-x="${i}" class="bad">Remover</button></td></tr>`).join("");
+  $("lsalvar").classList.toggle("hide", !achados.length);
+}
+$("ltab").oninput = e => { const i = e.target.dataset.i; if (i != null) achados[i][e.target.dataset.k] = e.target.value; };
+$("ltab").onclick = e => { if (e.target.dataset.x != null) { achados.splice(e.target.dataset.x, 1); desenharAchados(); } };
+$("bleitor").onclick = () => $("leitor").classList.remove("hide");
+$("lfechar").onclick = () => { $("leitor").classList.add("hide"); achados = []; desenharAchados(); $("lstatus").textContent = ""; $("lfotos").value = ""; };
+$("lfotos").onchange = async e => {
+  const arquivos = [...e.target.files]; let n = 0;
+  for (const f of arquivos) {
+    $("lstatus").textContent = `Lendo foto ${++n} de ${arquivos.length}...`;
+    try { achados.push(...await lerFoto(f, n)); desenharAchados(); }
+    catch (err) { $("lstatus").innerHTML = `<span style="color:var(--bad)">${esc(err.message)}</span>`; return; }
+  }
+  $("lstatus").textContent = `${achados.length} pessoas encontradas. Confira cada linha com a ficha de papel antes de salvar.`;
+};
+$("lsalvar").onclick = async () => {
+  const ja = new Set(clientes.map(c => c.telefone).filter(Boolean));
+  const num = v => v === "" || v == null ? null : Number(String(v).replace(",", "."));
+  const novos = achados.filter(p => p.nome && !(p.telefone && ja.has(p.telefone))).map(p => {
+    const data = /^\d{4}-\d{2}-\d{2}$/.test(p.data_nascimento || "");
+    const aviso = [p.conferir ? "[Conferir na ficha: " + p.conferir + "]" : "", p.data_nascimento && !data ? "[Nascimento na ficha: " + p.data_nascimento + "]" : ""];
+    return {
+      nome: p.nome, telefone: p.telefone || null, cpf: p.cpf || null,
+      data_nascimento: data ? p.data_nascimento : null,
+      tipo_renda: ["formal", "informal"].includes(p.tipo_renda) ? p.tipo_renda : null,
+      renda: num(p.renda),
+      tem_filhos: /^(sim|true)$/i.test(p.tem_filhos) ? true : /^(nao|não|false)$/i.test(p.tem_filhos) ? false : null,
+      status: STATUS[p.status] ? p.status : "lead",
+      origem: p.origem || null,
+      observacoes: [p.observacoes, ...aviso].filter(Boolean).join(" ") || null,
+      ficha_url: p._ficha
+    };
+  });
+  const pulados = achados.length - novos.length;
+  const { error } = await sb.from("clientes").insert(novos);
+  if (error) return msg("Erro ao salvar: " + error.message, true);
+  msg(`${novos.length} clientes salvos.` + (pulados ? ` ${pulados} pulados (sem nome ou telefone já cadastrado).` : ""));
+  $("lfechar").click(); carregar();
 };
 
 $("busca").oninput = $("fstatus").onchange = desenhar;
