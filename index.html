@@ -423,7 +423,7 @@
 
     <section id="reavaliacao" class="hide">
       <div class="secao-tit"><h2>Aguardando reavaliação</h2></div>
-      <p class="mut" style="margin-top:0">Clientes que a Caixa não aprovou. Ficam aqui por 30 dias e depois voltam para "Simulação / proposta" para uma nova avaliação.</p>
+      <p class="mut" style="margin-top:0">Clientes sem aprovação da Caixa, ou que você colocou em espera por outro motivo. Ficam aqui até a data escolhida (30 dias por padrão) e depois voltam para "Simulação / proposta".</p>
       <div id="raviso"></div>
       <div class="card" id="rvlista"></div>
     </section>
@@ -542,10 +542,12 @@
 </dialog>
 <dialog id="avdlg">
   <form id="avform">
-    <h3 style="margin-top:0">Avaliação da Caixa</h3>
+    <h3 style="margin-top:0" id="avtit">Avaliação da Caixa</h3>
     <p class="mut" id="avnome" style="margin-top:0"></p>
+    <div id="avres">
     <label class="chk2"><input type="radio" name="res" value="aprovada" checked> ✅ Foi <strong>aprovado</strong>: segue na esteira</label>
     <label class="chk2" style="margin-top:6px"><input type="radio" name="res" value="reprovada"> ❌ <strong>Não foi aprovado</strong>: vai para "Aguardando reavaliação"</label>
+    </div>
     <div id="avreprova" class="hide" style="margin-top:12px">
       <div class="row">
         <div style="grid-column:1/-1"><label>Motivo</label><select name="motivo">
@@ -556,7 +558,7 @@
       </div>
       <p class="mut" style="font-size:12px;margin:6px 0 0">Por padrão, 30 dias a partir de hoje. Você pode ajustar a data.</p>
     </div>
-    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Confirmar</button><button type="button" id="avcancel">Cancelar (continua em Simulação / proposta)</button></div>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Confirmar</button><button type="button" id="avcancel">Cancelar</button></div>
   </form>
 </dialog>
 <dialog id="gdlg">
@@ -693,7 +695,7 @@ const DICAS = {
   subsidio: "Aguardando liberação do subsídio do Minha Casa Minha Vida e/ou do FGTS. Acompanhe e agende a assinatura.",
   contrato: "Contrato assinado. Acompanhe o registro em cartório e a liberação do imóvel.",
   fechado: "Venda concluída. Entregue as chaves e peça indicações de amigos e familiares.",
-  reavaliacao: "A Caixa não aprovou desta vez. Mantenha contato, oriente o cliente a resolver o motivo e refaça a avaliação quando o prazo de 30 dias terminar.",
+  reavaliacao: "Cliente em espera (por exemplo, sem aprovação da Caixa ou aguardando algo). Mantenha contato, ajude a resolver o motivo e refaça a avaliação quando o prazo terminar.",
   perdido: "Cliente marcado como perdido. Registre o motivo no histórico; dá para reativar quando quiser."
 };
 const $ = id => document.getElementById(id);
@@ -946,12 +948,14 @@ function esteira(c, hist) {
         ${c.status === "perdido" ? `<button type="button" class="pri" data-go="lead">Reativar cliente</button>` : `
           ${ant ? `<button type="button" data-go="${ant}">◀ Voltar</button>` : ""}
           ${prox ? `<button type="button" class="pri" data-go="${prox}">Avançar para: ${STATUS[prox]} ▶</button>` : ""}
+          <button type="button" data-reav="1">⏳ Colocar em reavaliação</button>
           <button type="button" class="bad" data-go="perdido">Marcar como perdido</button>`}
       </div>
     </div>`;
   $("esteira").classList.remove("hide");
 }
 $("esteira").onclick = e => {
+  if (e.target.closest("[data-reav]")) { const cl = clientes.find(x => x.id === editId); return cl && abrirAvaliacao(cl, "reavaliacao", true); }
   const go = e.target.closest("[data-go]")?.dataset.go;
   const c = clientes.find(x => x.id === editId);
   if (!go || !c || go === c.status) return;
@@ -2474,16 +2478,25 @@ $("rvlista").onclick = async e => {
   if (!prontoReav(c) && !confirm("Ainda não passaram os 30 dias. Voltar para a esteira mesmo assim?")) return;
   await mover(c.id, "proposta");
 };
-function abrirAvaliacao(c, destino) {
-  avPend = { id: c.id, destino };
+const MOTIVOS_CAIXA = ["Renda insuficiente para a parcela", "Restrição no CPF (Serasa / SPC)", "Comprometimento de renda acima do limite",
+  "Documentação incompleta ou divergente", "Tempo de carteira ou de trabalho insuficiente", "Outro motivo"];
+const MOTIVOS_MANUAL = ["Cliente pediu um tempo para decidir", "Sem renda ou emprego no momento", "Aguardando juntar documentos", "Aguardando FGTS ou tempo de carteira",
+  "Restrição no CPF (Serasa / SPC)", "Cliente vai quitar dívidas antes", "Outro motivo"];
+function abrirAvaliacao(c, destino, manual = false) {
+  avPend = { id: c.id, destino, manual };
   const f = $("avform"); f.reset();
-  $("avnome").textContent = `${c.nome}: antes de avançar para "${STATUS[destino]}", a Caixa aprovou a avaliação?`;
+  $("avtit").textContent = manual ? "Colocar em reavaliação" : "Avaliação da Caixa";
+  $("avnome").textContent = manual ? `${c.nome}: informe o motivo. O cliente fica em "Aguardando reavaliação" até a data escolhida e depois volta para a esteira.`
+    : `${c.nome}: antes de avançar para "${STATUS[destino]}", a Caixa aprovou a avaliação?`;
+  f.motivo.innerHTML = (manual ? MOTIVOS_MANUAL : MOTIVOS_CAIXA).map(m => `<option>${m}</option>`).join("");
   f.data.value = isoLocal(Date.now() + PRAZO_REAV * 864e5);
-  $("avreprova").classList.add("hide");
+  $("avres").classList.toggle("hide", manual);
+  if (manual) f.res.value = "reprovada";
+  $("avreprova").classList.toggle("hide", !manual);
   $("avdlg").showModal();
 }
 $("avform").onchange = e => { if (e.target.name === "res") $("avreprova").classList.toggle("hide", e.target.value !== "reprovada"); };
-$("avcancel").onclick = () => { avPend = null; $("avdlg").close(); msg("Cliente continua em Simulação / proposta."); };
+$("avcancel").onclick = () => { const m = avPend?.manual; avPend = null; $("avdlg").close(); msg(m ? "Nada foi alterado." : "Cliente continua em Simulação / proposta."); };
 $("avform").onsubmit = async e => {
   e.preventDefault();
   const f = e.target, a = avPend; if (!a) return;
@@ -2496,7 +2509,7 @@ $("avform").onsubmit = async e => {
   if (!f.data.value) return msg("Escolha a data da reavaliação.", true);
   const motivo = f.motivo.value + (f.obs.value.trim() ? ": " + f.obs.value.trim() : "");
   $("avdlg").close(); avPend = null;
-  await registrar(a.id, "Anotação", `Avaliação da Caixa: não aprovada (${motivo}). Reavaliar em ${dataCurta(f.data.value)}.`);
+  await registrar(a.id, "Anotação", `${a.manual ? "Colocado em reavaliação" : "Avaliação da Caixa: não aprovada"} (${motivo}). Reavaliar em ${dataCurta(f.data.value)}.`);
   await mover(a.id, "reavaliacao", { avaliado: true, campos: { reavaliar_em: f.data.value, motivo_reprovacao: motivo } });
 };
 
