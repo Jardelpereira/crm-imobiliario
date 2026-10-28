@@ -809,7 +809,7 @@ async function carregar() {
 function filtrados() {
   const q = $("busca").value.toLowerCase(), st = $("fstatus").value;
   const itens = clientes.filter(c =>
-    (!st || c.status === st) &&
+    (st ? c.status === st : c.status !== "reavaliacao") && // em reavaliação só aparece na aba Reavaliação (ou escolhendo essa etapa no filtro)
     [c.nome, c.telefone, c.interesse, c.email, c.cpf].join(" ").toLowerCase().includes(q));
   if ($("ordem").value === "contato") {
     const t = c => resumo[c.id] ? new Date(resumo[c.id].ultimo).getTime() : 0; // nunca contatado vem primeiro
@@ -834,7 +834,7 @@ function desenhar() {
   if (telaAtual === "cliente") { propostasCliente(); matchCliente(); return agendaCliente(); }
   const itens = filtrados();
   if (visao === "funil") {
-    $("funil").innerHTML = Object.entries(STATUS).map(([k, v]) => {
+    $("funil").innerHTML = Object.entries(STATUS).filter(([k]) => k !== "reavaliacao").map(([k, v]) => {
       const col = itens.filter(c => c.status === k);
       return `<div class="col" data-col="${k}"><h4>${v} <span class="mut">${col.length}</span></h4>` + col.map(c => `
         <div class="kc" draggable="true" data-id="${c.id}">
@@ -1353,7 +1353,7 @@ async function marca() {
 
 function desenharInicio() {
   desenharNovidades();
-  const ativos = clientes.filter(c => !["fechado", "perdido"].includes(c.status));
+  const ativos = clientes.filter(c => !["fechado", "perdido", "reavaliacao"].includes(c.status));
   const t = c => resumo[c.id] ? new Date(resumo[c.id].ultimo).getTime() : 0;
   const pend = ativos.filter(c => !resumo[c.id] || diasDesde(resumo[c.id].ultimo) > 7).sort((a, b) => t(a) - t(b));
   const fin = clientes.filter(c => ["documentacao", "negociacao", "vistoria", "aprovado", "subsidio", "contrato"].includes(c.status)).length;
@@ -1674,7 +1674,7 @@ const norm = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "
 // "casa, Riacho Fundo / Samambaia" -> ["casa", "riacho fundo", "samambaia"]
 const desejos = c => norm(c.interesse).split(/[,;/]|\s+e\s+|\s+ou\s+/).map(t => t.trim()).filter(t => t.length >= 3);
 function combina(c, i) {
-  if (i.status !== "disponivel" || ["fechado", "perdido"].includes(c.status)) return null;
+  if (i.status !== "disponivel" || ["fechado", "perdido", "reavaliacao"].includes(c.status)) return null;
   const orc = Number(c.orcamento) || 0, preco = Number(i.preco) || 0;
   if (orc && preco && preco > orc * 1.1) return null; // fora do bolso (tolerância de 10%)
   const okValor = !!(orc && preco);
