@@ -122,6 +122,8 @@
   .pfotos{display:flex;gap:6px;overflow-x:auto;padding:2px 0}
   .pfotos img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:2px solid transparent;cursor:pointer;flex:none}
   .pfotos img.sel{border-color:var(--pri)}
+  .cont.pronto .contbar i{background:var(--ok)}.cont.pronto small{color:var(--ok);font-weight:600}.etapa.reavaliacao{border-left-color:var(--acc)}.tag.reavaliacao{color:#b26a00;border-color:var(--acc)}
+  .rvlinha{padding:12px 0;border-bottom:1px solid var(--bd)}.rvlinha:last-child{border-bottom:none}
   .grafico{display:flex;align-items:flex-end;gap:2px;height:170px;padding:22px 0 0;border-bottom:1px solid var(--bd)}
   .grafico .col2{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;position:relative}
   .grafico .b{width:70%;max-width:38px;background:var(--pri);border-radius:4px 4px 0 0}
@@ -236,7 +238,7 @@
     <span><b id="marcanome">CRM Imobiliário</b><small id="marcasub">Clientes e imóveis</small></span>
   </a>
   <nav id="menu" class="hide">
-    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="vendas">Minhas vendas</button><button data-nav="gastos">Gastos</button><button data-nav="perfil">Meu perfil</button>
+    <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="reavaliacao">Reavaliação<span id="rvbadge" class="badge hide"></span></button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="vendas">Minhas vendas</button><button data-nav="gastos">Gastos</button><button data-nav="perfil">Meu perfil</button>
     <a id="lvitrine" href="vitrine.html" target="_blank" rel="noopener">Ver meu site ↗</a>
   </nav>
   <span class="conta"><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
@@ -419,6 +421,13 @@
       <div class="rolagem"><table class="tabv" id="vtab"></table></div>
     </section>
 
+    <section id="reavaliacao" class="hide">
+      <div class="secao-tit"><h2>Aguardando reavaliação</h2></div>
+      <p class="mut" style="margin-top:0">Clientes que a Caixa não aprovou. Ficam aqui por 30 dias e depois voltam para "Simulação / proposta" para uma nova avaliação.</p>
+      <div id="raviso"></div>
+      <div class="card" id="rvlista"></div>
+    </section>
+
     <section id="gastos" class="hide">
       <div class="secao-tit"><h2>Gastos e líquido do mês</h2>
         <div class="bar" style="margin:0">
@@ -529,6 +538,25 @@
     <label style="margin-top:10px">Local</label><input name="local" placeholder="Endereço ou ponto de encontro">
     <label style="margin-top:10px">Observações</label><textarea name="obs" rows="2"></textarea>
     <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Salvar</button><button type="button" id="agcancel">Cancelar</button></div>
+  </form>
+</dialog>
+<dialog id="avdlg">
+  <form id="avform">
+    <h3 style="margin-top:0">Avaliação da Caixa</h3>
+    <p class="mut" id="avnome" style="margin-top:0"></p>
+    <label class="chk2"><input type="radio" name="res" value="aprovada" checked> ✅ Foi <strong>aprovado</strong>: segue na esteira</label>
+    <label class="chk2" style="margin-top:6px"><input type="radio" name="res" value="reprovada"> ❌ <strong>Não foi aprovado</strong>: vai para "Aguardando reavaliação"</label>
+    <div id="avreprova" class="hide" style="margin-top:12px">
+      <div class="row">
+        <div style="grid-column:1/-1"><label>Motivo</label><select name="motivo">
+          <option>Renda insuficiente para a parcela</option><option>Restrição no CPF (Serasa / SPC)</option><option>Comprometimento de renda acima do limite</option>
+          <option>Documentação incompleta ou divergente</option><option>Tempo de carteira ou de trabalho insuficiente</option><option>Outro motivo</option></select></div>
+        <div><label>Reavaliar em</label><input name="data" type="date"></div>
+        <div style="grid-column:1/-1"><label>Observações (opcional)</label><input name="obs" placeholder="Ex.: pagar dívida do cartão antes de nova análise"></div>
+      </div>
+      <p class="mut" style="font-size:12px;margin:6px 0 0">Por padrão, 30 dias a partir de hoje. Você pode ajustar a data.</p>
+    </div>
+    <div class="bar" style="margin:14px 0 0"><button class="pri" type="submit">Confirmar</button><button type="button" id="avcancel">Cancelar (continua em Simulação / proposta)</button></div>
   </form>
 </dialog>
 <dialog id="gdlg">
@@ -646,13 +674,13 @@ const STATUS = {
   lead: "Primeiro contato", visita: "Visita agendada", visita_feita: "Visita realizada",
   proposta: "Simulação / proposta", documentacao: "Documentação", negociacao: "Em financiamento",
   vistoria: "Vistoria do imóvel", aprovado: "Crédito aprovado", subsidio: "Aguardando subsídio / FGTS",
-  contrato: "Contrato assinado", fechado: "Chaves entregues", perdido: "Perdido"
+  contrato: "Contrato assinado", fechado: "Chaves entregues", reavaliacao: "Aguardando reavaliação", perdido: "Perdido"
 };
 // Tipos que contam como contato com o cliente ("Anotação", "Etapa" e "Documento" não contam).
 const CONTATOS = ["WhatsApp", "Ligação", "Visita", "E-mail", "Presencial"];
 const DOCS = ["RG ou CNH", "CPF", "Comprovante de renda", "Comprovante de residência", "Certidão de nascimento ou casamento",
   "Carteira de trabalho", "Extrato do FGTS", "Declaração de IR"];
-const FLUXO = Object.keys(STATUS).filter(k => k !== "perdido");
+const FLUXO = Object.keys(STATUS).filter(k => !["perdido", "reavaliacao"].includes(k));
 const DICAS = {
   lead: "Faça o primeiro contato: entenda renda, se tem filhos, FGTS e a região que procura. Ofereça uma visita.",
   visita: "Confirme dia, hora e endereço um dia antes da visita.",
@@ -665,6 +693,7 @@ const DICAS = {
   subsidio: "Aguardando liberação do subsídio do Minha Casa Minha Vida e/ou do FGTS. Acompanhe e agende a assinatura.",
   contrato: "Contrato assinado. Acompanhe o registro em cartório e a liberação do imóvel.",
   fechado: "Venda concluída. Entregue as chaves e peça indicações de amigos e familiares.",
+  reavaliacao: "A Caixa não aprovou desta vez. Mantenha contato, oriente o cliente a resolver o motivo e refaça a avaliação quando o prazo de 30 dias terminar.",
   perdido: "Cliente marcado como perdido. Registre o motivo no histórico; dá para reativar quando quiser."
 };
 const $ = id => document.getElementById(id);
@@ -713,6 +742,7 @@ const MODELOS = {
   subsidio: n => `Olá ${n}! Estamos aguardando a liberação do subsídio/FGTS. Assim que sair, agendamos a assinatura.`,
   contrato: n => `Olá ${n}! Contrato assinado. Agora acompanho o registro em cartório e te aviso de cada passo.`,
   fechado: n => `Olá ${n}! Parabéns pela conquista! Qualquer dúvida na documentação, estou à disposição.`,
+  reavaliacao: n => `Olá ${n}, tudo bem? Já está no prazo de refazermos a sua avaliação na Caixa. Posso te ajudar a reenviar a simulação?`,
   perdido: n => `Olá ${n}, tudo bem? Se mudar de ideia sobre o imóvel, é só me chamar.`
 };
 
@@ -759,6 +789,7 @@ async function carregar() {
   faltaV6 = !!(im.error || pf.error);
   imoveis = im.data || []; perfil = pf.data || null;
   faltaV9 = !!(await sb.from("clientes").select("prazo_docs").limit(1)).error;
+  faltaV13 = !!(await sb.from("clientes").select("reavaliar_em").limit(1)).error;
   const pr = await sb.from("propostas").select("*").order("data", { ascending: false }).order("criado_em", { ascending: false });
   faltaV10 = !!pr.error; propostas = pr.data || [];
   const vd = await sb.from("vendas").select("*").order("data_venda", { ascending: false });
@@ -769,7 +800,7 @@ async function carregar() {
   apresentados = new Set((ap.data || []).map(x => x.cliente_id + "|" + x.texto.replace("Apresentou o imóvel: ", "")));
   const ag = await sb.from("compromissos").select("*").order("quando");
   faltaV7 = !!ag.error; agenda = ag.data || [];
-  marca(); badgeAgenda();
+  marca(); badgeAgenda(); badgeReav();
   desenhar();
 }
 
@@ -797,6 +828,7 @@ function desenhar() {
   if (telaAtual === "agenda") return desenharAgenda();
   if (telaAtual === "vendas") return desenharVendas();
   if (telaAtual === "gastos") return desenharGastos();
+  if (telaAtual === "reavaliacao") return desenharReavaliacao();
   if (telaAtual === "cliente") { propostasCliente(); matchCliente(); return agendaCliente(); }
   const itens = filtrados();
   if (visao === "funil") {
@@ -818,7 +850,7 @@ function desenhar() {
   $("lista").innerHTML = itens.length ? itens.map(c => `
     <div class="card cli">
       <div>
-        <strong>${esc(c.nome)}</strong> <span class="tag ${c.status}">${c.status === "perdido" ? "Perdido" : `${FLUXO.indexOf(c.status) + 1}/${FLUXO.length} · ${STATUS[c.status]}`}</span>
+        <strong>${esc(c.nome)}</strong> <span class="tag ${c.status}">${FLUXO.includes(c.status) ? `${FLUXO.indexOf(c.status) + 1}/${FLUXO.length} · ${STATUS[c.status]}` : STATUS[c.status]}</span>
         <div class="mini ${c.status}" data-e="${c.id}" title="Abrir esteira">${barra(c.status)}</div>
         <span class="mut">${esc(c.telefone)} ${c.interesse ? "· " + esc(c.interesse) : ""}
         ${c.orcamento ? "· Orçamento " + dinheiro(c.orcamento) : ""}
@@ -858,10 +890,19 @@ $("lista").onclick = $("funil").onclick = async e => {
   }
 };
 
-const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v5.sql no SQL Editor do Supabase."
+const erroEtapa = m => /status_check/.test(m) ? "Esta etapa ainda não existe no banco. Rode o schema_v13.sql no SQL Editor do Supabase."
+  : /reavaliar_em|motivo_reprovacao/.test(m) ? "Falta um passo: rode o schema_v13.sql no SQL Editor do Supabase."
   : /imovel_id|valor_imovel|meta_mensal|comissao_padrao/.test(m) ? "Falta um passo: rode o schema_v8.sql no SQL Editor do Supabase." : m;
-async function mover(id, status) {
-  const { error } = await sb.from("clientes").update({ status, atualizado_em: new Date().toISOString() }).eq("id", id);
+async function mover(id, status, extra = {}) {
+  const atual = clientes.find(x => x.id === id);
+  // Saindo de "Simulação / proposta" para uma etapa seguinte: antes pergunta se a Caixa aprovou.
+  if (!extra.avaliado && atual?.status === "proposta" && FLUXO.indexOf(status) > FLUXO.indexOf("proposta")) return abrirAvaliacao(atual, status);
+  const campos = { status, atualizado_em: new Date().toISOString(), ...extra.campos };
+  if (!faltaV13) {
+    if (status === "reavaliacao" && !campos.reavaliar_em) campos.reavaliar_em = isoLocal(Date.now() + PRAZO_REAV * 864e5);
+    if (status !== "reavaliacao" && atual?.status === "reavaliacao") campos.reavaliar_em = null;
+  }
+  const { error } = await sb.from("clientes").update(campos).eq("id", id);
   if (error) return msg("Erro ao mover: " + erroEtapa(error.message), true);
   msg("Movido para " + STATUS[status] + ".");
   await registrar(id, "Etapa", STATUS[status]);
@@ -880,6 +921,16 @@ function esteira(c, hist) {
   }
   const desde = quando[c.status] || (c.status === "lead" ? c.criado_em : null);
   const dias = desde ? Math.floor((Date.now() - new Date(desde)) / 864e5) : null;
+  if (c.status === "reavaliacao") {
+    $("esteira").innerHTML = `<div class="etapa reavaliacao">
+      <strong>Etapa atual: ${STATUS.reavaliacao}</strong>${desde ? ` <span class="mut">· desde ${new Date(desde).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })}</span>` : ""}
+      <p>${DICAS.reavaliacao}</p>
+      ${c.motivo_reprovacao ? `<p class="mut" style="margin-top:0">Motivo informado: ${esc(c.motivo_reprovacao)}</p>` : ""}
+      ${c.reavaliar_em ? contadorReav(c) : ""}
+      <div class="bar" style="margin:8px 0 0"><button type="button" class="pri" data-go="proposta">Reavaliar agora (voltar para Simulação / proposta)</button>
+        <button type="button" class="bad" data-go="perdido">Marcar como perdido</button></div></div>`;
+    return $("esteira").classList.remove("hide");
+  }
   const i = FLUXO.indexOf(c.status), prox = FLUXO[i + 1], ant = FLUXO[i - 1];
   const data = d => d ? new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) : "";
   $("esteira").innerHTML = `
@@ -905,6 +956,7 @@ $("esteira").onclick = e => {
   const c = clientes.find(x => x.id === editId);
   if (!go || !c || go === c.status) return;
   if (go === "perdido" && !confirm("Marcar este cliente como perdido?")) return;
+  if (c.status === "reavaliacao" && go === "proposta" && !prontoReav(c) && !confirm("Ainda não passaram os 30 dias. Voltar para a esteira mesmo assim?")) return;
   mover(editId, go);
 };
 $("funil").onchange = e => { if (e.target.dataset.mv) mover(e.target.dataset.mv, e.target.value); };
@@ -1088,8 +1140,8 @@ $("ordem").onchange = desenhar;
 // Telas do menu (início, clientes, portfólio, perfil) e telas internas (cliente, relatório, imóvel).
 // As internas entram no histórico do navegador, então o botão voltar do celular também funciona.
 let telaAtual = "inicio", nivel = 0, base = "inicio";
-const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", portfolio: "portfolio", vendas: "vendas", gastos: "gastos", imovel: "imovelform", perfil: "perfilform" };
-const RAIZ = ["inicio", "clientes", "agenda", "portfolio", "vendas", "gastos", "perfil"];
+const SECOES = { inicio: "inicio", cliente: "form", relatorio: "relatorio", agenda: "agenda", reavaliacao: "reavaliacao", portfolio: "portfolio", vendas: "vendas", gastos: "gastos", imovel: "imovelform", perfil: "perfilform" };
+const RAIZ = ["inicio", "clientes", "reavaliacao", "agenda", "portfolio", "vendas", "gastos", "perfil"];
 function tela(t) {
   telaAtual = t;
   $("topo").classList.toggle("hide", t !== "clientes");
@@ -1310,6 +1362,7 @@ function desenharInicio() {
     [clientes.filter(c => c.status === "fechado").length, "vendas concluídas", "clientes"],
     [imoveis.filter(i => i.status === "disponivel").length, "imóveis disponíveis", "portfolio"],
     ...(vendas.some(v => v.pagamento_status !== "recebido") ? [[din(vendas.reduce((t, v) => t + aReceber(v), 0)), "comissões a receber", "vendas"]] : []),
+    ...(clientes.some(c => c.status === "reavaliacao") ? [[clientes.filter(c => c.status === "reavaliacao" && prontoReav(c)).length, "prontos para reavaliar", "reavaliacao"]] : []),
     ...(!faltaV12 && gastos.length ? [[din(liquidoDoMes(chaveMes(new Date()))), "líquido do mês", "gastos"]] : [])
   ].map(([n, txt, a]) => `<div class="click" data-acao="${a}"><b>${n}</b><span>${txt}</span></div>`).join("");
   $("pend").innerHTML = pend.length ? pend.slice(0, 6).map(c => `
@@ -1354,7 +1407,7 @@ document.addEventListener("click", e => {
   if (a === "novoimovel") abrirImovel(null);
   if (a === "share") compartilharSite();
   if (a === "contato") { $("ordem").value = "contato"; irRaiz("clientes"); }
-  if (["clientes", "agenda", "portfolio", "vendas", "gastos", "perfil"].includes(a)) irRaiz(a);
+  if (["clientes", "agenda", "reavaliacao", "portfolio", "vendas", "gastos", "perfil"].includes(a)) irRaiz(a);
   if (a === "novocomp") abrirComp({});
   if (a === "agvisita") abrirComp({ tipo: "visita", cliente_id: editId });
   if (a === "agretorno") abrirComp({ tipo: "retorno", cliente_id: editId });
@@ -1700,7 +1753,7 @@ function cardsCliente(c) {
     <div><span>Valor do imóvel</span><b>${v ? dinheiro(v) : "—"}</b><small>${c.renda ? "Renda do cliente: " + dinheiro(c.renda) : "&nbsp;"}</small></div>
     ${cardParcela(c)}
     <div class="sit ${c.status}"><span>Situação atual</span><b>${STATUS[c.status]}</b>
-      <small>${c.status === "perdido" ? "Fora da esteira" : `Etapa ${n + 1} de ${FLUXO.length}`}</small></div>`;
+      <small>${c.status === "reavaliacao" ? (c.reavaliar_em ? "Reavaliar em " + dataCurta(c.reavaliar_em) : "Fora da esteira") : c.status === "perdido" ? "Fora da esteira" : `Etapa ${n + 1} de ${FLUXO.length}`}</small></div>`;
 }
 
 // Prazo para o cliente entregar os documentos (mostrado no bloco Documentos e na mensagem de lembrete).
@@ -2377,6 +2430,74 @@ $("pcomp").onclick = async () => {
   if (navigator.canShare?.({ files: [arq] })) {
     try { await navigator.share({ files: [arq], text: $("plegenda").value }); } catch (e) { if (e.name !== "AbortError") msg("Não foi possível compartilhar: " + e.message, true); }
   } else msg("Este aparelho não compartilha imagens direto. Use \"Baixar imagem\" e \"Copiar legenda\".", true);
+};
+
+
+// ---------- Avaliação da Caixa e "Aguardando reavaliação" (30 dias) ----------
+let faltaV13 = false, avPend = null;
+const PRAZO_REAV = 30;
+const dataReav = c => new Date(c.reavaliar_em + "T12:00");
+const prontoReav = c => !c.reavaliar_em || dataReav(c) <= new Date();
+function contadorReav(c) {
+  if (!c.reavaliar_em) return "";
+  const alvo = dataReav(c), inicio = new Date(alvo); inicio.setDate(inicio.getDate() - PRAZO_REAV);
+  const passados = Math.floor((Date.now() - inicio) / 864e5), faltam = Math.ceil((alvo - Date.now()) / 864e5), pct = Math.min(100, Math.max(0, passados / PRAZO_REAV * 100));
+  const txt = faltam <= 0 ? (faltam === 0 ? "Pronto para reavaliar hoje" : `Pronto para reavaliar (há ${-faltam} dia${faltam < -1 ? "s" : ""})`) : `Faltam ${faltam} dia${faltam > 1 ? "s" : ""} · reavaliar em ${alvo.toLocaleDateString("pt-BR")}`;
+  return `<div class="cont ${faltam <= 0 ? "pronto" : faltam <= 5 ? "perto" : ""}" title="Dia ${Math.min(Math.max(passados, 0), PRAZO_REAV)} de ${PRAZO_REAV}"><div class="contbar"><i style="width:${faltam <= 0 ? 100 : pct}%"></i></div><small>${txt}</small></div>`;
+}
+function badgeReav() {
+  const n = clientes.filter(c => c.status === "reavaliacao" && prontoReav(c)).length;
+  $("rvbadge").textContent = n; $("rvbadge").classList.toggle("hide", !n);
+}
+function desenharReavaliacao() {
+  $("raviso").innerHTML = faltaV13 ? '<div class="card"><strong>Falta um passo:</strong> rode o <b>schema_v13.sql</b> no SQL Editor do Supabase para ativar a reavaliação.</div>' : "";
+  const lista = clientes.filter(c => c.status === "reavaliacao").sort((a, b) => (a.reavaliar_em || "").localeCompare(b.reavaliar_em || ""));
+  $("rvlista").innerHTML = lista.length ? lista.map(c => `<div class="rvlinha">
+      <div class="secao-tit" style="margin:0 0 4px"><strong><a href="#" data-rve="${c.id}">${esc(c.nome)}</a></strong><span class="mut" style="font-size:13px">${esc(c.telefone || "")}</span></div>
+      ${c.motivo_reprovacao ? `<div class="mut" style="font-size:13px">Motivo: ${esc(c.motivo_reprovacao)}</div>` : ""}
+      ${contadorReav(c) || '<div class="mut" style="font-size:13px">Sem data de reavaliação definida.</div>'}
+      <div class="bar" style="margin:8px 0 0">
+        ${c.telefone ? `<button data-rvw="${c.id}">WhatsApp</button>` : ""}<button data-rve="${c.id}">Abrir</button>
+        <button class="pri" data-rvgo="${c.id}">Reavaliar agora</button></div></div>`).join("")
+    : '<p class="mut" style="margin:0">Nenhum cliente aguardando reavaliação. 🎉</p>';
+}
+$("rvlista").onclick = async e => {
+  const b = e.target.closest("[data-rve],[data-rvw],[data-rvgo]"); if (!b) return;
+  e.preventDefault();
+  const id = b.dataset.rve || b.dataset.rvw || b.dataset.rvgo, c = clientes.find(x => x.id === id); if (!c) return;
+  if (b.dataset.rve) return abrir(c);
+  if (b.dataset.rvw) {
+    let n = c.telefone.replace(/\D/g, ""); if (n.length <= 11) n = "55" + n;
+    open(`https://wa.me/${n}?text=${encodeURIComponent(MODELOS.reavaliacao(c.nome.split(" ")[0]))}`, "_blank");
+    return registrar(c.id, "WhatsApp", "Abriu conversa (reavaliação)");
+  }
+  if (!prontoReav(c) && !confirm("Ainda não passaram os 30 dias. Voltar para a esteira mesmo assim?")) return;
+  await mover(c.id, "proposta");
+};
+function abrirAvaliacao(c, destino) {
+  avPend = { id: c.id, destino };
+  const f = $("avform"); f.reset();
+  $("avnome").textContent = `${c.nome}: antes de avançar para "${STATUS[destino]}", a Caixa aprovou a avaliação?`;
+  f.data.value = isoLocal(Date.now() + PRAZO_REAV * 864e5);
+  $("avreprova").classList.add("hide");
+  $("avdlg").showModal();
+}
+$("avform").onchange = e => { if (e.target.name === "res") $("avreprova").classList.toggle("hide", e.target.value !== "reprovada"); };
+$("avcancel").onclick = () => { avPend = null; $("avdlg").close(); msg("Cliente continua em Simulação / proposta."); };
+$("avform").onsubmit = async e => {
+  e.preventDefault();
+  const f = e.target, a = avPend; if (!a) return;
+  if (f.res.value === "aprovada") {
+    $("avdlg").close(); avPend = null;
+    await registrar(a.id, "Anotação", "Avaliação da Caixa: aprovada");
+    return mover(a.id, a.destino, { avaliado: true });
+  }
+  if (faltaV13) return msg("Rode o schema_v13.sql no SQL Editor do Supabase para usar a reavaliação.", true);
+  if (!f.data.value) return msg("Escolha a data da reavaliação.", true);
+  const motivo = f.motivo.value + (f.obs.value.trim() ? ": " + f.obs.value.trim() : "");
+  $("avdlg").close(); avPend = null;
+  await registrar(a.id, "Anotação", `Avaliação da Caixa: não aprovada (${motivo}). Reavaliar em ${dataCurta(f.data.value)}.`);
+  await mover(a.id, "reavaliacao", { avaliado: true, campos: { reavaliar_em: f.data.value, motivo_reprovacao: motivo } });
 };
 
 // ---------- Equipe: corretores que compartilham clientes, agenda, portfólio e vendas ----------
