@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CRM Imobiliário</title>
 <meta name="theme-color" content="#faf6f0">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icones/favicon.png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CRM Imóveis">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -29,6 +36,9 @@
   .mini i.ok{background:var(--ok)}.mini i.at{background:var(--pri)}.mini.perdido i{background:var(--bad);opacity:.35}
   .tag.fechado{color:var(--ok);border-color:var(--ok)}.tag.perdido{color:var(--bad);border-color:var(--bad)}
   .mut{color:var(--mut)}.hide{display:none!important}
+  .conta .btn-inst,.btn-inst{background:var(--pri);color:#fff;border:1px solid var(--pri);border-radius:8px;padding:6px 10px;font-size:13px;font-weight:600;cursor:pointer}
+  .dicaios{margin:10px 16px 0;padding:12px 14px;background:#fff8ec;border:1px solid var(--acc);border-radius:10px;font-size:14px}
+  .dicaios button{margin-left:6px;background:var(--pri);color:#fff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer}
   #msg{min-height:20px;margin:8px 0}
   a{color:var(--pri)}
   .gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:12px}
@@ -241,8 +251,9 @@
     <button data-nav="inicio">Início</button><button data-nav="clientes">Clientes</button><button data-nav="reavaliacao">Reavaliação<span id="rvbadge" class="badge hide"></span></button><button data-nav="agenda">Agenda<span id="agbadge" class="badge hide"></span></button><button data-nav="portfolio">Portfólio</button><button data-nav="vendas">Minhas vendas</button><button data-nav="gastos">Gastos</button><button data-nav="perfil">Meu perfil</button>
     <a id="lvitrine" href="vitrine.html" target="_blank" rel="noopener">Ver meu site ↗</a>
   </nav>
-  <span class="conta"><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
+  <span class="conta"><button id="instalar" class="hide btn-inst" title="Colocar um ícone do CRM na tela do celular">📲 Instalar app</button><span id="quem" class="mut"></span><button id="sair" class="hide">Sair</button></span>
 </header>
+<div id="dicaios" class="hide dicaios"><b>Instalar no iPhone:</b> toque em <b>Compartilhar</b> (o quadrado com a seta ↑) e depois em <b>Adicionar à Tela de Início</b>. <button id="dicaiosok">Entendi</button></div>
 <main>
   <div id="msg" class="mut"></div>
 
@@ -2684,5 +2695,6 @@ sessao();
   tentar(0);
 })();
 </script>
+<script src="pwa.js"></script>
 </body>
 </html>

@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Importar clientes</title>
+<meta name="theme-color" content="#faf6f0">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="icones/favicon.png">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CRM Imóveis">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
   :root{--bg:#faf6f0;--card:#fff;--tx:#2b2620;--mut:#75695d;--pri:#2f7a64;--bd:#ece3d6;--ok:#12805c;--bad:#c62828;--warn:#b26a00}
   *{box-sizing:border-box}
@@ -130,5 +138,6 @@ $("importar").onclick = async () => {
   tentar(0);
 })();
 </script>
+<script src="pwa.js"></script>
 </body>
 </html>
